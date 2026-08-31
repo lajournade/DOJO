@@ -3,7 +3,7 @@
  *  — Journal : les seances dans l'ordre, dépliables jusqu'au detail des series ;
  *  — Exercice : la progression d'un mouvement dans le temps.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ProgressChart, type Point } from '../components/ProgressChart';
 import { navigate } from '../router';
 import {
@@ -14,7 +14,7 @@ import {
   sinceLabel,
   tonnage,
 } from '../store/selectors';
-import { useStore } from '../store/state';
+import { dispatch, useStore } from '../store/state';
 import type { SessionLog, SetEntry } from '../types';
 
 type Tab = 'journal' | 'exercice';
@@ -63,6 +63,9 @@ export function History() {
   );
 }
 
+/** Duree d'appui avant que la suppression d'une seance soit proposee. */
+const HOLD_MS = 650;
+
 function Journal({ logs }: { logs: SessionLog[] }) {
   const [open, setOpen] = useState<string | null>(logs[0]?.id ?? null);
 
@@ -72,35 +75,108 @@ function Journal({ logs }: { logs: SessionLog[] }) {
 
   return (
     <div className="grid gap-2">
-      {logs.map((log) => {
-        const entries = doneEntries(log.entries);
-        const expanded = open === log.id;
-        return (
-          <section key={log.id} className="bevel-sm border border-white/8 bg-ink-2">
-            <button
-              type="button"
-              onClick={() => setOpen(expanded ? null : log.id)}
-              className="flex w-full items-center justify-between gap-3 p-3 text-left"
-            >
-              <div className="min-w-0">
-                <p className="fight-text text-base text-blood-hot">{log.programCode}</p>
-                <p className="text-[0.75rem] text-ash">
-                  {formatDate(log.date)} · {sinceLabel(log.date)}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="numeric text-sm font-black text-bone">
-                  {Math.round(tonnage(entries)).toLocaleString('fr-FR')} kg
-                </p>
-                <p className="text-[0.7rem] text-ash">{entries.length} séries</p>
-              </div>
-            </button>
-
-            {expanded && <LogDetail entries={log.entries} />}
-          </section>
-        );
-      })}
+      {logs.map((log) => (
+        <LogCard
+          key={log.id}
+          log={log}
+          expanded={open === log.id}
+          onToggle={() => setOpen(open === log.id ? null : log.id)}
+        />
+      ))}
+      <p className="pt-1 text-center text-[0.7rem] text-ash/70">
+        appui long sur une séance pour la supprimer
+      </p>
     </div>
+  );
+}
+
+/**
+ * Une seance du journal. L'appui maintenu propose de la supprimer : une jauge se
+ * remplit sous le doigt, relacher avant la fin annule. Le pouce n'efface donc rien
+ * par megarde, et aucune croix ne vient encombrer la carte.
+ */
+function LogCard({
+  log,
+  expanded,
+  onToggle,
+}: {
+  log: SessionLog;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const [holding, setHolding] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+  // L'appui long a abouti : le clic du relachement ne doit pas replier la carte.
+  const fired = useRef(false);
+  const entries = doneEntries(log.entries);
+
+  const cancelHold = () => {
+    clearTimeout(timer.current);
+    timer.current = undefined;
+    setHolding(false);
+  };
+
+  useEffect(() => cancelHold, []);
+
+  const startHold = () => {
+    fired.current = false;
+    setHolding(true);
+    timer.current = setTimeout(() => {
+      fired.current = true;
+      setHolding(false);
+      if (confirm(`Supprimer la séance ${log.programCode} du ${formatDate(log.date)} ?`)) {
+        dispatch('log.remove', { logId: log.id });
+      }
+    }, HOLD_MS) as unknown as number;
+  };
+
+  return (
+    <section className="bevel-sm border border-white/8 bg-ink-2">
+      <div className="relative overflow-hidden">
+        <button
+          type="button"
+          onClick={() => {
+            if (fired.current) {
+              fired.current = false;
+              return;
+            }
+            onToggle();
+          }}
+          onPointerDown={startHold}
+          onPointerUp={cancelHold}
+          onPointerLeave={cancelHold}
+          onPointerCancel={cancelHold}
+          onContextMenu={(e) => e.preventDefault()}
+          className="flex w-full touch-manipulation select-none items-center justify-between gap-3
+                     p-3 text-left [-webkit-touch-callout:none]"
+        >
+          <div className="min-w-0">
+            <p className="fight-text text-base text-blood-hot">{log.programCode}</p>
+            <p className="text-[0.75rem] text-ash">
+              {formatDate(log.date)} · {sinceLabel(log.date)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="numeric text-sm font-black text-bone">
+              {Math.round(tonnage(entries)).toLocaleString('fr-FR')} kg
+            </p>
+            <p className="text-[0.7rem] text-ash">{entries.length} séries</p>
+          </div>
+        </button>
+
+        {/* La jauge d'appui : pleine, la suppression est proposee. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute bottom-0 left-0 h-[3px] bg-blood-hot"
+          style={{
+            width: holding ? '100%' : '0%',
+            transition: holding ? `width ${HOLD_MS}ms linear` : 'none',
+          }}
+        />
+      </div>
+
+      {expanded && <LogDetail entries={log.entries} />}
+    </section>
   );
 }
 
