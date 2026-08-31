@@ -1,0 +1,27 @@
+# Service utilisateur : DOJO demarre avec la session et reste joignable
+# depuis le telephone, via le reseau local ou le VPN.
+#
+# Installation :
+#   mkdir -p ~/.config/systemd/user
+#   cp deploy/sport.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now sport
+#
+# L'application reste disponible meme session fermee si l'utilisateur est
+# « linger » : sudo loginctl enable-linger $USER
+
+[Unit]
+Description=DOJO — suivi de musculation
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Projects/Sport
+# Shim mise : survit aux montees de version de Node.
+ExecStart=%h/.local/share/mise/shims/node server/index.mjs
+Environment=PORT=5180
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

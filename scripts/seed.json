@@ -1,0 +1,780 @@
+{
+  "rev": 0,
+  "appliedOps": [],
+  "exercises": [
+    {
+      "id": "squat-barre",
+      "name": "Squat barre"
+    },
+    {
+      "id": "developpe-incline-halteres-30",
+      "name": "Développé incliné haltères 30°"
+    },
+    {
+      "id": "traction-pronation-lestee",
+      "name": "Traction pronation lestée"
+    },
+    {
+      "id": "elevations-laterales-halteres",
+      "name": "Élévations latérales haltères"
+    },
+    {
+      "id": "leg-curl-assis",
+      "name": "Leg curl assis"
+    },
+    {
+      "id": "pull-over-a-la-poulie-haute",
+      "name": "Pull-over à la poulie haute"
+    },
+    {
+      "id": "drapeau-du-dragon",
+      "name": "Drapeau du dragon"
+    },
+    {
+      "id": "souleve-de-terre-roumain",
+      "name": "Soulevé de terre roumain"
+    },
+    {
+      "id": "dips-lestes",
+      "name": "Dips lestés"
+    },
+    {
+      "id": "rowing-haltere-un-bras",
+      "name": "Rowing haltère un bras"
+    },
+    {
+      "id": "developpe-militaire-halteres-assis",
+      "name": "Développé militaire haltères assis"
+    },
+    {
+      "id": "fente-bulgare",
+      "name": "Fente bulgare"
+    },
+    {
+      "id": "elevations-laterales-a-la-poulie",
+      "name": "Élévations latérales à la poulie"
+    },
+    {
+      "id": "face-pull-a-la-poulie",
+      "name": "Face pull à la poulie"
+    },
+    {
+      "id": "curl-inverse-barre-ez",
+      "name": "Curl inversé barre EZ"
+    },
+    {
+      "id": "tractions-pronation-prise-large",
+      "name": "Tractions pronation — prise large"
+    },
+    {
+      "id": "smith-machine-squat",
+      "name": "Smith Machine Squat"
+    },
+    {
+      "id": "barbell-bench-press",
+      "name": "Barbell Bench Press"
+    },
+    {
+      "id": "seated-dumbbell-shoulder-press",
+      "name": "Seated Dumbbell Shoulder Press"
+    },
+    {
+      "id": "cable-triceps-pushdown",
+      "name": "Cable Triceps Pushdown"
+    }
+  ],
+  "programs": [
+    {
+      "id": "prog-p2",
+      "code": "P2",
+      "name": "Programme 2026",
+      "active": true,
+      "sessions": [
+        {
+          "id": "ses-A",
+          "code": "A",
+          "name": "Dominante quadriceps & pressée inclinée",
+          "items": [
+            {
+              "id": "it-dominante-qu-1",
+              "exerciseId": "squat-barre",
+              "sets": 4,
+              "repMin": 6,
+              "repMax": 8,
+              "targetRirMin": 2,
+              "targetRirMax": 2,
+              "restSec": 150,
+              "notes": "Descente contrôlée 2 s, cuisses au parallèle ou en dessous. Le mouvement le plus lourd de la semaine : il passe en premier, à froid mais échauffé."
+            },
+            {
+              "id": "it-dominante-qu-2",
+              "exerciseId": "developpe-incline-halteres-30",
+              "sets": 3,
+              "repMin": 8,
+              "repMax": 10,
+              "targetRirMin": 1,
+              "targetRirMax": 2,
+              "restSec": 60,
+              "notes": "Angle mesuré, pas « à peu près » : au-delà de 30° le travail glisse vers le deltoïde antérieur. Amplitude complète, étirement marqué en bas."
+            },
+            {
+              "id": "it-dominante-qu-3",
+              "exerciseId": "traction-pronation-lestee",
+              "sets": 3,
+              "repMin": 6,
+              "repMax": 10,
+              "targetRirMin": 1,
+              "targetRirMax": 1,
+              "restSec": 90,
+              "notes": "Coudes tirés vers les hanches, omoplates serrées. Ceinture de lest dès que 10 reps propres passent. Excentrique 3 s. Si tu as grimpé la veille : arrête-toi à 2 RIR, ne va pas à l'échec."
+            },
+            {
+              "id": "it-dominante-qu-4",
+              "exerciseId": "elevations-laterales-halteres",
+              "sets": 3,
+              "repMin": 12,
+              "repMax": 15,
+              "targetRirMin": 0,
+              "targetRirMax": 1,
+              "restSec": 60,
+              "notes": "Buste très légèrement penché, coudes menant le mouvement, pas de balancier. L'exercice qui construit la largeur."
+            },
+            {
+              "id": "it-dominante-qu-5",
+              "exerciseId": "leg-curl-assis",
+              "sets": 3,
+              "repMin": 10,
+              "repMax": 12,
+              "targetRirMin": 1,
+              "targetRirMax": 1,
+              "restSec": 75,
+              "notes": "Assis plutôt qu'allongé : hanche fléchie = ischio-jambiers en position allongée, meilleur stimulus."
+            },
+            {
+              "id": "it-dominante-qu-6",
+              "exerciseId": "pull-over-a-la-poulie-haute",
+              "sets": 3,
+              "repMin": 12,
+              "repMax": 15,
+              "targetRirMin": 0,
+              "targetRirMax": 1,
+              "restSec": 60,
+              "notes": "Bras quasi tendus : du grand dorsal sans fléchisseurs du coude. C'est la série qui finance le V-taper — et la seule qui charge le dos sans rien ajouter à un coude déjà chargé par le bloc."
+            },
+            {
+              "id": "it-dominante-qu-7",
+              "exerciseId": "drapeau-du-dragon",
+              "sets": 3,
+              "repMin": 5,
+              "repMax": 8,
+              "targetRirMin": 1,
+              "targetRirMax": 1,
+              "restSec": 75,
+              "notes": "Régression si besoin : genoux fléchis, puis jambes tendues. Sinon relevés de jambes suspendu, jambes tendues, sans élan."
+            }
+          ]
+        },
+        {
+          "id": "ses-B",
+          "code": "B",
+          "name": "Dominante chaîne postérieure & pressée décliné",
+          "items": [
+            {
+              "id": "it-dominante-ch-1",
+              "exerciseId": "souleve-de-terre-roumain",
+              "sets": 4,
+              "repMin": 8,
+              "repMax": 10,
+              "targetRirMin": 2,
+              "targetRirMax": 2,
+              "restSec": 150,
+              "notes": "Le hip hinge de la vidéo, enfin chargeable. Jambes quasi tendues, barre qui frôle les cuisses, descente jusqu'à l'étirement des ischios — pas plus bas."
+            },
+            {
+              "id": "it-dominante-ch-2",
+              "exerciseId": "dips-lestes",
+              "sets": 3,
+              "repMin": 6,
+              "repMax": 10,
+              "targetRirMin": 1,
+              "targetRirMax": 1,
+              "restSec": 60,
+              "notes": "Buste penché en avant pour orienter la charge vers les pectoraux. Descente jusqu'à l'étirement, sans forcer l'épaule."
+            },
+            {
+              "id": "it-dominante-ch-3",
+              "exerciseId": "rowing-haltere-un-bras",
+              "sets": 3,
+              "repMin": 8,
+              "repMax": 12,
+              "targetRirMin": 1,
+              "targetRirMax": 1,
+              "restSec": 90,
+              "notes": "Prise neutre, tirage vers la hanche. Le remplaçant chargeable du rowing inversé : rhomboïdes, grand rond, trapèzes."
+            },
+            {
+              "id": "it-dominante-ch-4",
+              "exerciseId": "developpe-militaire-halteres-assis",
+              "sets": 3,
+              "repMin": 8,
+              "repMax": 10,
+              "targetRirMin": 1,
+              "targetRirMax": 2,
+              "restSec": 60,
+              "notes": "Conservé pour la force et le deltoïde antérieur — mais ce n'est pas lui qui élargit. Dos calé, pas de cambrure."
+            },
+            {
+              "id": "it-dominante-ch-5",
+              "exerciseId": "fente-bulgare",
+              "sets": 3,
+              "repMin": 8,
+              "repMax": 10,
+              "targetRirMin": 1,
+              "targetRirMax": 2,
+              "restSec": 90,
+              "notes": "Remplace le pistol squat : même travail unilatéral, mais la charge progresse indéfiniment sans être limitée par l'équilibre."
+            },
+            {
+              "id": "it-dominante-ch-6",
+              "exerciseId": "elevations-laterales-a-la-poulie",
+              "sets": 3,
+              "repMin": 15,
+              "repMax": 20,
+              "targetRirMin": 0,
+              "targetRirMax": 0,
+              "restSec": 60,
+              "notes": "Deuxième dose hebdomadaire, en séries longues. La poulie maintient la tension en bas d'amplitude, là où les haltères la perdent."
+            },
+            {
+              "id": "it-dominante-ch-7",
+              "exerciseId": "face-pull-a-la-poulie",
+              "sets": 3,
+              "repMin": 15,
+              "repMax": 20,
+              "targetRirMin": 0,
+              "targetRirMax": 1,
+              "restSec": 75,
+              "notes": "Deltoïde postérieur et rotateurs externes : l'antagoniste direct de la posture d'escalade, épaules enroulées vers l'avant. Coudes hauts, mains qui finissent au niveau des oreilles."
+            },
+            {
+              "id": "it-dominante-ch-8",
+              "exerciseId": "curl-inverse-barre-ez",
+              "sets": 2,
+              "repMin": 12,
+              "repMax": 15,
+              "targetRirMin": 1,
+              "targetRirMax": 1,
+              "restSec": 60,
+              "notes": "Prise pronation : brachio-radial et extenseurs du poignet. Remplace le curl supination — il fait le travail de bras et le contrepoids des fléchisseurs de doigts sursollicités par le bloc."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "logs": [
+    {
+      "id": "log-2026-08-24-p1-a",
+      "programCode": "P1-A",
+      "sessionId": null,
+      "date": "2026-08-24",
+      "startedAt": null,
+      "endedAt": null,
+      "entries": [
+        {
+          "exerciseId": "tractions-pronation-prise-large",
+          "exerciseName": "Tractions pronation — prise large",
+          "setIndex": 1,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "tractions-pronation-prise-large",
+          "exerciseName": "Tractions pronation — prise large",
+          "setIndex": 2,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "tractions-pronation-prise-large",
+          "exerciseName": "Tractions pronation — prise large",
+          "setIndex": 3,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "tractions-pronation-prise-large",
+          "exerciseName": "Tractions pronation — prise large",
+          "setIndex": 4,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "smith-machine-squat",
+          "exerciseName": "Smith Machine Squat",
+          "setIndex": 1,
+          "reps": 6,
+          "weight": 60,
+          "rir": null
+        },
+        {
+          "exerciseId": "smith-machine-squat",
+          "exerciseName": "Smith Machine Squat",
+          "setIndex": 2,
+          "reps": 6,
+          "weight": 80,
+          "rir": null
+        },
+        {
+          "exerciseId": "smith-machine-squat",
+          "exerciseName": "Smith Machine Squat",
+          "setIndex": 3,
+          "reps": 6,
+          "weight": 100,
+          "rir": null
+        },
+        {
+          "exerciseId": "smith-machine-squat",
+          "exerciseName": "Smith Machine Squat",
+          "setIndex": 4,
+          "reps": 6,
+          "weight": 100,
+          "rir": 1
+        },
+        {
+          "exerciseId": "barbell-bench-press",
+          "exerciseName": "Barbell Bench Press",
+          "setIndex": 1,
+          "reps": 12,
+          "weight": 36,
+          "rir": null
+        },
+        {
+          "exerciseId": "barbell-bench-press",
+          "exerciseName": "Barbell Bench Press",
+          "setIndex": 2,
+          "reps": 8,
+          "weight": 40,
+          "rir": null
+        },
+        {
+          "exerciseId": "barbell-bench-press",
+          "exerciseName": "Barbell Bench Press",
+          "setIndex": 3,
+          "reps": 8,
+          "weight": 40,
+          "rir": 1
+        },
+        {
+          "exerciseId": "seated-dumbbell-shoulder-press",
+          "exerciseName": "Seated Dumbbell Shoulder Press",
+          "setIndex": 1,
+          "reps": 7,
+          "weight": 32,
+          "rir": null
+        },
+        {
+          "exerciseId": "seated-dumbbell-shoulder-press",
+          "exerciseName": "Seated Dumbbell Shoulder Press",
+          "setIndex": 2,
+          "reps": 7,
+          "weight": 32,
+          "rir": 2
+        },
+        {
+          "exerciseId": "cable-triceps-pushdown",
+          "exerciseName": "Cable Triceps Pushdown",
+          "setIndex": 1,
+          "reps": 12,
+          "weight": 15,
+          "rir": null
+        },
+        {
+          "exerciseId": "cable-triceps-pushdown",
+          "exerciseName": "Cable Triceps Pushdown",
+          "setIndex": 2,
+          "reps": 12,
+          "weight": 15,
+          "rir": 0
+        }
+      ]
+    },
+    {
+      "id": "log-2026-08-28-p2-b",
+      "programCode": "P2-B",
+      "sessionId": "ses-B",
+      "date": "2026-08-28",
+      "startedAt": null,
+      "endedAt": null,
+      "entries": [
+        {
+          "exerciseId": "souleve-de-terre-roumain",
+          "exerciseName": "Soulevé de terre roumain",
+          "setIndex": 1,
+          "reps": 10,
+          "weight": 80,
+          "rir": null
+        },
+        {
+          "exerciseId": "souleve-de-terre-roumain",
+          "exerciseName": "Soulevé de terre roumain",
+          "setIndex": 2,
+          "reps": 10,
+          "weight": 80,
+          "rir": 2
+        },
+        {
+          "exerciseId": "dips-lestes",
+          "exerciseName": "Dips lestés",
+          "setIndex": 1,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "dips-lestes",
+          "exerciseName": "Dips lestés",
+          "setIndex": 2,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "dips-lestes",
+          "exerciseName": "Dips lestés",
+          "setIndex": 3,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "rowing-haltere-un-bras",
+          "exerciseName": "Rowing haltère un bras",
+          "setIndex": 1,
+          "reps": 12,
+          "weight": 14,
+          "rir": null
+        },
+        {
+          "exerciseId": "rowing-haltere-un-bras",
+          "exerciseName": "Rowing haltère un bras",
+          "setIndex": 2,
+          "reps": 12,
+          "weight": 14,
+          "rir": null
+        },
+        {
+          "exerciseId": "rowing-haltere-un-bras",
+          "exerciseName": "Rowing haltère un bras",
+          "setIndex": 3,
+          "reps": 10,
+          "weight": 14,
+          "rir": null
+        },
+        {
+          "exerciseId": "developpe-militaire-halteres-assis",
+          "exerciseName": "Développé militaire haltères assis",
+          "setIndex": 1,
+          "reps": 8,
+          "weight": 14,
+          "rir": null
+        },
+        {
+          "exerciseId": "developpe-militaire-halteres-assis",
+          "exerciseName": "Développé militaire haltères assis",
+          "setIndex": 2,
+          "reps": 8,
+          "weight": 14,
+          "rir": null
+        },
+        {
+          "exerciseId": "developpe-militaire-halteres-assis",
+          "exerciseName": "Développé militaire haltères assis",
+          "setIndex": 3,
+          "reps": 8,
+          "weight": 14,
+          "rir": 2
+        },
+        {
+          "exerciseId": "fente-bulgare",
+          "exerciseName": "Fente bulgare",
+          "setIndex": 1,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "fente-bulgare",
+          "exerciseName": "Fente bulgare",
+          "setIndex": 2,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "fente-bulgare",
+          "exerciseName": "Fente bulgare",
+          "setIndex": 3,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "elevations-laterales-a-la-poulie",
+          "exerciseName": "Élévations latérales à la poulie",
+          "setIndex": 1,
+          "reps": 12,
+          "weight": 3.75,
+          "rir": null
+        },
+        {
+          "exerciseId": "elevations-laterales-a-la-poulie",
+          "exerciseName": "Élévations latérales à la poulie",
+          "setIndex": 2,
+          "reps": 12,
+          "weight": 3.75,
+          "rir": null
+        },
+        {
+          "exerciseId": "elevations-laterales-a-la-poulie",
+          "exerciseName": "Élévations latérales à la poulie",
+          "setIndex": 3,
+          "reps": 8,
+          "weight": 3.75,
+          "rir": null
+        },
+        {
+          "exerciseId": "face-pull-a-la-poulie",
+          "exerciseName": "Face pull à la poulie",
+          "setIndex": 1,
+          "reps": 7,
+          "weight": 7.5,
+          "rir": null
+        },
+        {
+          "exerciseId": "face-pull-a-la-poulie",
+          "exerciseName": "Face pull à la poulie",
+          "setIndex": 2,
+          "reps": 8,
+          "weight": 10,
+          "rir": null
+        },
+        {
+          "exerciseId": "face-pull-a-la-poulie",
+          "exerciseName": "Face pull à la poulie",
+          "setIndex": 3,
+          "reps": 12,
+          "weight": 12.5,
+          "rir": null
+        },
+        {
+          "exerciseId": "curl-inverse-barre-ez",
+          "exerciseName": "Curl inversé barre EZ",
+          "setIndex": 1,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "curl-inverse-barre-ez",
+          "exerciseName": "Curl inversé barre EZ",
+          "setIndex": 2,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        }
+      ]
+    },
+    {
+      "id": "log-2026-08-31-p2-a",
+      "programCode": "P2-A",
+      "sessionId": "ses-A",
+      "date": "2026-08-31",
+      "startedAt": null,
+      "endedAt": null,
+      "entries": [
+        {
+          "exerciseId": "squat-barre",
+          "exerciseName": "Squat barre",
+          "setIndex": 1,
+          "reps": 8,
+          "weight": 40,
+          "rir": null
+        },
+        {
+          "exerciseId": "squat-barre",
+          "exerciseName": "Squat barre",
+          "setIndex": 2,
+          "reps": 8,
+          "weight": 60,
+          "rir": null
+        },
+        {
+          "exerciseId": "squat-barre",
+          "exerciseName": "Squat barre",
+          "setIndex": 3,
+          "reps": 8,
+          "weight": 80,
+          "rir": null
+        },
+        {
+          "exerciseId": "squat-barre",
+          "exerciseName": "Squat barre",
+          "setIndex": 4,
+          "reps": 8,
+          "weight": 70,
+          "rir": 2
+        },
+        {
+          "exerciseId": "developpe-incline-halteres-30",
+          "exerciseName": "Développé incliné haltères 30°",
+          "setIndex": 1,
+          "reps": 8,
+          "weight": 44,
+          "rir": null
+        },
+        {
+          "exerciseId": "developpe-incline-halteres-30",
+          "exerciseName": "Développé incliné haltères 30°",
+          "setIndex": 2,
+          "reps": 4,
+          "weight": 44,
+          "rir": null
+        },
+        {
+          "exerciseId": "developpe-incline-halteres-30",
+          "exerciseName": "Développé incliné haltères 30°",
+          "setIndex": 3,
+          "reps": 6,
+          "weight": 44,
+          "rir": 0
+        },
+        {
+          "exerciseId": "traction-pronation-lestee",
+          "exerciseName": "Traction pronation lestée",
+          "setIndex": 1,
+          "reps": 6,
+          "weight": 0,
+          "rir": null
+        },
+        {
+          "exerciseId": "traction-pronation-lestee",
+          "exerciseName": "Traction pronation lestée",
+          "setIndex": 2,
+          "reps": 6,
+          "weight": -21,
+          "rir": null
+        },
+        {
+          "exerciseId": "traction-pronation-lestee",
+          "exerciseName": "Traction pronation lestée",
+          "setIndex": 3,
+          "reps": 6,
+          "weight": -21,
+          "rir": 2
+        },
+        {
+          "exerciseId": "elevations-laterales-halteres",
+          "exerciseName": "Élévations latérales haltères",
+          "setIndex": 1,
+          "reps": 15,
+          "weight": 8,
+          "rir": null
+        },
+        {
+          "exerciseId": "elevations-laterales-halteres",
+          "exerciseName": "Élévations latérales haltères",
+          "setIndex": 2,
+          "reps": 15,
+          "weight": 8,
+          "rir": null
+        },
+        {
+          "exerciseId": "elevations-laterales-halteres",
+          "exerciseName": "Élévations latérales haltères",
+          "setIndex": 3,
+          "reps": 15,
+          "weight": 8,
+          "rir": 2
+        },
+        {
+          "exerciseId": "leg-curl-assis",
+          "exerciseName": "Leg curl assis",
+          "setIndex": 1,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "leg-curl-assis",
+          "exerciseName": "Leg curl assis",
+          "setIndex": 2,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "leg-curl-assis",
+          "exerciseName": "Leg curl assis",
+          "setIndex": 3,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "pull-over-a-la-poulie-haute",
+          "exerciseName": "Pull-over à la poulie haute",
+          "setIndex": 1,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "pull-over-a-la-poulie-haute",
+          "exerciseName": "Pull-over à la poulie haute",
+          "setIndex": 2,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "pull-over-a-la-poulie-haute",
+          "exerciseName": "Pull-over à la poulie haute",
+          "setIndex": 3,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "drapeau-du-dragon",
+          "exerciseName": "Drapeau du dragon",
+          "setIndex": 1,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "drapeau-du-dragon",
+          "exerciseName": "Drapeau du dragon",
+          "setIndex": 2,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        },
+        {
+          "exerciseId": "drapeau-du-dragon",
+          "exerciseName": "Drapeau du dragon",
+          "setIndex": 3,
+          "reps": null,
+          "weight": null,
+          "rir": null
+        }
+      ]
+    }
+  ],
+  "liveSession": null
+}
