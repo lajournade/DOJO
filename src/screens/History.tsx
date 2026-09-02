@@ -30,11 +30,11 @@ export function History() {
         <button
           type="button"
           onClick={() => navigate('/')}
-          className="fight-text text-[0.7rem] tracking-[0.2em] text-ash"
+          className="fight-text text-p1 tracking-[0.2em] text-ash"
         >
           ← dojo
         </button>
-        <h1 className="fight-text fight-shadow mt-1 text-[2.2rem] leading-none text-bone">
+        <h1 className="fight-text fight-shadow mt-2 text-p3 text-bone">
           historique
         </h1>
 
@@ -53,8 +53,7 @@ export function History() {
 
         <a
           href="/api/export.csv"
-          className="bevel-sm fight-text mt-4 block bg-ink-2 py-3.5 text-center text-sm
-                     tracking-[0.15em] text-ash active:bg-ink-3"
+          className="bevel-sm keycap fight-text mt-4 block bg-ink-2 py-4 text-center text-p2 text-ash"
         >
           exporter en csv
         </a>
@@ -70,7 +69,7 @@ function Journal({ logs }: { logs: SessionLog[] }) {
   const [open, setOpen] = useState<string | null>(logs[0]?.id ?? null);
 
   if (!logs.length) {
-    return <p className="py-8 text-center text-sm text-ash">Aucune séance enregistrée.</p>;
+    return <p className="py-8 text-center text-p2 text-ash">Aucune séance enregistrée.</p>;
   }
 
   return (
@@ -83,7 +82,7 @@ function Journal({ logs }: { logs: SessionLog[] }) {
           onToggle={() => setOpen(open === log.id ? null : log.id)}
         />
       ))}
-      <p className="pt-1 text-center text-[0.7rem] text-ash/70">
+      <p className="pt-1 text-center text-p2 text-ash/70">
         appui long sur une séance pour la supprimer
       </p>
     </div>
@@ -131,7 +130,7 @@ function LogCard({
   };
 
   return (
-    <section className="bevel-sm border border-white/8 bg-ink-2">
+    <section className="bevel-sm bg-ink-2">
       <div className="relative overflow-hidden">
         <button
           type="button"
@@ -151,23 +150,23 @@ function LogCard({
                      p-3 text-left [-webkit-touch-callout:none]"
         >
           <div className="min-w-0">
-            <p className="fight-text text-base text-blood-hot">{log.programCode}</p>
-            <p className="text-[0.75rem] text-ash">
+            <p className="fight-text text-p2 text-impact">{log.programCode}</p>
+            <p className="text-p2 text-ash">
               {formatDate(log.date)} · {sinceLabel(log.date)}
             </p>
           </div>
-          <div className="text-right">
-            <p className="numeric text-sm font-black text-bone">
+          <div className="shrink-0 whitespace-nowrap text-right">
+            <p className="numeric fight-text text-p2 text-bone">
               {Math.round(tonnage(entries)).toLocaleString('fr-FR')} kg
             </p>
-            <p className="text-[0.7rem] text-ash">{entries.length} séries</p>
+            <p className="text-p2 text-ash">{entries.length} séries</p>
           </div>
         </button>
 
         {/* La jauge d'appui : pleine, la suppression est proposee. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute bottom-0 left-0 h-[3px] bg-blood-hot"
+          className="pointer-events-none absolute bottom-0 left-0 h-1 bg-impact"
           style={{
             width: holding ? '100%' : '0%',
             transition: holding ? `width ${HOLD_MS}ms linear` : 'none',
@@ -190,28 +189,28 @@ function LogDetail({ entries }: { entries: SetEntry[] }) {
   }
 
   return (
-    <div className="border-t border-white/8 p-3 pt-2">
+    <div className="border-t-2 border-line p-3 pt-2">
       {groups.map((group, i) => (
         <div key={`${group.name}-${i}`} className="mb-3 last:mb-0">
-          <p className="fight-text text-[0.78rem] text-bone">{group.name}</p>
+          <p className="text-p2 font-bold uppercase text-bone">{group.name}</p>
           <table className="mt-1 w-full border-collapse">
             <thead>
-              <tr className="text-[0.62rem] uppercase tracking-wider text-ash">
-                <th className="w-10 py-0.5 text-left font-semibold">sér.</th>
-                <th className="py-0.5 text-right font-semibold">reps</th>
-                <th className="py-0.5 text-right font-semibold">charge</th>
-                <th className="w-12 py-0.5 text-right font-semibold">rir</th>
+              <tr className="label-text text-p2 text-ash">
+                <th className="w-10 py-1 text-left">sér.</th>
+                <th className="py-1 text-right">reps</th>
+                <th className="py-1 text-right">charge</th>
+                <th className="w-14 py-1 pl-2 text-right">rir</th>
               </tr>
             </thead>
-            <tbody className="numeric text-[0.8rem]">
+            <tbody className="numeric text-p2">
               {group.sets.map((s, j) => (
-                <tr key={j} className="border-t border-white/5">
+                <tr key={j} className="border-t border-line/60">
                   <td className="py-1 text-ash">{s.setIndex}</td>
                   <td className="py-1 text-right text-bone">{s.reps ?? '—'}</td>
                   <td className="py-1 text-right text-bone">
                     {s.weight === null || s.weight === undefined ? '—' : `${s.weight} kg`}
                   </td>
-                  <td className="py-1 text-right text-impact">{s.rir ?? ''}</td>
+                  <td className="py-1 pl-2 text-right text-impact">{s.rir ?? ''}</td>
                 </tr>
               ))}
             </tbody>
@@ -256,19 +255,19 @@ function ByExercise() {
   );
 
   if (!seen.length) {
-    return <p className="py-8 text-center text-sm text-ash">Aucune série enregistrée.</p>;
+    return <p className="py-8 text-center text-p2 text-ash">Aucune série enregistrée.</p>;
   }
 
   return (
     <div>
-      <label className="fight-text text-[0.7rem] tracking-[0.2em] text-ash" htmlFor="exo">
+      <label className="fight-text text-p1 tracking-[0.2em] text-ash" htmlFor="exo">
         exercice
       </label>
       <select
         id="exo"
         value={selected}
         onChange={(e) => setSelected(e.target.value)}
-        className="bevel-sm mt-1 w-full appearance-none border border-white/10 bg-ink-2 px-3 py-3 text-bone"
+        className="bevel-in mt-2 w-full appearance-none bg-ink-3 px-3 py-3 text-bone"
       >
         {seen.map((e) => (
           <option key={e.id} value={e.id}>
@@ -277,18 +276,18 @@ function ByExercise() {
         ))}
       </select>
 
-      <div className="bevel-sm mt-3 border border-white/8 bg-ink-2 p-2 pt-3">
+      <div className="bevel-sm mt-3 bg-ink-2 p-2 pt-3">
         <ProgressChart points={points} />
       </div>
 
       <div className="mt-3 grid gap-2">
         {rows.map(({ log, entries }) => (
-          <div key={log.id} className="bevel-sm border border-white/8 bg-ink-2 p-3">
+          <div key={log.id} className="bevel-sm bg-ink-2 p-3">
             <div className="flex items-baseline justify-between">
-              <p className="fight-text text-[0.8rem] text-bone">{formatDate(log.date)}</p>
-              <p className="text-[0.7rem] text-ash">{log.programCode}</p>
+              <p className="numeric text-p2 text-bone">{formatDate(log.date)}</p>
+              <p className="fight-text text-p1 text-impact">{log.programCode}</p>
             </div>
-            <p className="numeric mt-1 text-[0.8rem] text-ash">
+            <p className="numeric mt-1 text-p2 text-ash">
               {entries
                 .map((e) => `${e.reps ?? '—'}×${e.weight ?? '—'}kg${e.rir !== null ? ` (rir ${e.rir})` : ''}`)
                 .join('  ·  ')}
@@ -313,7 +312,7 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`bevel-sm fight-text flex-1 py-2.5 text-[0.75rem] tracking-[0.15em] ${
+      className={`bevel-sm keycap fight-text flex-1 py-2.5 text-p1 tracking-[0.15em] ${
         active ? 'bg-blood text-bone' : 'bg-ink-2 text-ash'
       }`}
     >

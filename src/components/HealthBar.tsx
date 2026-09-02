@@ -1,49 +1,91 @@
 /**
- * Barre de vie de la seance : un segment par serie prevue, qui tombe a chaque
- * validation. C'est l'indicateur de progression, lu d'un coup d'oeil.
+ * Une barre de vie : un segment par serie prevue, qui tombe a chaque validation.
+ *
+ * Deux remplissages superposes. Celui du dessous, blanc, suit le meme rapport
+ * mais avec du retard : il traine derriere le coup avant de se resorber. C'est le
+ * detail qui fait lire « jeu de combat » plutot que « barre de progression ».
  */
 interface Props {
+  name: string;
   total: number;
   done: number;
-  label: string;
+  /** Cote d'ancrage : la barre se vide vers l'exterieur de l'ecran. */
+  side: 'left' | 'right';
   flash: number;
 }
 
-export function HealthBar({ total, done, label, flash }: Props) {
+export function HealthBar({ name, total, done, side, flash }: Props) {
   const remaining = Math.max(0, total - done);
   const ratio = total ? remaining / total : 0;
   const critical = ratio <= 0.25 && remaining > 0;
 
-  return (
-    <div className="select-none">
-      <div className="flex items-end justify-between px-0.5">
-        <span className="fight-text text-[0.7rem] tracking-[0.2em] text-ash">{label}</span>
-        <span className="numeric fight-text text-[0.7rem] text-ash">
-          {done}/{total} séries
-        </span>
-      </div>
+  const origin = side === 'left' ? 'origin-left' : 'origin-right';
+  const fill = ratio > 0.5 ? 'bg-impact' : ratio > 0.25 ? 'bg-orange' : 'bg-blood';
 
-      <div className="relative mt-1 h-5 border-2 border-bone/25 bg-ink-3">
-        {/* Jauge : elle se vide de la droite vers la gauche. */}
+  return (
+    <div className="min-w-0 flex-1 select-none">
+      <div className="bevel-in relative h-5 overflow-hidden bg-ink-3">
+        {/* Le retard : meme rapport, mais il part 260 ms plus tard. */}
         <div
-          className={`h-full origin-left transition-transform duration-500 ease-[var(--ease-out-hard)] ${
-            critical ? 'bg-blood-hot pulsing' : 'bg-gradient-to-r from-impact to-blood'
-          }`}
-          style={{ transform: `scaleX(${ratio})` }}
+          className={`absolute inset-0 bg-bone ${origin}`}
+          style={{
+            transform: `scaleX(${ratio})`,
+            transition: 'transform 400ms linear 260ms',
+          }}
         />
-        {/* Separateurs de series, pour compter sans lire les chiffres. */}
+        <div
+          className={`absolute inset-0 ${fill} ${origin} ${critical ? 'pulsing' : ''}`}
+          style={{ transform: `scaleX(${ratio})`, transition: 'transform 120ms linear' }}
+        />
+
+        {/* Separateurs de series : compter sans lire les chiffres. */}
         <div className="absolute inset-0 flex">
           {Array.from({ length: total }, (_, i) => (
-            <div key={i} className="flex-1 border-r border-ink/70 last:border-r-0" />
+            <div key={i} className="flex-1 border-r-2 border-line/60 last:border-r-0" />
           ))}
         </div>
+
         {/* Eclair blanc au moment de l'impact. */}
         <div
           key={flash}
           className="pointer-events-none absolute inset-0 bg-bone"
-          style={{ animation: flash ? 'dojo-flash 320ms ease-out forwards' : 'none', opacity: 0 }}
+          style={{ animation: flash ? 'dojo-flash 320ms steps(4) forwards' : 'none', opacity: 0 }}
         />
       </div>
+
+      <div className={`mt-0.5 flex items-baseline gap-2 ${side === 'right' ? 'flex-row-reverse' : ''}`}>
+        <span className="fight-text truncate text-p1 text-bone">{name}</span>
+        <span className="numeric text-p1 text-ash">
+          {done}/{total}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * La boite centrale du bandeau : le chrono de round. Elle affiche le repos qui
+ * s'ecoule, et sinon le nombre de series restantes — la boite ne reste jamais vide.
+ */
+export function RoundClock({ seconds, resting }: { seconds: number; resting: boolean }) {
+  const count = String(Math.max(0, Math.ceil(seconds))).padStart(2, '0');
+
+  return (
+    <div
+      className={`bevel-in flex h-14 w-14 shrink-0 flex-col items-center justify-center bg-line ${
+        resting ? '' : 'opacity-90'
+      }`}
+    >
+      {/* Deux chiffres tant que possible ; au-dela, la boite se resserre plutot
+          que de plafonner sur un nombre faux. */}
+      <span
+        className={`fight-text numeric ${count.length > 2 ? 'text-p2' : 'text-p3'} ${
+          resting ? 'text-impact' : 'text-bone'
+        } ${resting && seconds <= 5 ? 'pulsing' : ''}`}
+      >
+        {count}
+      </span>
+      <span className="label-text text-p1 text-ash">{resting ? 'repos' : 'sér.'}</span>
     </div>
   );
 }

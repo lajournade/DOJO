@@ -1,9 +1,12 @@
-/** Ecran de fin de seance : le K.O., puis le bilan chiffre. */
-import { useEffect, useMemo } from 'react';
-import { motion } from 'motion/react';
+/** Ecran de fin de seance : le K.O., puis le bilan qui se compte ligne a ligne. */
+import { useEffect, useMemo, useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
+import { Sprite, useFrame } from '../components/Sprite';
+import { Stage } from '../components/Stage';
 import { sfx } from '../fx/audio';
+import { FOE, FOE_FRAME, HERO, HERO_PALETTE, foePalette } from '../fx/sprites';
 import { navigate } from '../router';
-import { doneEntries, recentLogs, tonnage } from '../store/selectors';
+import { activeProgram, doneEntries, recentLogs, tonnage } from '../store/selectors';
 import { useStore } from '../store/state';
 import type { AppState, SessionLog } from '../types';
 
@@ -41,9 +44,49 @@ function records(state: AppState, log: SessionLog): string[] {
   return found;
 }
 
+/**
+ * Un chiffre qui defile jusqu'a sa valeur, comme le decompte des points en fin de
+ * combat. Sous « animations reduites », il s'affiche directement.
+ */
+function useCountUp(target: number, delay: number, duration = 600): number {
+  const [value, setValue] = useState(0);
+  const reduced = useReducedMotion();
+
+  useEffect(() => {
+    if (reduced) {
+      setValue(target);
+      return;
+    }
+    let raf = 0;
+    let start = 0;
+    const timer = setTimeout(() => {
+      const tick = (t: number) => {
+        if (!start) start = t;
+        const p = Math.min(1, (t - start) / duration);
+        setValue(Math.round(target * p));
+        if (p < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    }, delay);
+    return () => {
+      clearTimeout(timer);
+      cancelAnimationFrame(raf);
+    };
+  }, [target, delay, duration, reduced]);
+
+  return value;
+}
+
 export function Results() {
   const { state, loaded } = useStore();
   const log = useMemo(() => recentLogs(state)[0] ?? null, [state]);
+  const breath = useFrame(2, 2.5);
+
+  const foeIndex = useMemo(() => {
+    const program = activeProgram(state);
+    const i = program?.sessions.findIndex((s) => s.id === log?.sessionId) ?? -1;
+    return i < 0 ? 0 : i;
+  }, [state, log?.sessionId]);
 
   useEffect(() => {
     if (loaded && !log) navigate('/', { replace: true });
@@ -51,105 +94,126 @@ export function Results() {
 
   useEffect(() => {
     sfx.ko();
+    const id = setTimeout(() => sfx.win(), 900);
+    return () => clearTimeout(id);
   }, []);
+
+  const entries = log ? doneEntries(log.entries) : [];
+  const load = Math.round(tonnage(entries));
+  const reps = entries.reduce((n, e) => n + (e.reps ?? 0), 0);
+  const minutes =
+    log?.startedAt && log.endedAt
+      ? Math.max(1, Math.round((Date.parse(log.endedAt) - Date.parse(log.startedAt)) / 60000))
+      : 0;
+
+  // Les crochets doivent tourner a chaque rendu : les valeurs sont calculees avant la sortie.
+  const shownLoad = useCountUp(load, 700);
+  const shownReps = useCountUp(reps, 900);
+  const shownMinutes = useCountUp(minutes, 1100);
 
   if (!log) return null;
 
-  const entries = doneEntries(log.entries);
-  const load = tonnage(entries);
-  const reps = entries.reduce((n, e) => n + (e.reps ?? 0), 0);
-  const minutes =
-    log.startedAt && log.endedAt
-      ? Math.max(1, Math.round((Date.parse(log.endedAt) - Date.parse(log.startedAt)) / 60000))
-      : null;
   const { rank, delta } = grade(state, log);
   const beaten = records(state, log);
 
   return (
-    <div className="speedlines flex min-h-dvh flex-col bg-ink">
-      <div className="pad-top pad-x flex flex-1 flex-col items-center justify-center gap-5 py-8">
+    <div className="flex min-h-dvh flex-col bg-ink">
+      {/* L'adversaire est a terre, le combattant tient encore debout. */}
+      <div className="pad-top border-b-2 border-line">
+        <Stage className="h-32">
+          <Sprite sprite={HERO} palette={HERO_PALETTE} frame={breath} scale={3} />
+          <Sprite sprite={FOE} palette={foePalette(foeIndex)} frame={FOE_FRAME.ko} scale={3} />
+        </Stage>
+      </div>
+
+      <div className="speedlines pad-x flex flex-1 flex-col justify-center gap-4 py-5">
         <motion.h1
-          initial={{ scale: 2.2, opacity: 0, rotate: -12 }}
-          animate={{ scale: 1, opacity: 1, rotate: -4 }}
+          initial={{ scale: 2.4, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200, damping: 13 }}
-          className="fight-text fight-shadow text-[5rem] leading-none text-blood"
+          className="fight-text arcade-title text-center text-p5"
         >
           k.o.
         </motion.h1>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="w-full"
-        >
-          <p className="fight-text text-center text-sm tracking-[0.3em] text-ash">
-            {log.programCode}
-          </p>
+        <div className="bevel bg-ink-2 p-3">
+          <Row label="tonnage" value={`${shownLoad.toLocaleString('fr-FR')} kg`} delay={0.7} />
+          <Row label="répétitions" value={String(shownReps)} delay={0.9} />
+          <Row label="durée" value={minutes ? `${shownMinutes} min` : '—'} delay={1.1} />
 
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            <Stat value={Math.round(load).toLocaleString('fr-FR')} unit="kg soulevés" />
-            <Stat value={String(reps)} unit="répétitions" />
-            <Stat value={minutes ? `${minutes}` : '—'} unit="minutes" />
-          </div>
-
-          <div className="bevel mt-3 flex items-center justify-between border border-impact/30 bg-impact/10 px-4 py-3">
-            <span className="fight-text text-[0.7rem] tracking-[0.25em] text-ash">rang</span>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.35 }}
+            className="mt-2 flex items-center justify-between border-t-2 border-line pt-2"
+          >
+            <span className="fight-text text-p1 tracking-[0.2em] text-ash">rang</span>
             <div className="flex items-baseline gap-2">
               {delta !== null && (
-                <span className={`numeric text-sm ${delta >= 0 ? 'text-jade' : 'text-ash'}`}>
+                <span className={`numeric text-p2 ${delta >= 0 ? 'text-jade' : 'text-ash'}`}>
                   {delta >= 0 ? '+' : ''}
                   {Math.round(delta * 100)} % de volume
                 </span>
               )}
-              <span className="fight-text fight-shadow text-[3rem] leading-none text-impact">
-                {rank}
-              </span>
+              <span className="fight-text arcade-title text-p4">{rank}</span>
             </div>
-          </div>
+          </motion.div>
+        </div>
 
-          {beaten.length > 0 && (
-            <div className="bevel-sm mt-3 border border-blood/40 bg-blood/10 p-3">
-              <p className="fight-text text-[0.7rem] tracking-[0.25em] text-blood-hot">
-                nouveaux records
-              </p>
-              <ul className="mt-1.5 space-y-0.5">
-                {beaten.map((r) => (
-                  <li key={r} className="text-[0.8rem] text-bone">
-                    {r}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </motion.div>
+        {beaten.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.5 }}
+            className="bevel-sm bg-blood/25 p-3"
+          >
+            <p className="fight-text pulsing text-p1 tracking-[0.2em] text-impact">
+              nouveaux records
+            </p>
+            <ul className="mt-2 space-y-1">
+              {beaten.map((r) => (
+                <li key={r} className="text-p2 text-bone">
+                  {r}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
       </div>
 
       <div className="pad-x pad-bottom grid gap-2">
         <button
           type="button"
           onClick={() => navigate('/history')}
-          className="bevel-sm fight-text bg-ink-2 py-3.5 text-sm tracking-[0.15em] text-ash active:bg-ink-3"
+          className="bevel-sm keycap fight-text bg-ink-2 py-4 text-p2 text-ash"
         >
           voir l'historique
         </button>
         <button
           type="button"
           onClick={() => navigate('/', { replace: true })}
-          className="bevel fight-text bg-blood py-4 text-xl text-bone active:bg-blood-hot"
+          className="notch block w-full bg-line p-[3px] transition-transform duration-75
+                     active:translate-x-[3px] active:translate-y-[3px]"
         >
-          continue
+          <span className="notch flex h-14 w-full items-center justify-center bg-blood">
+            <span className="fight-text fight-shadow text-p3 text-bone">continue</span>
+          </span>
         </button>
       </div>
     </div>
   );
 }
 
-function Stat({ value, unit }: { value: string; unit: string }) {
+function Row({ label, value, delay }: { label: string; value: string; delay: number }) {
   return (
-    <div className="bevel-sm bg-ink-2 px-2 py-3 text-center">
-      <p className="numeric fight-shadow text-2xl font-black text-bone">{value}</p>
-      <p className="mt-0.5 text-[0.62rem] uppercase tracking-wider text-ash">{unit}</p>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, x: -12 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay }}
+      className="flex items-baseline justify-between py-1"
+    >
+      <span className="label-text text-p2 text-ash">{label}</span>
+      <span className="numeric fight-text text-p3 text-impact">{value}</span>
+    </motion.div>
   );
 }

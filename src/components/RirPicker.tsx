@@ -20,12 +20,12 @@ interface Props {
 
 export function RirPicker({ value, target, onChange }: Props) {
   return (
-    <div className="bevel-sm border border-blood/40 bg-blood/10 px-3 py-2.5">
+    <div className="bevel-sm bg-blood/20 px-2 py-2">
       <div className="flex items-baseline justify-between">
-        <span className="fight-text text-[0.7rem] tracking-[0.2em] text-blood-hot">
-          RIR — dernière série
+        <span className="label-text text-p2 text-impact">
+          rir — dernière série
         </span>
-        {target && <span className="numeric text-[0.7rem] text-ash">cible {target}</span>}
+        {target && <span className="numeric text-p1 text-ash">cible {target}</span>}
       </div>
 
       <div className="mt-2 flex gap-1.5">
@@ -36,10 +36,9 @@ export function RirPicker({ value, target, onChange }: Props) {
               key={level}
               type="button"
               onClick={() => onChange(level)}
-              className={`bevel-sm numeric h-14 flex-1 text-2xl font-black transition-transform
-                          duration-75 active:scale-90 ${
-                            active ? 'bg-blood text-bone' : 'bg-ink-3 text-ash'
-                          }`}
+              className={`bevel-sm keycap numeric fight-text h-14 flex-1 text-p3 ${
+                active ? 'bg-blood text-bone' : 'bg-ink-3 text-ash'
+              }`}
             >
               {level}
             </button>
@@ -47,7 +46,7 @@ export function RirPicker({ value, target, onChange }: Props) {
         })}
       </div>
 
-      <p className="mt-1.5 h-4 text-center text-[0.7rem] text-ash">
+      <p className="mt-2 h-6 text-center text-p2 text-ash">
         {value !== null ? CAPTION[value] : 'combien de reps restaient en réserve ?'}
       </p>
     </div>

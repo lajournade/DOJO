@@ -1,10 +1,10 @@
 /**
  * Progression d'un exercice : charge maximale par seance, dans l'ordre du temps.
  *
- * Une seule serie, donc pas de legende — le titre nomme l'exercice. Ligne fine,
- * grille en retrait, et des valeurs annoncees seulement sur les points qui
- * comptent (premier, dernier, record) plutot que sur chacun. Le tableau des
- * series sous le graphique tient lieu de vue texte.
+ * Tout est trace sur la grille : coordonnees entieres, `crispEdges` pour couper
+ * l'anti-crenelage, points carres, aire remplie d'un tramage plutot que d'un
+ * aplat transparent. La largeur est fixe pour que le dessin reste au 1:1 —
+ * l'etirer a la largeur du conteneur flouterait la police bitmap.
  */
 import { useState } from 'react';
 
@@ -14,16 +14,22 @@ export interface Point {
   value: number;
 }
 
-const W = 340;
-const H = 132;
-const PAD = { top: 16, right: 14, bottom: 20, left: 30 };
+const W = 320;
+const H = 140;
+const PAD = { top: 16, right: 12, bottom: 24, left: 32 };
+
+const INK = '#101830';
+const BONE = '#f5f0e6';
+const ASH = '#8fa0c8';
+const IMPACT = '#ffd400';
+const BLOOD = '#e01b24';
 
 export function ProgressChart({ points, unit = 'kg' }: { points: Point[]; unit?: string }) {
   const [active, setActive] = useState<number | null>(null);
 
   if (points.length < 2) {
     return (
-      <p className="py-6 text-center text-[0.8rem] text-ash">
+      <p className="py-6 text-center text-p2 text-ash">
         Pas encore assez de séances pour tracer une progression.
       </p>
     );
@@ -37,11 +43,11 @@ export function ProgressChart({ points, unit = 'kg' }: { points: Point[]; unit?:
   const bottom = Math.max(0, min - Math.max(1, (max - min) * 0.25));
   const span = top - bottom || 1;
 
-  const x = (i: number) => PAD.left + (i * (W - PAD.left - PAD.right)) / (points.length - 1);
-  const y = (v: number) => PAD.top + (1 - (v - bottom) / span) * (H - PAD.top - PAD.bottom);
+  const x = (i: number) => Math.round(PAD.left + (i * (W - PAD.left - PAD.right)) / (points.length - 1));
+  const y = (v: number) => Math.round(PAD.top + (1 - (v - bottom) / span) * (H - PAD.top - PAD.bottom));
 
-  const line = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(p.value).toFixed(1)}`).join(' ');
-  const area = `${line} L${x(points.length - 1).toFixed(1)} ${H - PAD.bottom} L${x(0).toFixed(1)} ${H - PAD.bottom} Z`;
+  const line = points.map((p, i) => `${i ? 'L' : 'M'}${x(i)} ${y(p.value)}`).join(' ');
+  const area = `${line} L${x(points.length - 1)} ${H - PAD.bottom} L${x(0)} ${H - PAD.bottom} Z`;
 
   const lastIndex = points.length - 1;
   const recordIndex = values.indexOf(max);
@@ -53,10 +59,20 @@ export function ProgressChart({ points, unit = 'kg' }: { points: Point[]; unit?:
     <figure className="m-0">
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full"
+        width={W}
+        className="mx-auto block max-w-full"
+        shapeRendering="crispEdges"
         role="img"
         aria-label={`Charge maximale par séance, de ${points[0].label} à ${points[lastIndex].label}`}
       >
+        <defs>
+          {/* Tramage : un pixel sur quatre, la trame des jeux 16 bits. */}
+          <pattern id="dojo-dither" width="4" height="4" patternUnits="userSpaceOnUse">
+            <rect x="0" y="0" width="1" height="1" fill={IMPACT} />
+            <rect x="2" y="2" width="1" height="1" fill={IMPACT} />
+          </pattern>
+        </defs>
+
         {/* Grille : trois reperes horizontaux, volontairement effaces. */}
         {[0, 0.5, 1].map((t) => {
           const value = bottom + span * t;
@@ -67,71 +83,74 @@ export function ProgressChart({ points, unit = 'kg' }: { points: Point[]; unit?:
                 x2={W - PAD.right}
                 y1={y(value)}
                 y2={y(value)}
-                stroke="#f5f0e6"
-                strokeOpacity="0.08"
+                stroke={BONE}
+                strokeOpacity="0.12"
                 strokeWidth="1"
               />
-              <text
-                x={PAD.left - 6}
-                y={y(value) + 3}
-                textAnchor="end"
-                fill="#8a8794"
-                fontSize="8"
-                fontWeight="600"
-              >
+              <text x={PAD.left - 6} y={y(value) + 3} textAnchor="end" fill={ASH} fontSize="8">
                 {Math.round(value)}
               </text>
             </g>
           );
         })}
 
-        <path d={area} fill="#ffd400" fillOpacity="0.09" />
-        <path d={line} fill="none" stroke="#ffd400" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <path d={area} fill="url(#dojo-dither)" />
+        <path d={line} fill="none" stroke={IMPACT} strokeWidth="2" />
 
-        {points.map((p, i) => (
-          <g key={p.date}>
-            {/* Cible tactile large : le point visible reste fin. */}
-            <circle
-              cx={x(i)}
-              cy={y(p.value)}
-              r="14"
-              fill="transparent"
-              onPointerDown={() => setActive(active === i ? null : i)}
-            />
-            <circle
-              cx={x(i)}
-              cy={y(p.value)}
-              r={i === lastIndex || i === shown ? 5 : 3.5}
-              fill={i === shown ? '#e01b24' : '#ffd400'}
-              stroke="#14141a"
-              strokeWidth="2"
-            />
-            {(labelled.has(i) || i === shown) && (
-              <text
-                x={Math.min(W - PAD.right, Math.max(PAD.left, x(i)))}
-                y={y(p.value) - 9}
-                textAnchor={i === lastIndex ? 'end' : 'middle'}
-                fill="#f5f0e6"
-                fontSize="10"
-                fontWeight="800"
-              >
-                {p.value}
-                {unit}
-              </text>
-            )}
-          </g>
-        ))}
+        {points.map((p, i) => {
+          const big = i === lastIndex || i === shown;
+          const size = big ? 6 : 4;
+          return (
+            <g key={p.date}>
+              {/* Cible tactile large : le point visible reste petit. */}
+              <rect
+                x={x(i) - 14}
+                y={y(p.value) - 14}
+                width="28"
+                height="28"
+                fill="transparent"
+                onPointerDown={() => setActive(active === i ? null : i)}
+              />
+              <rect
+                x={x(i) - size / 2 - 1}
+                y={y(p.value) - size / 2 - 1}
+                width={size + 2}
+                height={size + 2}
+                fill={INK}
+              />
+              <rect
+                x={x(i) - size / 2}
+                y={y(p.value) - size / 2}
+                width={size}
+                height={size}
+                fill={i === shown ? BLOOD : IMPACT}
+              />
+              {(labelled.has(i) || i === shown) && (
+                <text
+                  x={Math.min(W - PAD.right, Math.max(PAD.left, x(i)))}
+                  y={y(p.value) - 10}
+                  textAnchor={i === lastIndex ? 'end' : 'middle'}
+                  fill={BONE}
+                  fontSize="8"
+                >
+                  {p.value}
+                  {unit}
+                </text>
+              )}
+            </g>
+          );
+        })}
 
         {/* Reperes de temps : les extremites suffisent a situer la serie. */}
-        <text x={PAD.left} y={H - 5} fill="#8a8794" fontSize="8" fontWeight="600">
+        <text x={PAD.left} y={H - 6} fill={ASH} fontSize="8">
           {points[0].label}
         </text>
-        <text x={W - PAD.right} y={H - 5} textAnchor="end" fill="#8a8794" fontSize="8" fontWeight="600">
+        <text x={W - PAD.right} y={H - 6} textAnchor="end" fill={ASH} fontSize="8">
           {points[lastIndex].label}
         </text>
       </svg>
 
-      <figcaption className="mt-1 text-center text-[0.7rem] text-ash">
+      <figcaption className="mt-1 text-center text-p2 text-ash">
         {shown >= 0
           ? `${points[shown].label} · ${points[shown].value} ${unit}`
           : `charge maximale par séance · ${points.length} séances`}

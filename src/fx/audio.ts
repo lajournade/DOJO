@@ -77,10 +77,23 @@ export const sfx = {
     void unlock();
     tone({ type: 'square', from: 620, to: 880, duration: 0.07, gain: 0.06 });
   },
+  /** Ecran VS : deux coups de gong montants. */
+  vs() {
+    void unlock();
+    tone({ type: 'square', from: 300, to: 300, duration: 0.09, gain: 0.09 });
+    tone({ type: 'square', from: 450, to: 450, duration: 0.14, gain: 0.09, delay: 0.11 });
+  },
   fight() {
     void unlock();
     tone({ type: 'sawtooth', from: 180, to: 520, duration: 0.3, gain: 0.1 });
     tone({ type: 'square', from: 520, to: 300, duration: 0.22, gain: 0.09, delay: 0.28 });
+  },
+  /** Victoire : l'arpege de fin de combat. */
+  win() {
+    void unlock();
+    [523, 659, 784, 1046].forEach((f, i) => {
+      tone({ type: 'square', from: f, to: f, duration: 0.13, gain: 0.08, delay: i * 0.11 });
+    });
   },
   ko() {
     void unlock();

@@ -74,10 +74,10 @@ export function BigStepper({
   const accent = tone === 'impact' ? 'text-impact' : 'text-bone';
 
   return (
-    <div className="bevel-sm bg-ink-2 border border-white/5 px-3 py-2.5">
+    <div className="bevel-sm bg-ink-2 px-2 py-2">
       <div className="flex items-baseline justify-between">
-        <span className="fight-text text-[0.7rem] tracking-widest text-ash">{label}</span>
-        {hint && <span className="numeric text-[0.7rem] text-ash/80">{hint}</span>}
+        <span className="label-text text-p2 text-ash">{label}</span>
+        {hint && <span className="numeric text-p1 text-ash">{hint}</span>}
       </div>
 
       <div className="mt-1 flex items-center justify-between gap-2">
@@ -92,7 +92,7 @@ export function BigStepper({
             onChange={(e) => setDraft(e.target.value)}
             onBlur={commit}
             onKeyDown={(e) => e.key === 'Enter' && commit()}
-            className="numeric w-full min-w-0 bg-transparent text-center text-4xl font-black text-impact outline-none"
+            className="numeric w-full min-w-0 bg-transparent text-center text-3xl text-impact outline-none"
           />
         ) : (
           <button
@@ -103,10 +103,10 @@ export function BigStepper({
             }}
             className="flex min-w-0 flex-1 flex-col items-center leading-none"
           >
-            <span className={`numeric fight-shadow text-[2.75rem] font-black ${accent}`}>
+            <span className={`numeric fight-text fight-shadow text-p4 ${accent}`}>
               {fmt(value, decimals)}
             </span>
-            <span className="fight-text mt-0.5 text-[0.65rem] tracking-[0.2em] text-ash">{unit}</span>
+            <span className="fight-text mt-1 text-p1 tracking-[0.2em] text-ash">{unit}</span>
           </button>
         )}
 
@@ -137,8 +137,8 @@ function StepButton({
       onPointerLeave={onRelease}
       onPointerCancel={onRelease}
       onContextMenu={(e) => e.preventDefault()}
-      className="bevel-sm h-[72px] w-[72px] shrink-0 bg-ink-3 text-3xl font-black text-bone
-                 transition-transform duration-75 active:scale-90 active:bg-blood"
+      className="bevel-sm keycap fight-text h-[72px] w-[72px] shrink-0 bg-ink-3 text-p3 text-bone
+                 active:bg-blood"
     >
       {sign}
     </button>

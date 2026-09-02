@@ -1,24 +1,40 @@
 /**
- * Ecran d'accueil : le choix de l'adversaire du jour.
- * Une carte par seance du programme actif, avec ce qui a ete fait la derniere fois.
+ * Ecran d'accueil : la selection du personnage, en grille de portraits.
+ * Une tuile par seance du programme actif, avec son adversaire, sa couleur et ce
+ * qui a ete fait la derniere fois. Le curseur clignotant designe la seance la
+ * moins recemment jouee — c'est la suggestion du jour, pas une contrainte.
  */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { sfx } from '../fx/audio';
+import { FOE, foePalette } from '../fx/sprites';
 import { navigate } from '../router';
 import { activeProgram, doneEntries, lastRun, sinceLabel, tonnage } from '../store/selectors';
 import { startSession } from '../store/session';
 import { useStore } from '../store/state';
 import type { Program, ProgramSession } from '../types';
 import { FightIntro } from '../components/FightIntro';
+import { Sprite, useFrame } from '../components/Sprite';
 import { SyncBadge } from '../components/SyncBadge';
 
 export function Roster() {
   const { state } = useStore();
   const program = activeProgram(state);
   const [intro, setIntro] = useState<{ program: Program; session: ProgramSession } | null>(null);
+  const frame = useFrame(2, 2.5);
 
   const resume = state.liveSession;
+
+  /** La seance la moins recemment jouee : celle que le curseur propose. */
+  const suggested = useMemo(() => {
+    if (!program) return null;
+    let best: { id: string; date: string } | null = null;
+    for (const session of program.sessions) {
+      const date = lastRun(state, session.id)?.date ?? '';
+      if (!best || date < best.date) best = { id: session.id, date };
+    }
+    return best?.id ?? null;
+  }, [program, state]);
 
   const launch = (session: ProgramSession) => {
     if (!program) return;
@@ -30,7 +46,9 @@ export function Roster() {
     <div className="min-h-dvh bg-ink">
       {intro && (
         <FightIntro
-          label={`${intro.program.code}-${intro.session.code}`}
+          code={intro.session.code}
+          name={intro.session.name}
+          index={intro.program.sessions.findIndex((s) => s.id === intro.session.id)}
           onDone={() => {
             startSession(intro.program, intro.session);
             navigate('/arena');
@@ -39,10 +57,10 @@ export function Roster() {
       )}
 
       <header className="pad-top pad-x pb-3">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="fight-text fight-shadow text-[2.6rem] leading-none text-blood">dojo</h1>
-            <p className="fight-text text-[0.7rem] tracking-[0.3em] text-ash">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="fight-text arcade-title text-p4">dojo</h1>
+            <p className="mt-1 truncate text-p2 text-ash">
               {program ? program.name : 'aucun programme'}
             </p>
           </div>
@@ -55,68 +73,81 @@ export function Roster() {
           <button
             type="button"
             onClick={() => navigate('/arena')}
-            className="bevel w-full border border-impact/40 bg-impact/10 p-3 text-left active:bg-impact/20"
+            className="bevel-sm keycap w-full bg-impact/15 p-3 text-left"
           >
-            <p className="fight-text text-sm text-impact">combat en cours — {resume.programCode}</p>
-            <p className="text-[0.75rem] text-ash">
-              {resume.entries.length} série{resume.entries.length > 1 ? 's' : ''} enregistrée
-              {resume.entries.length > 1 ? 's' : ''} · reprendre
+            <p className="fight-text pulsing text-p2 text-impact">continue ?</p>
+            <p className="mt-1 text-p2 text-bone">
+              {resume.programCode} · {resume.entries.length} série
+              {resume.entries.length > 1 ? 's' : ''} en cours
             </p>
           </button>
         </section>
       )}
 
-      <main className="pad-x grid gap-3">
+      <p className="pad-x fight-text mb-2 text-p1 tracking-[0.2em] text-cyan">
+        choisis ton adversaire
+      </p>
+
+      <main className="pad-x grid grid-cols-2 gap-2">
         {program?.sessions.map((session, i) => {
           const previous = lastRun(state, session.id);
           const load = previous ? tonnage(doneEntries(previous.entries)) : 0;
+          const sets = session.items.reduce((n, it) => n + it.sets, 0);
+
           return (
             <motion.button
               key={session.id}
               type="button"
-              initial={{ opacity: 0, y: 22 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.07, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ delay: i * 0.06, duration: 0.25 }}
               onClick={() => launch(session)}
-              className="bevel halftone relative overflow-hidden border border-white/10 bg-ink-2
-                         p-4 text-left transition-transform duration-100 active:scale-[0.98]"
+              className="bevel-sm keycap relative bg-ink-2 p-1.5 text-left"
             >
-              <span className="absolute inset-y-0 left-0 w-1.5 bg-blood" />
-              <div className="flex items-start justify-between gap-3">
-                <span className="fight-text fight-shadow text-[3.4rem] leading-[0.8] text-blood">
+              {/* Le portrait, dans son cadre creux, avec sa plaque de code. */}
+              <div className="bevel-in halftone relative flex justify-center overflow-hidden bg-ink">
+                <Sprite
+                  sprite={FOE}
+                  palette={foePalette(i)}
+                  frame={frame}
+                  scale={5}
+                  cropY={2}
+                  cropH={16}
+                />
+                <span className="fight-text absolute bottom-0 right-0 bg-line px-1.5 py-0.5 text-p3 text-impact">
                   {session.code}
                 </span>
-                <div className="min-w-0 flex-1">
-                  <p className="fight-text text-[1.05rem] leading-tight text-bone">{session.name}</p>
-                  <p className="mt-1 text-[0.75rem] text-ash">
-                    {session.items.length} exercices ·{' '}
-                    {session.items.reduce((n, it) => n + it.sets, 0)} séries
-                  </p>
-                </div>
               </div>
 
-              <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-2">
-                <span className="text-[0.72rem] text-ash">
-                  {previous ? `dernier combat ${sinceLabel(previous.date)}` : 'jamais joué'}
-                </span>
-                {load > 0 && (
-                  <span className="numeric text-[0.72rem] text-impact">
-                    {Math.round(load).toLocaleString('fr-FR')} kg soulevés
-                  </span>
-                )}
-              </div>
+              {/* Deux lignes au plus : le nom compte, mais la tuile ne doit pas s'etirer. */}
+              <p className="mt-1.5 line-clamp-2 h-12 text-p2 leading-6 text-bone">{session.name}</p>
+
+              <p className="numeric text-p2 text-ash">
+                {session.items.length} ex · {sets} sér
+              </p>
+              <p className="numeric truncate text-p2 text-ash/80">
+                {previous ? sinceLabel(previous.date) : 'jamais joué'}
+              </p>
+              <p className="numeric h-6 text-p2 text-impact">
+                {load > 0 ? `${Math.round(load).toLocaleString('fr-FR')} kg` : ''}
+              </p>
+
+              {/* Curseur de selection : le cadre clignotant des bornes. */}
+              {session.id === suggested && (
+                <span className="blinking pointer-events-none absolute inset-0 border-4 border-cyan" />
+              )}
             </motion.button>
           );
         })}
-
-        {!program && (
-          <p className="text-sm text-ash">
-            Aucun programme. Créez-en un depuis l'écran Programme.
-          </p>
-        )}
       </main>
 
-      <nav className="pad-x pad-bottom mt-5 grid grid-cols-2 gap-2">
+      {!program && (
+        <p className="pad-x text-p2 text-ash">
+          Aucun programme. Créez-en un depuis l'écran Programme.
+        </p>
+      )}
+
+      <nav className="pad-x pad-bottom mt-4 grid grid-cols-2 gap-2">
         <NavButton onClick={() => navigate('/history')}>historique</NavButton>
         <NavButton onClick={() => navigate('/program')}>programme</NavButton>
       </nav>
@@ -129,7 +160,7 @@ function NavButton({ children, onClick }: { children: React.ReactNode; onClick: 
     <button
       type="button"
       onClick={onClick}
-      className="bevel-sm fight-text bg-ink-2 py-3.5 text-sm tracking-[0.15em] text-ash active:bg-ink-3"
+      className="bevel-sm keycap fight-text bg-ink-2 py-4 text-p2 text-ash"
     >
       {children}
     </button>

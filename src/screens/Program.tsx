@@ -53,7 +53,7 @@ export function Program() {
               } satisfies ProgramType,
             })
           }
-          className="bevel fight-text w-full bg-blood py-4 text-lg text-bone"
+          className="bevel keycap label-text w-full bg-blood py-4 text-p3 text-bone"
         >
           créer un programme
         </button>
@@ -107,12 +107,12 @@ export function Program() {
             key={session.id}
             type="button"
             onClick={() => setOpenId(session.id)}
-            className="bevel-sm flex items-center gap-3 border border-white/8 bg-ink-2 p-3 text-left active:bg-ink-3"
+            className="bevel-sm keycap flex items-center gap-3 bg-ink-2 p-3 text-left"
           >
-            <span className="fight-text text-3xl leading-none text-blood">{session.code}</span>
+            <span className="fight-text fight-shadow text-p3 text-impact">{session.code}</span>
             <span className="min-w-0 flex-1">
-              <span className="fight-text block text-[0.9rem] text-bone">{session.name}</span>
-              <span className="block text-[0.72rem] text-ash">{session.items.length} exercices</span>
+              <span className="block text-p2 font-bold uppercase text-bone">{session.name}</span>
+              <span className="block text-p2 text-ash">{session.items.length} exercices</span>
             </span>
             <span className="text-ash">›</span>
           </button>
@@ -131,7 +131,7 @@ export function Program() {
             saveSession(session);
             setOpenId(session.id);
           }}
-          className="bevel-sm fight-text bg-ink-2 py-3.5 text-sm tracking-[0.15em] text-ash active:bg-ink-3"
+          className="bevel-sm keycap label-text bg-ink-2 py-3 text-p2 text-ash"
         >
           + ajouter une séance
         </button>
@@ -192,7 +192,7 @@ function SessionEditor({
       </datalist>
 
       {draft.items.map((item, index) => (
-        <div key={item.id} className="bevel-sm border border-white/8 bg-ink-2 p-3">
+        <div key={item.id} className="bevel-sm bg-ink-2 p-3">
           <div className="flex items-center gap-2">
             <input
               value={labels[item.id] ?? ''}
@@ -232,7 +232,7 @@ function SessionEditor({
             placeholder="conseil d'exécution"
             rows={2}
             onChange={(e) => patch(item.id, { notes: e.target.value })}
-            className="mt-2 w-full min-w-0 resize-none bg-ink-3 p-2 text-[0.8rem] text-ash outline-none placeholder:text-ash/40"
+            className="bevel-in mt-2 w-full min-w-0 resize-none bg-ink-3 p-2 text-p2 text-ash outline-none placeholder:text-ash/40"
           />
         </div>
       ))}
@@ -244,7 +244,7 @@ function SessionEditor({
           setDraft({ ...draft, items: [...draft.items, item] });
           setLabels({ ...labels, [item.id]: '' });
         }}
-        className="bevel-sm fight-text bg-ink-2 py-3 text-[0.8rem] tracking-[0.15em] text-ash active:bg-ink-3"
+        className="bevel-sm keycap label-text bg-ink-2 py-3 text-p2 text-ash"
       >
         + ajouter un exercice
       </button>
@@ -260,7 +260,7 @@ function SessionEditor({
           );
           onSave({ ...draft, items }, names);
         }}
-        className="bevel fight-text bg-blood py-4 text-lg text-bone active:bg-blood-hot"
+        className="bevel keycap fight-text bg-blood py-4 text-p2 text-bone"
       >
         enregistrer
       </button>
@@ -268,7 +268,7 @@ function SessionEditor({
       <button
         type="button"
         onClick={() => confirm('Supprimer cette séance ?') && onDelete()}
-        className="py-2 text-[0.75rem] text-ash underline"
+        className="py-2 text-p2 text-ash underline"
       >
         supprimer la séance
       </button>
@@ -291,11 +291,11 @@ function Frame({
         <button
           type="button"
           onClick={() => (onBack ? onBack() : navigate('/'))}
-          className="fight-text text-[0.7rem] tracking-[0.2em] text-ash"
+          className="fight-text text-p1 tracking-[0.2em] text-ash"
         >
           ← {onBack ? 'programme' : 'dojo'}
         </button>
-        <h1 className="fight-text fight-shadow mt-1 text-[2rem] leading-none text-bone">
+        <h1 className="fight-shadow mt-2 text-p3 font-bold uppercase leading-8 text-bone">
           {title ?? 'programme'}
         </h1>
       </header>
@@ -306,8 +306,8 @@ function Frame({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="bevel-sm block border border-white/8 bg-ink-2 px-3 py-2">
-      <span className="fight-text block text-[0.65rem] tracking-[0.2em] text-ash">{label}</span>
+    <label className="bevel-sm block bg-ink-2 px-3 py-2">
+      <span className="label-text block text-p2 text-ash">{label}</span>
       {children}
     </label>
   );
@@ -323,8 +323,8 @@ function Num({
   onChange: (v: number) => void;
 }) {
   return (
-    <label className="block min-w-0 bg-ink-3 px-2 py-1.5">
-      <span className="block text-[0.6rem] uppercase tracking-wider text-ash">{label}</span>
+    <label className="bevel-in block min-w-0 bg-ink-3 px-2 py-1.5">
+      <span className="label-text block text-p1 text-ash">{label}</span>
       <input
         type="number"
         inputMode="numeric"
@@ -341,7 +341,7 @@ function IconButton({ children, onClick }: { children: React.ReactNode; onClick:
     <button
       type="button"
       onClick={onClick}
-      className="h-9 w-9 shrink-0 bg-ink-3 text-sm text-ash active:bg-blood active:text-bone"
+      className="bevel-sm keycap h-9 w-9 shrink-0 bg-ink-3 text-p2 text-ash active:bg-blood active:text-bone"
     >
       {children}
     </button>

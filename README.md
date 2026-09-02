@@ -1,8 +1,8 @@
 # DOJO
 
 Suivi de musculation en remplacement de l'onglet **Suivit 2** de `Sport 2026.xlsx`.
-Pensé pour le pouce sur iPhone 12 Pro, habillé en jeu de combat : la séance est un
-adversaire dont la barre de vie descend à chaque série validée.
+Pensé pour le pouce sur iPhone 12 Pro, habillé en borne d'arcade pixel : la séance est
+un adversaire dont la barre de vie descend à chaque série validée.
 
 Mono-utilisateur, sans compte. Les données vivent sur le PC, dans un fichier JSON.
 
@@ -69,12 +69,31 @@ python3 scripts/extract-xlsx.py ~/Downloads/"Sport 2026.xlsx"
 ```
 server/     serveur HTTP sans dépendance : sert dist/ et l'API
 shared/     opérations appliquées à l'identique par le client et le serveur
+public/     icône, manifeste, et les deux polices bitmap embarquées
 src/        application React
-  screens/  Roster (choix de la séance), Arena (la séance), Results, History, Program
+  screens/  Roster (sélection de l'adversaire), Arena (la séance), Results, History, Program
   store/    état, file d'envoi, synchronisation, sélecteurs
-  fx/       audio, secousse d'écran, écran allumé
+  fx/       audio, secousse d'écran, écran allumé, sprites des combattants
 scripts/    import du classeur et état initial
 ```
+
+### Habillage
+
+Tout le dessin tient sur une grille de pixels : deux polices bitmap (Press Start 2P pour
+les titres, Silkscreen pour le texte), des cadres crénelés en `box-shadow`, une palette
+fixe, et des combattants décrits en clair dans `src/fx/sprites.ts` — un caractère par
+pixel, rendus en `<svg>` par `src/components/Sprite.tsx`. Aucune image binaire.
+
+Les polices sont **embarquées dans `public/fonts/`** (sous-ensemble latin, 28 Ko en tout,
+licence dans `OFL.txt`) : l'application ne demande rien au réseau une fois chargée.
+
+Deux règles à tenir en modifiant l'interface :
+
+- **Press Start 2P uniquement pour des chaînes courtes et sans accent** — un cadratin par
+  glyphe, et ses capitales accentuées sont dessinées à hauteur de bas de casse
+  (« RÉPÉTITIONS » y devient « RePeTITIONS »). Tout le reste passe par `label-text`.
+- **Les tailles sont des multiples de 8 px** (`text-p1` à `text-p5`), comme les échelles
+  de sprite (entières), sinon le rendu bave.
 
 ### Synchronisation
 
