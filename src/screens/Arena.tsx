@@ -8,6 +8,7 @@ import { BigStepper } from '../components/BigStepper';
 import { ComboMeter, comboLabel } from '../components/ComboMeter';
 import { HealthBar, RoundClock } from '../components/HealthBar';
 import { ImpactFx, type Hit } from '../components/ImpactFx';
+import { PowerUp } from '../components/PowerUp';
 import { RestTimer, useRestCountdown, type Rest } from '../components/RestTimer';
 import { RirPicker } from '../components/RirPicker';
 import { Sprite, useFrame } from '../components/Sprite';
@@ -17,6 +18,7 @@ import { useShake } from '../fx/shake';
 import { FOE, FOE_FRAME, HERO, HERO_FRAME, HERO_PALETTE, foePalette } from '../fx/sprites';
 import { keepAwake, rearmOnVisible, releaseAwake } from '../fx/wakelock';
 import { navigate } from '../router';
+import { gainLabel, type Advice } from '../store/progression';
 import { activeProgram, bestWeight } from '../store/selectors';
 import {
   abortSession,
@@ -43,6 +45,8 @@ export function Arena() {
   const [weight, setWeight] = useState(0);
   const [reps, setReps] = useState(0);
   const [rir, setRir] = useState<number | null>(null);
+  const [advice, setAdvice] = useState<Advice | null>(null);
+  const [banner, setBanner] = useState(false);
   const [rest, setRest] = useState<Rest | null>(null);
   const [hits, setHits] = useState<Hit[]>([]);
   const [combo, setCombo] = useState(0);
@@ -92,6 +96,9 @@ export function Arena() {
     if (live && isFinished(live) && !ended.current) end();
   });
 
+  // Un exercice n'annonce sa montee en charge qu'une fois, a sa premiere serie.
+  const announced = useRef<number | null>(null);
+
   // Chaque nouvelle serie repart de ce qui a ete fait la derniere fois.
   useEffect(() => {
     if (!live || !step) return;
@@ -100,6 +107,14 @@ export function Arena() {
     setReps(s.reps);
     setRir(null);
     setShowNotes(false);
+    setAdvice(s);
+
+    const worthAnnouncing = s.trend !== 'hold' && announced.current !== live.cursor.planIndex;
+    setBanner(worthAnnouncing);
+    if (worthAnnouncing) {
+      announced.current = live.cursor.planIndex;
+      sfx.powerup();
+    }
     // Volontairement limite au curseur : on ne veut pas ecraser une saisie en cours.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cursorKey]);
@@ -115,6 +130,9 @@ export function Arena() {
   const done = live.entries.length;
   const total = totalSets(live.plan);
   const target = rirTarget(step);
+  // La proposition ne tient que tant qu'elle decrit la valeur au compteur : des
+  // que le pouce touche la charge, elle s'efface plutot que de mentir.
+  const bump = advice && advice.trend !== 'hold' && weight === advice.weight ? advice : null;
 
   const validate = () => {
     // Le tonnage sert de degats. Au poids du corps (charge nulle), on compte les repetitions.
@@ -252,6 +270,8 @@ export function Arena() {
             <Tag>{repRange(step)} reps</Tag>
             {target && <Tag>rir {target}</Tag>}
             {record > 0 && <Tag>record {record} kg</Tag>}
+            {/* Puis une simple trace sur les series suivantes. */}
+            {bump && !banner && <Tag tone="impact">montée {gainLabel(bump)}</Tag>}
             {step.notes && (
               <button
                 type="button"
@@ -265,6 +285,13 @@ export function Arena() {
 
           {showNotes && step.notes && (
             <p className="bevel-sm mt-2 bg-ink-2 p-2.5 text-p2 text-ash">{step.notes}</p>
+          )}
+
+          {/* La montee en charge : un moment fort a la premiere serie de l'exercice. */}
+          {bump && banner && (
+            <div className="mt-2">
+              <PowerUp trend={bump.trend} gain={gainLabel(bump)} reason={bump.reason} />
+            </div>
           )}
         </motion.section>
 
@@ -289,6 +316,7 @@ export function Arena() {
             value={weight}
             step={2.5}
             min={-100}
+            tone={bump?.trend === 'up' ? 'impact' : 'blood'}
             onChange={setWeight}
           />
           <BigStepper

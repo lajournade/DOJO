@@ -95,6 +95,23 @@ Deux règles à tenir en modifiant l'interface :
 - **Les tailles sont des multiples de 8 px** (`text-p1` à `text-p5`), comme les échelles
   de sprite (entières), sinon le rendu bave.
 
+### Montée en charge
+
+Le RIR saisi sur la dernière série ne dort pas dans le journal : c'est lui qui fixe la
+charge proposée la fois suivante. À chaque exercice, le dojo relit la dernière séance où
+il a été pratiqué et applique une double progression, en trois cas :
+
+| La dernière fois | Aujourd'hui |
+|---|---|
+| RIR au moins égal à la cible, et haut de fourchette de reps atteint | **+ 2,5 kg**, reps ramenées en bas de fourchette |
+| RIR au moins égal à la cible, fourchette pas encore remplie | même charge, **une répétition de plus** |
+| RIR sous la cible | à l'identique |
+
+Jamais de baisse automatique : décharger reste un geste manuel. Le verdict ne touche que
+les séries qui portaient le poids de travail — l'échauffement 40 / 60 / 80 du squat garde
+ses valeurs, seule la série lourde monte. Et rien n'est imposé : un appui sur le compteur
+suffit à revenir sur la proposition, qui s'efface alors du bandeau.
+
 ### Synchronisation
 
 Valider une série met l'état local à jour immédiatement, puis dépose une opération

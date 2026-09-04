@@ -106,6 +106,13 @@ export const sfx = {
     tone({ type: 'triangle', from: 1180, to: 1180, duration: 0.16, gain: 0.09 });
     tone({ type: 'triangle', from: 1580, to: 1580, duration: 0.22, gain: 0.07, delay: 0.16 });
   },
+  /** Montee en charge : l'arpege court d'un bonus ramasse. */
+  powerup() {
+    void unlock();
+    [523, 698, 880, 1175].forEach((f, i) => {
+      tone({ type: 'square', from: f, to: f, duration: 0.08, gain: 0.07, delay: i * 0.055 });
+    });
+  },
   combo(level: number) {
     void unlock();
     tone({ type: 'square', from: 520 + level * 110, to: 780 + level * 130, duration: 0.1, gain: 0.07 });

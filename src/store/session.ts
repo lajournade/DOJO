@@ -5,7 +5,8 @@
  */
 import type { AppState, LiveSession, PlanStep, Program, ProgramSession, SetEntry } from '../types';
 import { dispatch, getState } from './state';
-import { exerciseName, lastSet, todayIso } from './selectors';
+import { exerciseName, todayIso } from './selectors';
+import { advise, type Advice } from './progression';
 
 /** Instantane du programme au moment du demarrage : l'editer ensuite ne touche pas la seance engagee. */
 export function buildPlan(state: AppState, session: ProgramSession): PlanStep[] {
@@ -84,24 +85,26 @@ export function abortSession() {
 }
 
 /**
- * Valeurs proposees pour la serie en cours : ce qui a ete fait sur cette meme
- * serie la derniere fois, a defaut le bas de la fourchette du programme.
- * C'est ce qui permet de valider une serie sans rien toucher.
+ * Valeurs proposees pour la serie en cours. Le verdict vient de `advise` : la
+ * meme serie lors de la derniere seance — c'est elle qui porte la montee en
+ * charge (40, 60, 80...), qu'une simple reprise de la serie precedente
+ * effacerait — augmentee de ce que dit le RIR. C'est ce qui permet de valider
+ * une serie sans rien toucher, et de progresser malgre tout.
  */
-export function suggestion(state: AppState, live: LiveSession): { weight: number; reps: number } {
+export function suggestion(state: AppState, live: LiveSession): Advice {
   const step = live.plan[live.cursor.planIndex];
-  if (!step) return { weight: 0, reps: 0 };
+  if (!step) return { weight: 0, reps: 0, trend: 'hold', reason: '' };
 
-  // La meme serie lors de la derniere seance : c'est elle qui porte la montee en
-  // charge (40, 60, 80...), qu'une simple reprise de la serie precedente effacerait.
-  const previous = lastSet(state, step.exerciseId, live.cursor.setIndex);
-  if (previous) return { weight: previous.weight ?? 0, reps: previous.reps ?? step.repMin ?? 8 };
+  const advice = advise(state, step, live.cursor.setIndex);
+  if (advice) return advice;
 
   // Jamais fait : on reprend ce qui vient d'etre porte sur cet exercice aujourd'hui.
   const today = [...live.entries].reverse().find((e) => e.itemId === step.id);
   return {
     weight: today?.weight ?? 0,
     reps: today?.reps ?? step.repMin ?? 8,
+    trend: 'hold',
+    reason: '',
   };
 }
 
