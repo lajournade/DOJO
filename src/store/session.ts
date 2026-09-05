@@ -6,7 +6,7 @@
 import type { AppState, LiveSession, PlanStep, Program, ProgramSession, SetEntry } from '../types';
 import { dispatch, getState } from './state';
 import { exerciseName, todayIso, typicalMinutes } from './selectors';
-import { advise, gainLabel, type Advice, type Trend } from './progression';
+import { advise, gainLabel, plateau, type Advice, type Plateau, type Trend } from './progression';
 
 /** Instantane du programme au moment du demarrage : l'editer ensuite ne touche pas la seance engagee. */
 export function buildPlan(state: AppState, session: ProgramSession): PlanStep[] {
@@ -37,6 +37,8 @@ export interface StepPreview {
   gain: string;
   /** Faux tant que l'exercice n'a jamais ete pratique : rien a proposer. */
   known: boolean;
+  /** Renseigne quand la charge ne bouge plus depuis plusieurs seances. */
+  plateau: Plateau | null;
 }
 
 export interface SessionPreview {
@@ -47,6 +49,8 @@ export interface SessionPreview {
   estimated: boolean;
   /** Nombre d'exercices qui montent aujourd'hui. */
   ups: number;
+  /** Nombre d'exercices en palier : la contrepartie de `ups`. */
+  stuck: number;
 }
 
 /**
@@ -68,7 +72,16 @@ export function previewSession(state: AppState, session: ProgramSession): Sessio
     // verdict. L'echauffement qui la precede garde ses valeurs et ne monte pas.
     const work = advices[advices.length - 1] ?? known[known.length - 1] ?? null;
     if (!work) {
-      return { step, first: 0, work: 0, ramp: false, trend: 'hold', gain: '', known: false };
+      return {
+        step,
+        first: 0,
+        work: 0,
+        ramp: false,
+        trend: 'hold',
+        gain: '',
+        known: false,
+        plateau: null,
+      };
     }
 
     return {
@@ -79,6 +92,8 @@ export function previewSession(state: AppState, session: ProgramSession): Sessio
       trend: work.trend,
       gain: gainLabel(work),
       known: true,
+      // Le dojo propose deja une montee : quoi qu'en dise l'historique, rien n'est bloque.
+      plateau: work.trend === 'hold' ? plateau(state, step) : null,
     };
   });
 
@@ -94,6 +109,7 @@ export function previewSession(state: AppState, session: ProgramSession): Sessio
     minutes: measured ?? Math.max(1, Math.round((planned - lastRest) / 60)),
     estimated: measured === null,
     ups: steps.filter((s) => s.trend !== 'hold').length,
+    stuck: steps.filter((s) => s.plateau !== null).length,
   };
 }
 

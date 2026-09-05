@@ -8,6 +8,7 @@ import { BigStepper } from '../components/BigStepper';
 import { ComboMeter, comboLabel } from '../components/ComboMeter';
 import { HealthBar, RoundClock } from '../components/HealthBar';
 import { ImpactFx, type Hit } from '../components/ImpactFx';
+import { Plateau } from '../components/Plateau';
 import { PowerUp } from '../components/PowerUp';
 import { RestTimer, useRestCountdown, type Rest } from '../components/RestTimer';
 import { RirPicker } from '../components/RirPicker';
@@ -18,7 +19,13 @@ import { useShake } from '../fx/shake';
 import { FOE, FOE_FRAME, HERO, HERO_FRAME, HERO_PALETTE, foePalette } from '../fx/sprites';
 import { keepAwake, rearmOnVisible, releaseAwake } from '../fx/wakelock';
 import { navigate } from '../router';
-import { gainLabel, type Advice } from '../store/progression';
+import {
+  STEP_KG,
+  deloadWeight,
+  gainLabel,
+  plateau,
+  type Advice,
+} from '../store/progression';
 import { activeProgram, bestWeight } from '../store/selectors';
 import {
   abortSession,
@@ -47,6 +54,7 @@ export function Arena() {
   const [rir, setRir] = useState<number | null>(null);
   const [advice, setAdvice] = useState<Advice | null>(null);
   const [banner, setBanner] = useState(false);
+  const [deloaded, setDeloaded] = useState(false);
   const [rest, setRest] = useState<Rest | null>(null);
   const [hits, setHits] = useState<Hit[]>([]);
   const [combo, setCombo] = useState(0);
@@ -96,30 +104,52 @@ export function Arena() {
     if (live && isFinished(live) && !ended.current) end();
   });
 
-  // Un exercice n'annonce sa montee en charge qu'une fois, a sa premiere serie.
+  // Un exercice n'a qu'une annonce, a sa premiere serie : la montee en charge, ou le
+  // palier. Les deux s'excluent — l'un veut `hold`, l'autre non —, une ref suffit.
   const announced = useRef<number | null>(null);
+
+  /**
+   * Les exercices decharges a la main pendant cette seance : planIndex → la charge
+   * du palier. La baisse se reporte sur les series suivantes du meme exercice, mais
+   * seulement sur celles qui portaient cette charge : l'echauffement 40 / 60 / 80
+   * garde ses paliers, comme le fait deja `advise`. Rien n'est ecrit au journal —
+   * la seance suivante repartira de l'historique.
+   */
+  const deloads = useRef(new Map<number, number>());
 
   // Chaque nouvelle serie repart de ce qui a ete fait la derniere fois.
   useEffect(() => {
     if (!live || !step) return;
     const s = suggestion(state, live);
-    setWeight(s.weight);
+    const cut = deloads.current.get(live.cursor.planIndex);
+    setWeight(cut !== undefined && s.weight === cut ? deloadWeight(s.weight) : s.weight);
     setReps(s.reps);
     setRir(null);
     setShowNotes(false);
     setAdvice(s);
+    setDeloaded(cut !== undefined);
 
-    const worthAnnouncing = s.trend !== 'hold' && announced.current !== live.cursor.planIndex;
+    // Le meme palier que ci-dessous, relu ici : `advice` ne sera a jour qu'au rendu suivant.
+    const stallAtCursor = s.trend === 'hold' ? plateau(state, step) : null;
+    const worthAnnouncing =
+      (s.trend !== 'hold' || (stallAtCursor !== null && cut === undefined)) &&
+      announced.current !== live.cursor.planIndex;
     setBanner(worthAnnouncing);
     if (worthAnnouncing) {
       announced.current = live.cursor.planIndex;
-      sfx.powerup();
+      if (s.trend === 'hold') sfx.warn();
+      else sfx.powerup();
     }
     // Volontairement limite au curseur : on ne veut pas ecraser une saisie en cours.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cursorKey]);
 
   const record = useMemo(() => (step ? bestWeight(state, step.exerciseId) : 0), [state, step]);
+  // Le dojo propose deja une montee : quoi qu'en dise l'historique, rien n'est bloque.
+  const stall = useMemo(
+    () => (step && advice?.trend === 'hold' ? plateau(state, step) : null),
+    [state, step, advice],
+  );
 
   const hitId = useRef(0);
   const strikeTimer = useRef<number | undefined>(undefined);
@@ -272,6 +302,11 @@ export function Arena() {
             {record > 0 && <Tag>record {record} kg</Tag>}
             {/* Puis une simple trace sur les series suivantes. */}
             {bump && !banner && <Tag tone="impact">montée {gainLabel(bump)}</Tag>}
+            {deloaded ? (
+              <Tag tone="jade">déchargé −{String(STEP_KG).replace('.', ',')} kg</Tag>
+            ) : (
+              stall && !banner && <Tag tone="warn">bloqué {stall.sessions} séances</Tag>
+            )}
             {step.notes && (
               <button
                 type="button"
@@ -291,6 +326,26 @@ export function Arena() {
           {bump && banner && (
             <div className="mt-2">
               <PowerUp trend={bump.trend} gain={gainLabel(bump)} reason={bump.reason} />
+            </div>
+          )}
+
+          {/* Le palier, a la meme place : ce qui ne monte plus se dit aussi fort. */}
+          {stall && banner && !deloaded && (
+            <div className="mt-2">
+              <Plateau
+                sessions={stall.sessions}
+                weight={deloadWeight(stall.weight)}
+                onDeload={() => {
+                  deloads.current.set(live.cursor.planIndex, stall.weight);
+                  // La baisse ne touche que le poids de travail : sur une rampe, on la
+                  // decide des l'echauffement, mais le compteur n'en bouge qu'a la
+                  // serie qui portait la charge bloquee.
+                  setWeight((w) => (w === stall.weight ? deloadWeight(w) : w));
+                  setDeloaded(true);
+                  setBanner(false);
+                  sfx.select();
+                }}
+              />
             </div>
           )}
         </motion.section>
@@ -373,13 +428,25 @@ export function Arena() {
   );
 }
 
-function Tag({ children, tone }: { children: React.ReactNode; tone?: 'blood' | 'impact' }) {
+function Tag({
+  children,
+  tone,
+}: {
+  children: React.ReactNode;
+  tone?: 'blood' | 'impact' | 'jade' | 'warn';
+}) {
+  // `warn` clignote et prend le rouge vif : a cote du `blood` mat de « serie 1/4 »,
+  // c'est le battement qui le distingue, pas la teinte seule.
   const skin =
     tone === 'blood'
       ? 'bg-blood text-bone'
       : tone === 'impact'
         ? 'bg-impact text-line'
-        : 'bg-ink-3 text-ash';
+        : tone === 'jade'
+          ? 'bg-jade text-line'
+          : tone === 'warn'
+            ? 'pulsing bg-blood-hot text-bone'
+            : 'bg-ink-3 text-ash';
   return <span className={`bevel-sm label-text px-2 py-1 text-p2 ${skin}`}>{children}</span>;
 }
 

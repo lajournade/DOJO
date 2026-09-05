@@ -72,7 +72,8 @@ shared/     opérations appliquées à l'identique par le client et le serveur
 public/     icône, manifeste, et les deux polices bitmap embarquées
 src/        application React
   screens/     Roster (sélection de l'adversaire), Arena (la séance), Results, History, Program
-  components/  PreFight (le briefing d'avant-combat), FightIntro, barres de vie, compteurs
+  components/  PreFight (le briefing d'avant-combat), FightIntro, barres de vie, compteurs,
+               PowerUp et Plateau (ce qui monte, ce qui piétine)
   store/       état, file d'envoi, synchronisation, sélecteurs
   fx/          audio, secousse d'écran, écran allumé, sprites des combattants
 scripts/    import du classeur et état initial
@@ -108,10 +109,19 @@ il a été pratiqué et applique une double progression, en trois cas :
 | RIR au moins égal à la cible, fourchette pas encore remplie | même charge, **une répétition de plus** |
 | RIR sous la cible | à l'identique |
 
-Jamais de baisse automatique : décharger reste un geste manuel. Le verdict ne touche que
-les séries qui portaient le poids de travail — l'échauffement 40 / 60 / 80 du squat garde
-ses valeurs, seule la série lourde monte. Et rien n'est imposé : un appui sur le compteur
-suffit à revenir sur la proposition, qui s'efface alors du bandeau.
+Jamais de baisse automatique — mais plus jamais en silence non plus. Quand la série de
+travail passe **trois séances** à la même charge sans gagner une répétition, le dojo le
+constate : l'exercice porte un `bloqué` sur le briefing, et l'arène ouvre un bandeau
+`stalled` à sa première série, avec un déchargement de 2,5 kg à un appui. Il constate et
+propose, il n'applique rien : décharger reste un geste manuel, et la baisse consentie ne
+vaut que pour la séance en cours — elle se reporte sur les séries suivantes de l'exercice
+qui portaient cette charge, jamais sur son échauffement, et rien n'en est écrit au journal.
+Les séances où le RIR a été oublié ne comptent pas : sans lui, une séance ne dit rien, ni
+dans un sens ni dans l'autre.
+
+Le verdict ne touche que les séries qui portaient le poids de travail — l'échauffement
+40 / 60 / 80 du squat garde ses valeurs, seule la série lourde monte. Et rien n'est imposé :
+un appui sur le compteur suffit à revenir sur la proposition, qui s'efface alors du bandeau.
 
 Rien de tout cela n'attend le premier coup pour se dire. Entre le choix de l'adversaire
 et la première série, le **briefing** annonce le combat : les exercices dans l'ordre, la

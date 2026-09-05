@@ -113,6 +113,13 @@ export const sfx = {
       tone({ type: 'square', from: f, to: f, duration: 0.08, gain: 0.07, delay: i * 0.055 });
     });
   },
+  /** Palier : le miroir descendant du bonus — deux notes qui retombent. */
+  warn() {
+    void unlock();
+    [440, 330].forEach((f, i) => {
+      tone({ type: 'square', from: f, to: f, duration: 0.12, gain: 0.07, delay: i * 0.13 });
+    });
+  },
   combo(level: number) {
     void unlock();
     tone({ type: 'square', from: 520 + level * 110, to: 780 + level * 130, duration: 0.1, gain: 0.07 });

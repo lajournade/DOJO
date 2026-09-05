@@ -90,11 +90,21 @@ export function PreFight({ session, index, onFight, onBack }: Props) {
       <div className="pad-x grid grid-cols-3 gap-1.5 py-2">
         <Plate value={preview.sets} label="séries" />
         <Plate value={preview.minutes} label={preview.estimated ? 'min env.' : 'min'} />
-        <Plate
-          value={preview.ups}
-          label={preview.ups > 1 ? 'montées' : 'montée'}
-          hot={preview.ups > 0}
-        />
+        {/* La troisieme plaque repond a « qu'est-ce qui bouge aujourd'hui ». Quand rien
+            ne monte, elle dit ce qui pietine plutot que d'afficher un zero muet. */}
+        {preview.ups === 0 && preview.stuck > 0 ? (
+          <Plate
+            value={preview.stuck}
+            label={preview.stuck > 1 ? 'bloqués' : 'bloqué'}
+            tone="stuck"
+          />
+        ) : (
+          <Plate
+            value={preview.ups}
+            label={preview.ups > 1 ? 'montées' : 'montée'}
+            tone={preview.ups > 0 ? 'up' : undefined}
+          />
+        )}
       </div>
 
       {/* ---- la carte du combat : seule cette zone defile ---- */}
@@ -132,11 +142,26 @@ export function PreFight({ session, index, onFight, onBack }: Props) {
 }
 
 /** Une plaque du bandeau : le chiffre en gros, son unite dessous. */
-function Plate({ value, label, hot }: { value: number; label: string; hot?: boolean }) {
+function Plate({
+  value,
+  label,
+  tone,
+}: {
+  value: number;
+  label: string;
+  tone?: 'up' | 'stuck';
+}) {
+  const skin =
+    tone === 'up'
+      ? { box: 'bg-impact', figure: 'text-line', label: 'text-line' }
+      : tone === 'stuck'
+        ? { box: 'bg-blood', figure: 'text-impact', label: 'text-bone' }
+        : { box: 'bg-ink-2', figure: 'text-impact', label: 'text-ash' };
+
   return (
-    <div className={`bevel-sm px-1 py-1.5 text-center ${hot ? 'bg-impact' : 'bg-ink-2'}`}>
-      <p className={`numeric fight-text text-p3 ${hot ? 'text-line' : 'text-impact'}`}>{value}</p>
-      <p className={`label-text text-p2 ${hot ? 'text-line' : 'text-ash'}`}>{label}</p>
+    <div className={`bevel-sm px-1 py-1.5 text-center ${skin.box}`}>
+      <p className={`numeric fight-text text-p3 ${skin.figure}`}>{value}</p>
+      <p className={`label-text text-p2 ${skin.label}`}>{label}</p>
     </div>
   );
 }
@@ -177,6 +202,12 @@ function Line({
             {preview.gain}
           </span>
         )}
+        {/* Le gain est vide sur un palier : les deux plaques ne se disputent jamais la place. */}
+        {preview.plateau && (
+          <span className="bevel-sm label-text pulsing shrink-0 bg-blood px-1.5 text-p2 leading-6 text-bone">
+            bloqué
+          </span>
+        )}
       </div>
 
       {/* Puis le chiffrage : la charge tombe toujours au meme fer a droite. */}
@@ -195,6 +226,13 @@ function Line({
           <p className="shrink-0 text-p2 text-ash">première fois</p>
         )}
       </div>
+
+      {/* La raison du blocage, sous le chiffrage : c'est lui qu'elle qualifie. */}
+      {preview.plateau && (
+        <p className="label-text mt-0.5 pl-6 text-p2 text-blood">
+          {preview.plateau.sessions} séances sans montée
+        </p>
+      )}
     </motion.div>
   );
 }

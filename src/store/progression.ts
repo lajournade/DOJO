@@ -93,3 +93,48 @@ export function gainLabel(advice: Advice): string {
   if (advice.trend === 'reps') return '+1 rep';
   return '';
 }
+
+/**
+ * Le palier : trois seances a la meme charge, sans un rep de plus.
+ *
+ * `advise` maintient la charge quand le RIR passe sous la cible — c'est voulu, mais
+ * repete, cela devient un pietinement que rien ne signale. On le compte donc, sans
+ * rien y changer : constater est le role de ce module, decharger reste un geste.
+ */
+export const PLATEAU_SESSIONS = 3;
+
+export interface Plateau {
+  /** Nombre de seances consecutives a la meme charge. */
+  sessions: number;
+  /** La charge qui ne bouge plus : celle de la serie de travail. */
+  weight: number;
+}
+
+/**
+ * Le palier d'un exercice, ou `null` s'il avance encore.
+ *
+ * On ne lit que les series de travail — celles qui portent un RIR, comme le verdict.
+ * Une seance ou le RIR a ete oublie n'en dit rien, ni dans un sens ni dans l'autre :
+ * `referenceSet` l'ecarte, et elle ne rompt donc pas la serie.
+ */
+export function plateau(state: AppState, step: PlanStep): Plateau | null {
+  const refs = historyOf(state, step.exerciseId)
+    .map((row) => referenceSet(row.entries))
+    .filter((e): e is SetEntry => e !== null && e.weight !== null);
+
+  if (refs.length < PLATEAU_SESSIONS) return null;
+
+  // De la plus recente vers l'ancienne, tant que la charge est la meme.
+  const top = refs[0];
+  let sessions = 1;
+  while (sessions < refs.length && refs[sessions].weight === top.weight) sessions += 1;
+  if (sessions < PLATEAU_SESSIONS) return null;
+
+  // Les repetitions ont progresse a charge egale : c'est une montee, pas un palier.
+  if ((top.reps ?? 0) > (refs[sessions - 1].reps ?? 0)) return null;
+
+  return { sessions, weight: top.weight as number };
+}
+
+/** La sortie de palier proposee : un cran du compteur en moins, jamais sous zero. */
+export const deloadWeight = (weight: number) => Math.max(0, weight - STEP_KG);
