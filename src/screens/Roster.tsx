@@ -14,13 +14,24 @@ import { startSession } from '../store/session';
 import { useStore } from '../store/state';
 import type { Program, ProgramSession } from '../types';
 import { FightIntro } from '../components/FightIntro';
+import { PreFight } from '../components/PreFight';
 import { Sprite, useFrame } from '../components/Sprite';
 import { SyncBadge } from '../components/SyncBadge';
+
+/** La seance choisie, en attente du premier coup. */
+interface Pending {
+  program: Program;
+  session: ProgramSession;
+  /** Rang dans le programme : il fixe la couleur de l'adversaire, du roster a l'arene. */
+  index: number;
+}
 
 export function Roster() {
   const { state } = useStore();
   const program = activeProgram(state);
-  const [intro, setIntro] = useState<{ program: Program; session: ProgramSession } | null>(null);
+  // Le combat se joue en deux temps : on lit d'abord la carte, on frappe ensuite.
+  const [brief, setBrief] = useState<Pending | null>(null);
+  const [intro, setIntro] = useState<Pending | null>(null);
   const frame = useFrame(2, 2.5);
 
   const resume = state.liveSession;
@@ -36,19 +47,33 @@ export function Roster() {
     return best?.id ?? null;
   }, [program, state]);
 
-  const launch = (session: ProgramSession) => {
+  const launch = (session: ProgramSession, index: number) => {
     if (!program) return;
     sfx.select();
-    setIntro({ program, session });
+    setBrief({ program, session, index });
   };
 
   return (
     <div className="min-h-dvh bg-ink">
+      {brief && (
+        <PreFight
+          session={brief.session}
+          index={brief.index}
+          onBack={() => setBrief(null)}
+          onFight={() => {
+            setIntro(brief);
+            setBrief(null);
+          }}
+        />
+      )}
+
+      {/* Le face-a-face a eu lieu sur le briefing : il ne reste que l'annonce du round. */}
       {intro && (
         <FightIntro
           code={intro.session.code}
           name={intro.session.name}
-          index={intro.program.sessions.findIndex((s) => s.id === intro.session.id)}
+          index={intro.index}
+          withVs={false}
           onDone={() => {
             startSession(intro.program, intro.session);
             navigate('/arena');
@@ -101,7 +126,7 @@ export function Roster() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06, duration: 0.25 }}
-              onClick={() => launch(session)}
+              onClick={() => launch(session, i)}
               className="bevel-sm keycap relative bg-ink-2 p-1.5 text-left"
             >
               {/* Le portrait, dans son cadre creux, avec sa plaque de code. */}

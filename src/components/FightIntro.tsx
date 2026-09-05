@@ -2,6 +2,9 @@
  * Transition entre la selection et la seance : l'ecran VS, puis l'annonce du
  * round. Toujours passable au toucher — on est au milieu d'une seance, l'intro
  * ne doit jamais etre subie.
+ *
+ * Quand le briefing d'avant-combat a deja pose le face-a-face, `withVs` tombe a
+ * faux : le rejouer ferait doublon, seul « fight! » reste.
  */
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
@@ -13,11 +16,13 @@ interface Props {
   code: string;
   name: string;
   index: number;
+  /** Faux quand le moment VS a deja eu lieu ailleurs : on entre direct sur « fight! ». */
+  withVs?: boolean;
   onDone: () => void;
 }
 
-export function FightIntro({ code, name, index, onDone }: Props) {
-  const [phase, setPhase] = useState<0 | 1>(0);
+export function FightIntro({ code, name, index, withVs = true, onDone }: Props) {
+  const [phase, setPhase] = useState<0 | 1>(withVs ? 0 : 1);
   // La sortie ne part qu'une fois : le toucher et le minuteur visent la meme porte.
   const left = useRef(false);
   const done = () => {
@@ -27,6 +32,12 @@ export function FightIntro({ code, name, index, onDone }: Props) {
   };
 
   useEffect(() => {
+    if (!withVs) {
+      sfx.fight();
+      const straight = setTimeout(done, 1000);
+      return () => clearTimeout(straight);
+    }
+
     sfx.vs();
     const toRound = setTimeout(() => {
       setPhase(1);

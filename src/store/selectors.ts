@@ -56,6 +56,26 @@ export function lastRun(s: AppState, sessionId: string): SessionLog | null {
   return recentLogs(s).find((l) => l.sessionId === sessionId) ?? null;
 }
 
+/**
+ * Duree mediane des seances deja jouees sur cette seance du programme, en minutes.
+ * `startedAt` / `endedAt` ne sont poses que par l'application : les seances importees
+ * du classeur n'en ont pas, et une seance oubliee ouverte une nuit entiere n'a rien a
+ * dire d'une duree — les deux sont ecartees plutot que moyennees.
+ */
+export function typicalMinutes(s: AppState, sessionId: string): number | null {
+  const durations = s.logs
+    .filter((l) => l.sessionId === sessionId && l.startedAt && l.endedAt)
+    .map((l) => (Date.parse(l.endedAt as string) - Date.parse(l.startedAt as string)) / 60_000)
+    .filter((m) => m >= 5 && m <= 240)
+    .sort((a, b) => a - b);
+  if (!durations.length) return null;
+
+  const mid = Math.floor(durations.length / 2);
+  const median =
+    durations.length % 2 ? durations[mid] : (durations[mid - 1] + durations[mid]) / 2;
+  return Math.round(median);
+}
+
 export function formatDate(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString('fr-FR', {

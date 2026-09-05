@@ -71,9 +71,10 @@ server/     serveur HTTP sans dépendance : sert dist/ et l'API
 shared/     opérations appliquées à l'identique par le client et le serveur
 public/     icône, manifeste, et les deux polices bitmap embarquées
 src/        application React
-  screens/  Roster (sélection de l'adversaire), Arena (la séance), Results, History, Program
-  store/    état, file d'envoi, synchronisation, sélecteurs
-  fx/       audio, secousse d'écran, écran allumé, sprites des combattants
+  screens/     Roster (sélection de l'adversaire), Arena (la séance), Results, History, Program
+  components/  PreFight (le briefing d'avant-combat), FightIntro, barres de vie, compteurs
+  store/       état, file d'envoi, synchronisation, sélecteurs
+  fx/          audio, secousse d'écran, écran allumé, sprites des combattants
 scripts/    import du classeur et état initial
 ```
 
@@ -111,6 +112,15 @@ Jamais de baisse automatique : décharger reste un geste manuel. Le verdict ne t
 les séries qui portaient le poids de travail — l'échauffement 40 / 60 / 80 du squat garde
 ses valeurs, seule la série lourde monte. Et rien n'est imposé : un appui sur le compteur
 suffit à revenir sur la proposition, qui s'efface alors du bandeau.
+
+Rien de tout cela n'attend le premier coup pour se dire. Entre le choix de l'adversaire
+et la première série, le **briefing** annonce le combat : les exercices dans l'ordre, la
+charge que l'arène proposera pour chacun — les deux bouts de la rampe quand il y en a
+une (« 40 à 72,5 kg ») —, les montées du jour, et la durée. On sait quoi charger sur la
+barre avant d'y être. L'écran ne fait que lire le même `advise` que l'arène : ce qui est
+annoncé est ce qui sera servi, et l'ouvrir n'engage aucune séance. La durée vient des
+séances déjà chronométrées quand il y en a, et du programme sinon — c'est le `min env.`
+du bandeau.
 
 ### Synchronisation
 

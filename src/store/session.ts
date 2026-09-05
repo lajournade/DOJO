@@ -5,8 +5,8 @@
  */
 import type { AppState, LiveSession, PlanStep, Program, ProgramSession, SetEntry } from '../types';
 import { dispatch, getState } from './state';
-import { exerciseName, todayIso } from './selectors';
-import { advise, type Advice } from './progression';
+import { exerciseName, todayIso, typicalMinutes } from './selectors';
+import { advise, gainLabel, type Advice, type Trend } from './progression';
 
 /** Instantane du programme au moment du demarrage : l'editer ensuite ne touche pas la seance engagee. */
 export function buildPlan(state: AppState, session: ProgramSession): PlanStep[] {
@@ -15,6 +15,86 @@ export function buildPlan(state: AppState, session: ProgramSession): PlanStep[] 
 
 export function totalSets(plan: PlanStep[]): number {
   return plan.reduce((sum, step) => sum + step.sets, 0);
+}
+
+/**
+ * Duree d'execution d'une serie, repos exclu. C'est la seule part que le programme
+ * ne dit pas : tout le reste de l'estimation vient des `restSec` prescrits.
+ */
+const SET_SEC = 40;
+
+/** Ce qu'un exercice va couter aujourd'hui, tel que l'Arena le proposera. */
+export interface StepPreview {
+  step: PlanStep;
+  /** Charge de la premiere serie : ce qu'on met sur la barre en arrivant. */
+  first: number;
+  /** Charge de la serie de travail — la derniere, celle qui porte le RIR. */
+  work: number;
+  /** Les charges montent d'une serie a l'autre (la rampe 40 / 60 / 80 du squat). */
+  ramp: boolean;
+  trend: Trend;
+  /** « +2,5 kg », « +1 rep », ou vide. */
+  gain: string;
+  /** Faux tant que l'exercice n'a jamais ete pratique : rien a proposer. */
+  known: boolean;
+}
+
+export interface SessionPreview {
+  steps: StepPreview[];
+  sets: number;
+  minutes: number;
+  /** Vrai quand la duree vient du programme, faux quand elle vient des seances jouees. */
+  estimated: boolean;
+  /** Nombre d'exercices qui montent aujourd'hui. */
+  ups: number;
+}
+
+/**
+ * L'annonce du combat, avant qu'il soit engage.
+ *
+ * Le plan est monte comme au demarrage et chaque serie passe par le meme `advise` :
+ * ce qui est affiche ici est exactement ce que l'Arena servira au compteur. Aucun
+ * etat n'est touche — lire le briefing ne demarre pas de seance.
+ */
+export function previewSession(state: AppState, session: ProgramSession): SessionPreview {
+  const plan = buildPlan(state, session);
+
+  const steps: StepPreview[] = plan.map((step) => {
+    const advices: (Advice | null)[] = [];
+    for (let i = 1; i <= step.sets; i += 1) advices.push(advise(state, step, i));
+    const known = advices.filter((a): a is Advice => a !== null);
+
+    // La serie de travail est la derniere : c'est elle qui porte le RIR, donc le
+    // verdict. L'echauffement qui la precede garde ses valeurs et ne monte pas.
+    const work = advices[advices.length - 1] ?? known[known.length - 1] ?? null;
+    if (!work) {
+      return { step, first: 0, work: 0, ramp: false, trend: 'hold', gain: '', known: false };
+    }
+
+    return {
+      step,
+      first: known[0].weight,
+      work: work.weight,
+      ramp: known.some((a) => a.weight !== work.weight),
+      trend: work.trend,
+      gain: gainLabel(work),
+      known: true,
+    };
+  });
+
+  // Une seance deja chronometree en dit plus long que n'importe quelle formule.
+  const measured = typicalMinutes(state, session.id);
+  const planned = plan.reduce((sec, step) => sec + step.sets * (SET_SEC + step.restSec), 0);
+  // Le dernier repos n'a pas lieu : la seance s'arrete sur la derniere serie.
+  const lastRest = plan.length ? plan[plan.length - 1].restSec : 0;
+
+  return {
+    steps,
+    sets: totalSets(plan),
+    minutes: measured ?? Math.max(1, Math.round((planned - lastRest) / 60)),
+    estimated: measured === null,
+    ups: steps.filter((s) => s.trend !== 'hold').length,
+  };
 }
 
 export function startSession(program: Program, session: ProgramSession): LiveSession {
