@@ -3,6 +3,7 @@ import { MotionConfig } from 'motion/react';
 import { useRoute } from './router';
 import { Arena } from './screens/Arena';
 import { History } from './screens/History';
+import { Players } from './screens/Players';
 import { Program } from './screens/Program';
 import { Results } from './screens/Results';
 import { Roster } from './screens/Roster';
@@ -11,7 +12,10 @@ import { boot, startSyncDaemon } from './store/sync';
 
 export function App() {
   const route = useRoute();
-  const { loaded } = useStore();
+  const { loaded, userId, users } = useStore();
+  // Tant qu'aucun profil n'est choisi sur cet appareil — ou que celui qui l'etait a
+  // disparu —, la selection passe avant tout le reste : chaque ecran parle d'un joueur.
+  const known = userId !== null && users.some((u) => u.id === userId);
 
   useEffect(() => {
     void boot();
@@ -22,7 +26,7 @@ export function App() {
     // `reducedMotion="user"` etend le reglage systeme a toutes les animations de
     // motion : les entrees et les ressorts se posent net, l'information reste.
     <MotionConfig reducedMotion="user">
-      {loaded ? screen(route) : <Boot />}
+      {!loaded ? <Boot /> : known ? screen(route) : <Players />}
       <Crt />
     </MotionConfig>
   );
@@ -38,6 +42,8 @@ function screen(route: string) {
       return <History />;
     case '/program':
       return <Program />;
+    case '/players':
+      return <Players />;
     default:
       return <Roster />;
   }

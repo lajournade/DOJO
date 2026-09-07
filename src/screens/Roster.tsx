@@ -7,7 +7,7 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { sfx } from '../fx/audio';
-import { FOE, foePalette } from '../fx/sprites';
+import { FOE, HERO, foePalette } from '../fx/sprites';
 import { navigate } from '../router';
 import { activeProgram, doneEntries, lastRun, sinceLabel, tonnage } from '../store/selectors';
 import { startSession } from '../store/session';
@@ -91,6 +91,28 @@ export function Roster() {
           </div>
           <SyncBadge />
         </div>
+
+        {/* Qui joue, et de quoi en changer : l'application se partage a plusieurs. */}
+        <button
+          type="button"
+          onClick={() => navigate('/players')}
+          className="bevel-sm keycap mt-2 flex w-full items-center gap-2 bg-ink-2 p-1.5 text-left"
+        >
+          <span className="bevel-in flex shrink-0 overflow-hidden bg-ink">
+            <Sprite
+              sprite={HERO}
+              palette={foePalette(state.user.palette)}
+              frame={frame}
+              scale={2}
+              cropY={2}
+              cropH={12}
+            />
+          </span>
+          <span className="min-w-0 flex-1 truncate text-p2 font-bold uppercase text-bone">
+            {state.user.name}
+          </span>
+          <span className="label-text shrink-0 text-p2 text-ash">changer</span>
+        </button>
       </header>
 
       {resume && (

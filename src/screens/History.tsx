@@ -3,8 +3,9 @@
  *  — Journal : les seances dans l'ordre, dépliables jusqu'au detail des series ;
  *  — Exercice : la progression d'un mouvement dans le temps.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ProgressChart, type Point } from '../components/ProgressChart';
+import { useHold } from '../fx/hold';
 import { navigate } from '../router';
 import {
   doneEntries,
@@ -52,7 +53,7 @@ export function History() {
         {tab === 'journal' ? <Journal logs={logs} /> : <ByExercise />}
 
         <a
-          href="/api/export.csv"
+          href={`/api/export.csv?user=${encodeURIComponent(state.user.id)}`}
           className="bevel-sm keycap fight-text mt-4 block bg-ink-2 py-4 text-center text-p2 text-ash"
         >
           exporter en csv
@@ -61,9 +62,6 @@ export function History() {
     </div>
   );
 }
-
-/** Duree d'appui avant que la suppression d'une seance soit proposee. */
-const HOLD_MS = 650;
 
 function Journal({ logs }: { logs: SessionLog[] }) {
   const [open, setOpen] = useState<string | null>(logs[0]?.id ?? null);
@@ -103,49 +101,20 @@ function LogCard({
   expanded: boolean;
   onToggle: () => void;
 }) {
-  const [holding, setHolding] = useState(false);
-  const timer = useRef<number | undefined>(undefined);
-  // L'appui long a abouti : le clic du relachement ne doit pas replier la carte.
-  const fired = useRef(false);
+  const hold = useHold(() => {
+    if (confirm(`Supprimer la séance ${log.programCode} du ${formatDate(log.date)} ?`)) {
+      dispatch('log.remove', { logId: log.id });
+    }
+  });
   const entries = doneEntries(log.entries);
-
-  const cancelHold = () => {
-    clearTimeout(timer.current);
-    timer.current = undefined;
-    setHolding(false);
-  };
-
-  useEffect(() => cancelHold, []);
-
-  const startHold = () => {
-    fired.current = false;
-    setHolding(true);
-    timer.current = setTimeout(() => {
-      fired.current = true;
-      setHolding(false);
-      if (confirm(`Supprimer la séance ${log.programCode} du ${formatDate(log.date)} ?`)) {
-        dispatch('log.remove', { logId: log.id });
-      }
-    }, HOLD_MS) as unknown as number;
-  };
 
   return (
     <section className="bevel-sm bg-ink-2">
       <div className="relative overflow-hidden">
         <button
           type="button"
-          onClick={() => {
-            if (fired.current) {
-              fired.current = false;
-              return;
-            }
-            onToggle();
-          }}
-          onPointerDown={startHold}
-          onPointerUp={cancelHold}
-          onPointerLeave={cancelHold}
-          onPointerCancel={cancelHold}
-          onContextMenu={(e) => e.preventDefault()}
+          onClick={() => !hold.consumed() && onToggle()}
+          {...hold.props}
           className="flex w-full touch-manipulation select-none items-center justify-between gap-3
                      p-3 text-left [-webkit-touch-callout:none]"
         >
@@ -164,14 +133,7 @@ function LogCard({
         </button>
 
         {/* La jauge d'appui : pleine, la suppression est proposee. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute bottom-0 left-0 h-1 bg-impact"
-          style={{
-            width: holding ? '100%' : '0%',
-            transition: holding ? `width ${HOLD_MS}ms linear` : 'none',
-          }}
-        />
+        <div aria-hidden {...hold.gauge} />
       </div>
 
       {expanded && <LogDetail entries={log.entries} />}

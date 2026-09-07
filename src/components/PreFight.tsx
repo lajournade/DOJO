@@ -90,20 +90,25 @@ export function PreFight({ session, index, onFight, onBack }: Props) {
       <div className="pad-x grid grid-cols-3 gap-1.5 py-2">
         <Plate value={preview.sets} label="séries" />
         <Plate value={preview.minutes} label={preview.estimated ? 'min env.' : 'min'} />
-        {/* La troisieme plaque repond a « qu'est-ce qui bouge aujourd'hui ». Quand rien
-            ne monte, elle dit ce qui pietine plutot que d'afficher un zero muet. */}
-        {preview.ups === 0 && preview.stuck > 0 ? (
+        {/* La troisieme plaque repond a « qu'est-ce qui bouge aujourd'hui ». Rien ne
+            monte : elle dit ce qui se transpose, puis ce qui pietine, plutot que
+            d'afficher un zero muet. */}
+        {preview.ups > 0 ? (
+          <Plate value={preview.ups} label={preview.ups > 1 ? 'montées' : 'montée'} tone="up" />
+        ) : preview.shifts > 0 ? (
+          <Plate
+            value={preview.shifts}
+            label={preview.shifts > 1 ? 'transposés' : 'transposé'}
+            tone="up"
+          />
+        ) : preview.stuck > 0 ? (
           <Plate
             value={preview.stuck}
             label={preview.stuck > 1 ? 'bloqués' : 'bloqué'}
             tone="stuck"
           />
         ) : (
-          <Plate
-            value={preview.ups}
-            label={preview.ups > 1 ? 'montées' : 'montée'}
-            tone={preview.ups > 0 ? 'up' : undefined}
-          />
+          <Plate value={0} label="montée" />
         )}
       </div>
 

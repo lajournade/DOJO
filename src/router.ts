@@ -1,15 +1,15 @@
 /**
- * Routeur minimal sur l'History API : quatre ecrans, et le geste de retour iOS
+ * Routeur minimal sur l'History API : cinq ecrans, et le geste de retour iOS
  * qui fonctionne. Une bibliotheque complete serait plus lourde que le besoin.
  */
 import { useSyncExternalStore } from 'react';
 
-export type Route = '/' | '/arena' | '/history' | '/program' | '/results';
+export type Route = '/' | '/arena' | '/history' | '/program' | '/players' | '/results';
 
 const listeners = new Set<() => void>();
 
 function normalize(path: string): Route {
-  const known: Route[] = ['/', '/arena', '/history', '/program', '/results'];
+  const known: Route[] = ['/', '/arena', '/history', '/program', '/players', '/results'];
   return known.includes(path as Route) ? (path as Route) : '/';
 }
 

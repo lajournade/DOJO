@@ -8,10 +8,10 @@ import { FOE, FOE_FRAME, HERO, HERO_PALETTE, foePalette } from '../fx/sprites';
 import { navigate } from '../router';
 import { activeProgram, doneEntries, recentLogs, tonnage } from '../store/selectors';
 import { useStore } from '../store/state';
-import type { AppState, SessionLog } from '../types';
+import type { SessionLog, UserView } from '../types';
 
 /** Rang de la seance, compare a la fois precedente sur la meme seance du programme. */
-function grade(state: AppState, log: SessionLog): { rank: string; delta: number | null } {
+function grade(state: UserView, log: SessionLog): { rank: string; delta: number | null } {
   const previous = recentLogs(state).find((l) => l.sessionId === log.sessionId && l.id !== log.id);
   const load = tonnage(doneEntries(log.entries));
   if (!previous) return { rank: 'A', delta: null };
@@ -27,7 +27,7 @@ function grade(state: AppState, log: SessionLog): { rank: string; delta: number 
 }
 
 /** Series ayant battu la meilleure charge connue sur l'exercice avant cette seance. */
-function records(state: AppState, log: SessionLog): string[] {
+function records(state: UserView, log: SessionLog): string[] {
   const found: string[] = [];
   for (const id of new Set(log.entries.map((e) => e.exerciseId))) {
     const best = Math.max(0, ...log.entries.filter((e) => e.exerciseId === id).map((e) => e.weight ?? 0));

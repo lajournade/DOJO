@@ -1,20 +1,24 @@
 /**
- * L'annonce de la montee en charge : la plaque s'ouvre, le gain claque, puis le
- * bandeau reste en place le temps de la serie. Une seule fois par exercice —
- * ensuite, l'information se reduit a un tag dans la rangee de l'arene.
+ * L'annonce du verdict : la plaque s'ouvre, l'ecart claque, puis le bandeau reste
+ * en place le temps de la serie. Une seule fois par exercice — ensuite,
+ * l'information se reduit a un tag dans la rangee de l'arene.
+ *
+ * Deux titres, car deux choses a annoncer : la montee du jour, et le report des
+ * charges quand la fourchette a change — qui peut aussi bien descendre.
  */
 import { motion } from 'motion/react';
 import type { Trend } from '../store/progression';
 
 interface Props {
   trend: Trend;
-  /** Le gain annonce : « +2,5 kg » ou « +1 rep ». */
+  /** Le gain annonce : « +2,5 kg », « +1 rep », ou l'ecart d'une transposition. */
   gain: string;
   reason: string;
 }
 
 export function PowerUp({ trend, gain, reason }: Props) {
   const strong = trend === 'up';
+  const title = trend === 'shift' ? 'nouveau cycle' : 'power up';
 
   return (
     <motion.div
@@ -28,7 +32,7 @@ export function PowerUp({ trend, gain, reason }: Props) {
 
       <div className="relative flex items-center justify-between gap-2">
         <span className={`fight-text text-p1 tracking-[0.2em] ${strong ? 'text-line' : 'text-impact'}`}>
-          power up
+          {title}
         </span>
         {/* Le gain arrive en ressort, comme le « k.o. » de l'ecran de fin. Il
             grandit vers l'interieur de la plaque : depuis le bord droit, le

@@ -1,6 +1,6 @@
 /**
  * Persistance de l'etat : un seul fichier JSON, ecrit de facon atomique.
- * Mono-utilisateur, quelques milliers de series par an — un fichier suffit,
+ * Quelques joueurs, quelques milliers de series par an — un fichier suffit,
  * il se sauvegarde avec un `cp` et se lit avec n'importe quel editeur.
  */
 import { readFile, writeFile, rename, mkdir, readdir, unlink, copyFile } from 'node:fs/promises';
@@ -14,6 +14,9 @@ const BACKUP_DIR = join(dirname(DATA_FILE), 'backups');
 const SEED_FILE = join(ROOT, 'scripts', 'seed.json');
 const KEEP_BACKUPS = 14;
 
+/** Le joueur qu'on invente en reprenant un etat d'avant les profils. */
+const FIRST_USER = 'u-1';
+
 let state = null;
 /** Les ecritures s'enchainent sur cette promesse : jamais deux writeFile concurrents. */
 let writeChain = Promise.resolve();
@@ -23,21 +26,76 @@ const emptyState = () => ({
   appliedOps: [],
   exercises: [],
   programs: [],
+  users: [],
   logs: [],
-  liveSession: null,
+  liveSessions: {},
 });
+
+/**
+ * Passage de l'etat mono-joueur a l'etat multi-joueurs.
+ *
+ * L'etat d'origine n'avait ni `users` ni `liveSessions`, et le programme en cours
+ * etait marque sur le programme lui-meme. Tout ce qui existait appartient au
+ * premier joueur ; les programmes rejoignent la categorie la plus courante, a
+ * corriger d'un geste dans l'editeur. Renvoie vrai si quelque chose a bouge.
+ */
+function migrate(s) {
+  if (Array.isArray(s.users) && s.liveSessions) return false;
+
+  const active = s.programs?.find((p) => p.active);
+  s.users = [
+    {
+      id: FIRST_USER,
+      name: 'Joueur 1',
+      activeProgramId: active?.id ?? s.programs?.[0]?.id ?? null,
+      palette: 0,
+    },
+  ];
+
+  for (const log of s.logs ?? []) if (!log.userId) log.userId = FIRST_USER;
+
+  s.liveSessions = {};
+  if (s.liveSession) {
+    s.liveSession.userId = FIRST_USER;
+    s.liveSessions[FIRST_USER] = s.liveSession;
+  }
+  delete s.liveSession;
+
+  for (const program of s.programs ?? []) {
+    if (!program.goal) program.goal = 'hypertrophie';
+    delete program.active;
+  }
+
+  return true;
+}
+
+/** Le fichier d'avant la conversion, garde de cote : la sauvegarde du jour arrive trop tard. */
+async function archiveV1() {
+  await mkdir(BACKUP_DIR, { recursive: true });
+  const day = new Date().toISOString().slice(0, 10);
+  const target = join(BACKUP_DIR, `sport-v1-${day}.json`);
+  if (existsSync(target)) return;
+  await copyFile(DATA_FILE, target);
+  console.log(`[dojo] etat mono-joueur archive dans ${target}`);
+}
 
 export async function load() {
   if (state) return state;
   await mkdir(dirname(DATA_FILE), { recursive: true });
-  if (existsSync(DATA_FILE)) {
-    state = JSON.parse(await readFile(DATA_FILE, 'utf8'));
-  } else {
+
+  const fresh = !existsSync(DATA_FILE);
+  if (fresh) {
     // Premier demarrage : on part de l'historique importe du classeur.
     state = existsSync(SEED_FILE) ? JSON.parse(await readFile(SEED_FILE, 'utf8')) : emptyState();
-    await persist();
     console.log(`[dojo] etat initialise depuis ${existsSync(SEED_FILE) ? 'scripts/seed.json' : 'zero'}`);
+  } else {
+    state = JSON.parse(await readFile(DATA_FILE, 'utf8'));
   }
+
+  const converted = migrate(state);
+  if (converted && !fresh) await archiveV1();
+  if (converted || fresh) await persist();
+
   return state;
 }
 
@@ -69,6 +127,6 @@ export async function backup() {
   const target = join(BACKUP_DIR, `sport-${day}.json`);
   if (existsSync(target)) return;
   await copyFile(DATA_FILE, target);
-  const old = (await readdir(BACKUP_DIR)).filter((f) => f.startsWith('sport-')).sort();
+  const old = (await readdir(BACKUP_DIR)).filter((f) => f.startsWith('sport-20')).sort();
   await Promise.all(old.slice(0, -KEEP_BACKUPS).map((f) => unlink(join(BACKUP_DIR, f))));
 }

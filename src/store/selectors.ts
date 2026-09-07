@@ -1,9 +1,11 @@
 /** Lectures derivees de l'etat : suggestions de charge, records, agregats d'historique. */
-import type { AppState, SessionLog, SetEntry } from '../types';
+import type { SessionLog, SetEntry, UserView } from '../types';
 
-export const activeProgram = (s: AppState) => s.programs.find((p) => p.active) ?? s.programs[0] ?? null;
+/** Le programme en cours du joueur : la bibliotheque est commune, le choix ne l'est pas. */
+export const activeProgram = (s: UserView) =>
+  s.programs.find((p) => p.id === s.user.activeProgramId) ?? s.programs[0] ?? null;
 
-export const exerciseName = (s: AppState, id: string) =>
+export const exerciseName = (s: UserView, id: string) =>
   s.exercises.find((e) => e.id === id)?.name ?? id;
 
 /** Tonnage d'une liste de series : la somme des charge x repetitions. */
@@ -14,11 +16,11 @@ export const doneEntries = (entries: SetEntry[]) =>
   entries.filter((e) => e.reps !== null && e.reps !== undefined);
 
 /** Les seances du journal, de la plus recente a la plus ancienne. */
-export const recentLogs = (s: AppState) =>
+export const recentLogs = (s: UserView) =>
   [...s.logs].sort((a, b) => b.date.localeCompare(a.date) || (b.startedAt ?? '').localeCompare(a.startedAt ?? ''));
 
 /** Toutes les series d'un exercice, seance par seance, de la plus recente a la plus ancienne. */
-export function historyOf(s: AppState, exerciseId: string): { log: SessionLog; entries: SetEntry[] }[] {
+export function historyOf(s: UserView, exerciseId: string): { log: SessionLog; entries: SetEntry[] }[] {
   return recentLogs(s)
     .map((log) => ({ log, entries: log.entries.filter((e) => e.exerciseId === exerciseId) }))
     .filter((row) => row.entries.length > 0);
@@ -29,7 +31,7 @@ export function historyOf(s: AppState, exerciseId: string): { log: SessionLog; e
  * C'est la valeur qui pre-remplit les compteurs : dans le cas nominal,
  * une serie se valide sans rien toucher.
  */
-export function lastSet(s: AppState, exerciseId: string, setIndex: number): SetEntry | null {
+export function lastSet(s: UserView, exerciseId: string, setIndex: number): SetEntry | null {
   for (const { entries } of historyOf(s, exerciseId)) {
     const exact = entries.find((e) => e.setIndex === setIndex && e.weight !== null);
     if (exact) return exact;
@@ -41,7 +43,7 @@ export function lastSet(s: AppState, exerciseId: string, setIndex: number): SetE
 }
 
 /** Meilleure charge jamais soulevee sur un exercice (sert a doser l'impact). */
-export function bestWeight(s: AppState, exerciseId: string): number {
+export function bestWeight(s: UserView, exerciseId: string): number {
   let best = 0;
   for (const log of s.logs) {
     for (const e of log.entries) {
@@ -52,7 +54,7 @@ export function bestWeight(s: AppState, exerciseId: string): number {
 }
 
 /** Derniere fois qu'une seance du programme a ete jouee. */
-export function lastRun(s: AppState, sessionId: string): SessionLog | null {
+export function lastRun(s: UserView, sessionId: string): SessionLog | null {
   return recentLogs(s).find((l) => l.sessionId === sessionId) ?? null;
 }
 
@@ -62,7 +64,7 @@ export function lastRun(s: AppState, sessionId: string): SessionLog | null {
  * du classeur n'en ont pas, et une seance oubliee ouverte une nuit entiere n'a rien a
  * dire d'une duree — les deux sont ecartees plutot que moyennees.
  */
-export function typicalMinutes(s: AppState, sessionId: string): number | null {
+export function typicalMinutes(s: UserView, sessionId: string): number | null {
   const durations = s.logs
     .filter((l) => l.sessionId === sessionId && l.startedAt && l.endedAt)
     .map((l) => (Date.parse(l.endedAt as string) - Date.parse(l.startedAt as string)) / 60_000)

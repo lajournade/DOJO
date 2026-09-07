@@ -3,13 +3,13 @@
  * curseur, cloture. Toutes les mutations passent par `dispatch`, donc chacune
  * est immediatement persistee et synchronisee.
  */
-import type { AppState, LiveSession, PlanStep, Program, ProgramSession, SetEntry } from '../types';
-import { dispatch, getState } from './state';
+import type { LiveSession, PlanStep, Program, ProgramSession, SetEntry, UserView } from '../types';
+import { dispatch, getView } from './state';
 import { exerciseName, todayIso, typicalMinutes } from './selectors';
 import { advise, gainLabel, plateau, type Advice, type Plateau, type Trend } from './progression';
 
 /** Instantane du programme au moment du demarrage : l'editer ensuite ne touche pas la seance engagee. */
-export function buildPlan(state: AppState, session: ProgramSession): PlanStep[] {
+export function buildPlan(state: UserView, session: ProgramSession): PlanStep[] {
   return session.items.map((item) => ({ ...item, exerciseName: exerciseName(state, item.exerciseId) }));
 }
 
@@ -49,6 +49,8 @@ export interface SessionPreview {
   estimated: boolean;
   /** Nombre d'exercices qui montent aujourd'hui. */
   ups: number;
+  /** Nombre d'exercices dont la charge est transposee : la fourchette a change. */
+  shifts: number;
   /** Nombre d'exercices en palier : la contrepartie de `ups`. */
   stuck: number;
 }
@@ -60,7 +62,7 @@ export interface SessionPreview {
  * ce qui est affiche ici est exactement ce que l'Arena servira au compteur. Aucun
  * etat n'est touche — lire le briefing ne demarre pas de seance.
  */
-export function previewSession(state: AppState, session: ProgramSession): SessionPreview {
+export function previewSession(state: UserView, session: ProgramSession): SessionPreview {
   const plan = buildPlan(state, session);
 
   const steps: StepPreview[] = plan.map((step) => {
@@ -108,16 +110,18 @@ export function previewSession(state: AppState, session: ProgramSession): Sessio
     sets: totalSets(plan),
     minutes: measured ?? Math.max(1, Math.round((planned - lastRest) / 60)),
     estimated: measured === null,
-    ups: steps.filter((s) => s.trend !== 'hold').length,
+    ups: steps.filter((s) => s.trend === 'up' || s.trend === 'reps').length,
+    shifts: steps.filter((s) => s.trend === 'shift').length,
     stuck: steps.filter((s) => s.plateau !== null).length,
   };
 }
 
 export function startSession(program: Program, session: ProgramSession): LiveSession {
-  const state = getState();
+  const state = getView();
   const date = todayIso();
   const live: LiveSession = {
     id: `log-${date}-${session.id}-${Date.now().toString(36)}`,
+    userId: state.user.id,
     programCode: `${program.code}-${session.code}`,
     sessionId: session.id,
     date,
@@ -187,9 +191,9 @@ export function abortSession() {
  * effacerait — augmentee de ce que dit le RIR. C'est ce qui permet de valider
  * une serie sans rien toucher, et de progresser malgre tout.
  */
-export function suggestion(state: AppState, live: LiveSession): Advice {
+export function suggestion(state: UserView, live: LiveSession): Advice {
   const step = live.plan[live.cursor.planIndex];
-  if (!step) return { weight: 0, reps: 0, trend: 'hold', reason: '' };
+  if (!step) return { weight: 0, reps: 0, trend: 'hold', reason: '', from: 0 };
 
   const advice = advise(state, step, live.cursor.setIndex);
   if (advice) return advice;
@@ -201,6 +205,7 @@ export function suggestion(state: AppState, live: LiveSession): Advice {
     reps: today?.reps ?? step.repMin ?? 8,
     trend: 'hold',
     reason: '',
+    from: today?.weight ?? 0,
   };
 }
 

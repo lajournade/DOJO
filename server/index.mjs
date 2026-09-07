@@ -59,9 +59,13 @@ function readBody(req) {
   });
 }
 
-/** Journal au format de l'onglet d'origine : separateur ';' et date FR, pour un retour direct au tableur. */
-function toCsv(state) {
-  const header = ['Programme', 'Date', 'Exercice', 'Série', 'Répétitions', 'Charge (kg)', 'RIR'];
+/**
+ * Journal au format de l'onglet d'origine : separateur ';' et date FR, pour un
+ * retour direct au tableur. Sans `userId`, tout le monde y passe — la colonne
+ * Utilisateur permet alors de trier au tableur.
+ */
+function toCsv(state, userId) {
+  const header = ['Utilisateur', 'Programme', 'Date', 'Exercice', 'Série', 'Répétitions', 'Charge (kg)', 'RIR'];
   const cell = (v) => {
     if (v === null || v === undefined) return '';
     const s = String(v).replace(/\./g, ',');
@@ -71,16 +75,20 @@ function toCsv(state) {
     const [y, m, d] = iso.split('-');
     return `${d}/${m}/${y}`;
   };
+  const nameOf = (id) => state.users.find((u) => u.id === id)?.name ?? id ?? '';
   const lines = [header.join(';')];
   for (const log of state.logs) {
+    if (userId && log.userId !== userId) continue;
     for (const e of log.entries) {
-      lines.push([log.programCode, frDate(log.date), e.exerciseName, e.setIndex, e.reps, e.weight, e.rir]
-        .map(cell)
-        .join(';'));
+      lines.push(
+        [nameOf(log.userId), log.programCode, frDate(log.date), e.exerciseName, e.setIndex, e.reps, e.weight, e.rir]
+          .map(cell)
+          .join(';'),
+      );
     }
   }
   // BOM : sans lui, Excel et LibreOffice lisent l'UTF-8 de travers.
-  return '﻿' + lines.join('\r\n') + '\r\n';
+  return '\ufeff' + lines.join('\r\n') + '\r\n';
 }
 
 async function serveStatic(req, res, pathname) {
@@ -110,7 +118,7 @@ async function serveStatic(req, res, pathname) {
 }
 
 const server = createServer(async (req, res) => {
-  const { pathname } = new URL(req.url, 'http://localhost');
+  const { pathname, searchParams } = new URL(req.url, 'http://localhost');
   try {
     if (pathname === '/api/state' && req.method === 'GET') {
       return json(res, 200, get());
@@ -126,7 +134,7 @@ const server = createServer(async (req, res) => {
     }
 
     if (pathname === '/api/export.csv') {
-      const body = Buffer.from(toCsv(get()), 'utf8');
+      const body = Buffer.from(toCsv(get(), searchParams.get('user')), 'utf8');
       res.writeHead(200, {
         'content-type': 'text/csv; charset=utf-8',
         'content-disposition': `attachment; filename="dojo-${new Date().toISOString().slice(0, 10)}.csv"`,

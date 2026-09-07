@@ -301,7 +301,11 @@ export function Arena() {
             {target && <Tag>rir {target}</Tag>}
             {record > 0 && <Tag>record {record} kg</Tag>}
             {/* Puis une simple trace sur les series suivantes. */}
-            {bump && !banner && <Tag tone="impact">montée {gainLabel(bump)}</Tag>}
+            {bump && !banner && (
+              <Tag tone="impact">
+                {bump.trend === 'shift' ? 'cycle' : 'montée'} {gainLabel(bump)}
+              </Tag>
+            )}
             {deloaded ? (
               <Tag tone="jade">déchargé −{String(STEP_KG).replace('.', ',')} kg</Tag>
             ) : (
