@@ -23,6 +23,12 @@ export interface ProgramItem {
   targetRirMax: number | null;
   restSec: number;
   notes: string;
+  /**
+   * Les items consecutifs qui partagent cette lettre s'enchainent sans repos :
+   * l'arene alterne leurs series au lieu de les jouer bloc par bloc. Absent ou
+   * `null` sur un exercice qui se joue seul.
+   */
+  supersetGroup?: string | null;
 }
 
 export interface ProgramSession {

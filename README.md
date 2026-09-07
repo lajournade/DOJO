@@ -57,6 +57,7 @@ complet, `tailscale serve` suffit, sans changer une ligne de code.
 | `data/backups/` | une copie datée par jour, les 14 dernières conservées |
 | `data/backups/sport-v1-*.json` | l'état d'avant les profils, archivé une fois pour toutes |
 | `scripts/seed.json` | état initial (programme P2 + historique importé du classeur) |
+| `scripts/p3-full-body.ops.json` | le programme P3, rejouable : `curl -X POST localhost:5180/api/ops --data-binary @scripts/p3-full-body.ops.json` |
 
 Un fichier antérieur aux profils est converti au premier démarrage : tout ce qu'il contenait
 revient à un joueur nommé *Joueur 1*, les programmes rejoignent la famille *hypertrophie*, et
@@ -107,8 +108,16 @@ range la bibliothèque et pré-remplit les exercices qu'on y ajoute :
 | hypertrophie | 8 – 12 | 90 s | 2 |
 | endurance | 15 – 20 | 60 s | 3 |
 
-Rien n'y est imposé : ces valeurs se corrigent ligne à ligne dans l'éditeur. Choisir un
-programme le pose comme **programme en cours** — celui du joueur, pas celui du dojo : deux
+Rien n'y est imposé : ces valeurs se corrigent ligne à ligne dans l'éditeur.
+
+Deux exercices voisins peuvent être **enchaînés en superset** — un bouton entre les deux
+lignes de l'éditeur, et la lettre du groupe se pose toute seule. L'arène alterne alors leurs
+séries au lieu de les jouer bloc par bloc : traction, dips, traction, dips, et le repos ne
+tombe qu'à la sortie de la paire. Le repos du premier passe à zéro en même temps que le lien,
+et lui revient si on délie. Séparer les deux exercices défait le superset : la lettre ne
+survit pas à la rupture, elle ne décrit rien d'autre que le voisinage.
+
+Choisir un programme le pose comme **programme en cours** — celui du joueur, pas celui du dojo : deux
 personnes peuvent suivre le même sans partager une seule charge.
 
 ### Habillage

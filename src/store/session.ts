@@ -135,12 +135,51 @@ export function startSession(program: Program, session: ProgramSession): LiveSes
   return live;
 }
 
-/** Curseur suivant : serie d'apres, puis exercice d'apres. */
+/**
+ * Les bornes du superset auquel appartient un exercice : les items *consecutifs*
+ * qui portent la meme lettre. Un exercice seul est son propre groupe, ce qui
+ * laisse tout le reste du code s'ecrire sans distinguer les deux cas.
+ */
+export function supersetRange(plan: PlanStep[], planIndex: number): [number, number] {
+  const group = plan[planIndex]?.supersetGroup ?? null;
+  if (!group) return [planIndex, planIndex];
+
+  let first = planIndex;
+  while (first > 0 && (plan[first - 1].supersetGroup ?? null) === group) first -= 1;
+  let last = planIndex;
+  while (last < plan.length - 1 && (plan[last + 1].supersetGroup ?? null) === group) last += 1;
+  return [first, last];
+}
+
+/**
+ * Curseur suivant.
+ *
+ * Hors superset : serie d'apres, puis exercice d'apres. Dans un superset, on
+ * tourne — A1 s1, A2 s1, A1 s2 — jusqu'a epuiser le tour le plus long ; un
+ * exercice qui a moins de series que son partenaire est simplement saute.
+ */
 export function nextCursor(live: LiveSession) {
   const { planIndex, setIndex } = live.cursor;
   const step = live.plan[planIndex];
-  if (step && setIndex < step.sets) return { planIndex, setIndex: setIndex + 1 };
-  return { planIndex: planIndex + 1, setIndex: 1 };
+  if (!step) return { planIndex: planIndex + 1, setIndex: 1 };
+
+  const [first, last] = supersetRange(live.plan, planIndex);
+  if (first === last) {
+    if (setIndex < step.sets) return { planIndex, setIndex: setIndex + 1 };
+    return { planIndex: planIndex + 1, setIndex: 1 };
+  }
+
+  const rounds = Math.max(...live.plan.slice(first, last + 1).map((s) => s.sets));
+  for (let i = planIndex + 1, round = setIndex; round <= rounds; i += 1) {
+    // Fin de la ronde : on repart du premier exercice de la paire, un tour plus loin.
+    if (i > last) {
+      i = first - 1;
+      round += 1;
+      continue;
+    }
+    if (round <= live.plan[i].sets) return { planIndex: i, setIndex: round };
+  }
+  return { planIndex: last + 1, setIndex: 1 };
 }
 
 export const isFinished = (live: LiveSession) => live.cursor.planIndex >= live.plan.length;
@@ -163,9 +202,12 @@ export function moveTo(planIndex: number, setIndex = 1) {
   dispatch('session.cursor', { cursor: { planIndex, setIndex } });
 }
 
+/** Une serie de plus — sur toute la paire quand on est dans un superset, sinon elle se desaccorde. */
 export function addSet(live: LiveSession) {
-  const i = live.cursor.planIndex;
-  dispatch('session.plan', { planIndex: i, patch: { sets: live.plan[i].sets + 1 } });
+  const [first, last] = supersetRange(live.plan, live.cursor.planIndex);
+  for (let i = first; i <= last; i += 1) {
+    dispatch('session.plan', { planIndex: i, patch: { sets: live.plan[i].sets + 1 } });
+  }
 }
 
 export function undoLastSet(live: LiveSession) {

@@ -40,6 +40,7 @@ export function blankItem(goal: ProgramGoal): ProgramItem {
     targetRirMax: preset.rir,
     restSec: preset.restSec,
     notes: '',
+    supersetGroup: null,
   };
 }
 

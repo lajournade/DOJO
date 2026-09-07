@@ -1,0 +1,252 @@
+[
+  {
+    "opId": "seed-p3-ex-0",
+    "type": "exercise.upsert",
+    "payload": {
+      "exercise": {
+        "id": "curl-biceps-a-la-poulie-basse",
+        "name": "Curl biceps à la poulie basse"
+      }
+    }
+  },
+  {
+    "opId": "seed-p3-ex-1",
+    "type": "exercise.upsert",
+    "payload": {
+      "exercise": {
+        "id": "souleve-de-terre-jambes-tendues",
+        "name": "Soulevé de terre jambes tendues"
+      }
+    }
+  },
+  {
+    "opId": "seed-p3-ex-2",
+    "type": "exercise.upsert",
+    "payload": {
+      "exercise": {
+        "id": "cable-triceps-pushdown",
+        "name": "Extensions triceps à la poulie haute"
+      }
+    }
+  },
+  {
+    "opId": "seed-p3-program",
+    "type": "program.save",
+    "payload": {
+      "program": {
+        "id": "prog-p3",
+        "code": "P3",
+        "name": "Full body",
+        "goal": "hypertrophie",
+        "sessions": [
+          {
+            "id": "ses-p3-A",
+            "code": "A",
+            "name": "Full body",
+            "items": [
+              {
+                "id": "it-p3a-1",
+                "exerciseId": "fente-bulgare",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 90,
+                "notes": "Le pied arrière sur un banc, buste légèrement penché. Descente contrôlée, genou avant qui ne dépasse pas la pointe du pied. Un haltère dans chaque main.",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p3a-2",
+                "exerciseId": "traction-pronation-lestee",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 0,
+                "notes": "Superset A1 avec les dips : enchaîner sans repos. Coudes tirés vers les hanches, omoplates serrées. Repli machines : tirage vertical.",
+                "supersetGroup": "A"
+              },
+              {
+                "id": "it-p3a-3",
+                "exerciseId": "dips-lestes",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 90,
+                "notes": "Superset A2. Buste penché en avant pour orienter la charge vers les pectoraux. Repos après la paire. Repli machines : développé couché haltères légèrement décliné.",
+                "supersetGroup": "A"
+              },
+              {
+                "id": "it-p3a-4",
+                "exerciseId": "face-pull-a-la-poulie",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 0,
+                "notes": "Superset B1 avec les élévations latérales : enchaîner sans repos. Coudes hauts, mains qui finissent au niveau des oreilles.",
+                "supersetGroup": "B"
+              },
+              {
+                "id": "it-p3a-5",
+                "exerciseId": "elevations-laterales-halteres",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 90,
+                "notes": "Superset B2. Amplitude complète, coudes menant le mouvement, sans balancier. Repos après la paire.",
+                "supersetGroup": "B"
+              },
+              {
+                "id": "it-p3a-6",
+                "exerciseId": "curl-biceps-a-la-poulie-basse",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 0,
+                "notes": "Superset C1 avec les extensions triceps : enchaîner sans repos. Barre droite ou corde, coudes collés au corps.",
+                "supersetGroup": "C"
+              },
+              {
+                "id": "it-p3a-7",
+                "exerciseId": "cable-triceps-pushdown",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 90,
+                "notes": "Superset C2. Barre droite ou corde, coudes fixes le long du buste. Repos après la paire.",
+                "supersetGroup": "C"
+              },
+              {
+                "id": "it-p3a-8",
+                "exerciseId": "souleve-de-terre-jambes-tendues",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 90,
+                "notes": "Jambes quasi tendues, dos neutre, barre qui frôle les cuisses. Descente jusqu'à l'étirement des ischio-jambiers, pas plus bas. Repli : hyperextensions.",
+                "supersetGroup": null
+              }
+            ]
+          },
+          {
+            "id": "ses-p3-B",
+            "code": "B",
+            "name": "Full body",
+            "items": [
+              {
+                "id": "it-p3b-1",
+                "exerciseId": "fente-bulgare",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 90,
+                "notes": "Le pied arrière sur un banc, buste légèrement penché. Descente contrôlée, genou avant qui ne dépasse pas la pointe du pied. Un haltère dans chaque main.",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p3b-2",
+                "exerciseId": "traction-pronation-lestee",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 0,
+                "notes": "Superset A1 avec les dips : enchaîner sans repos. Coudes tirés vers les hanches, omoplates serrées. Repli machines : tirage vertical.",
+                "supersetGroup": "A"
+              },
+              {
+                "id": "it-p3b-3",
+                "exerciseId": "dips-lestes",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 90,
+                "notes": "Superset A2. Buste penché en avant pour orienter la charge vers les pectoraux. Repos après la paire. Repli machines : développé couché haltères légèrement décliné.",
+                "supersetGroup": "A"
+              },
+              {
+                "id": "it-p3b-4",
+                "exerciseId": "face-pull-a-la-poulie",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 0,
+                "notes": "Superset B1 avec les élévations latérales : enchaîner sans repos. Coudes hauts, mains qui finissent au niveau des oreilles.",
+                "supersetGroup": "B"
+              },
+              {
+                "id": "it-p3b-5",
+                "exerciseId": "elevations-laterales-halteres",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 90,
+                "notes": "Superset B2. Amplitude complète, coudes menant le mouvement, sans balancier. Repos après la paire.",
+                "supersetGroup": "B"
+              },
+              {
+                "id": "it-p3b-6",
+                "exerciseId": "curl-biceps-a-la-poulie-basse",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 0,
+                "notes": "Superset C1 avec les extensions triceps : enchaîner sans repos. Barre droite ou corde, coudes collés au corps.",
+                "supersetGroup": "C"
+              },
+              {
+                "id": "it-p3b-7",
+                "exerciseId": "cable-triceps-pushdown",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 90,
+                "notes": "Superset C2. Barre droite ou corde, coudes fixes le long du buste. Repos après la paire.",
+                "supersetGroup": "C"
+              },
+              {
+                "id": "it-p3b-8",
+                "exerciseId": "souleve-de-terre-jambes-tendues",
+                "sets": 4,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 2,
+                "targetRirMax": 2,
+                "restSec": 90,
+                "notes": "Jambes quasi tendues, dos neutre, barre qui frôle les cuisses. Descente jusqu'à l'étirement des ischio-jambiers, pas plus bas. Repli : hyperextensions.",
+                "supersetGroup": null
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]

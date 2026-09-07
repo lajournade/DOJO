@@ -8,7 +8,7 @@
  *
  * La bibliotheque est commune a tous les joueurs ; le programme en cours, non.
  */
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useHold } from '../fx/hold';
 import { navigate } from '../router';
 import { activeProgram, exerciseName } from '../store/selectors';
@@ -358,6 +358,43 @@ function ProgramEditor({
 
 /* ---------------------------------------------------------- l'editeur de seance */
 
+/** Ou chaque ligne s'enchaine a la precedente : le lien tel qu'il se lit dans les items. */
+const linksOf = (items: ProgramItem[]) =>
+  items.map(
+    (it, i) => i > 0 && !!it.supersetGroup && it.supersetGroup === items[i - 1].supersetGroup,
+  );
+
+/**
+ * Renumerote les groupes de haut en bas — A, B, C — a partir des liens poses.
+ *
+ * La lettre ne se saisit jamais : elle se deduit, ce qui evite les groupes en
+ * double et les lettres a trous quand on deplace ou supprime une ligne. Le repos
+ * suit le lien : zero pour qui enchaine — c'est ce que « superset » veut dire ici,
+ * et l'arene s'en sert pour ne pas afficher de pause —, et celui de la famille
+ * rendu a qui sort d'une paire, sans quoi delier laisserait un exercice sans repos.
+ */
+function regroup(items: ProgramItem[], links: boolean[], restSec: number): ProgramItem[] {
+  const groups: (string | null)[] = items.map(() => null);
+  let rank = 0;
+
+  for (let i = 1; i < items.length; i += 1) {
+    if (!links[i]) continue;
+    if (groups[i - 1] === null) {
+      groups[i - 1] = String.fromCharCode(65 + rank);
+      rank += 1;
+    }
+    groups[i] = groups[i - 1];
+  }
+
+  return items.map((it, i) => {
+    const group = groups[i];
+    const chained = group !== null && groups[i + 1] === group;
+    if (chained) return { ...it, supersetGroup: group, restSec: 0 };
+    return { ...it, supersetGroup: group, restSec: it.restSec === 0 ? restSec : it.restSec };
+  });
+}
+
+
 function SessionEditor({
   session,
   goal,
@@ -392,7 +429,17 @@ function SessionEditor({
       const target = index + direction;
       if (target < 0 || target >= items.length) return d;
       [items[index], items[target]] = [items[target], items[index]];
-      return { ...d, items };
+      // Un deplacement peut separer une paire : `regroup` la dissout alors plutot
+      // que de laisser une lettre orpheline sur un exercice devenu solitaire.
+      return { ...d, items: regroup(items, linksOf(items), GOALS[goal].restSec) };
+    });
+
+  /** Enchaine — ou desenchaine — une ligne avec celle du dessus. */
+  const toggleLink = (index: number) =>
+    setDraft((d) => {
+      const links = linksOf(d.items);
+      links[index] = !links[index];
+      return { ...d, items: regroup(d.items, links, GOALS[goal].restSec) };
     });
 
   return (
@@ -412,49 +459,69 @@ function SessionEditor({
       </datalist>
 
       {draft.items.map((item, index) => (
-        <div key={item.id} className="bevel-sm bg-ink-2 p-3">
-          <div className="flex items-center gap-2">
-            <input
-              value={labels[item.id] ?? ''}
-              list="exercices"
-              placeholder="nom de l'exercice"
-              onChange={(e) => setLabels({ ...labels, [item.id]: e.target.value })}
-              className="min-w-0 flex-1 bg-transparent font-bold text-bone outline-none placeholder:text-ash/50"
-            />
-            <IconButton onClick={() => move(index, -1)}>↑</IconButton>
-            <IconButton onClick={() => move(index, 1)}>↓</IconButton>
-            <IconButton
-              onClick={() => setDraft({ ...draft, items: draft.items.filter((i) => i.id !== item.id) })}
-            >
-              ✕
-            </IconButton>
-          </div>
+        <Fragment key={item.id}>
+          {/* Le lien se pose entre deux lignes, la ou il agit. */}
+          {index > 0 &&
+            (() => {
+              const linked =
+                !!item.supersetGroup && item.supersetGroup === draft.items[index - 1].supersetGroup;
+              return (
+                <button
+                  type="button"
+                  onClick={() => toggleLink(index)}
+                  className={`bevel-sm keycap label-text py-1.5 text-p2 ${
+                    linked ? 'bg-impact text-line' : 'bg-ink-2 text-ash/60'
+                  }`}
+                >
+                  {linked ? `⛓ superset ${item.supersetGroup}` : '⛓ enchaîner sans repos'}
+                </button>
+              );
+            })()}
 
-          <div className="mt-2 grid grid-cols-3 gap-1.5">
-            <Num label="séries" value={item.sets} onChange={(v) => patch(item.id, { sets: v })} />
-            <Num label="rep min" value={item.repMin} onChange={(v) => patch(item.id, { repMin: v })} />
-            <Num label="rep max" value={item.repMax} onChange={(v) => patch(item.id, { repMax: v })} />
-            <Num label="repos s" value={item.restSec} onChange={(v) => patch(item.id, { restSec: v })} />
-            <Num
-              label="rir min"
-              value={item.targetRirMin}
-              onChange={(v) => patch(item.id, { targetRirMin: v })}
-            />
-            <Num
-              label="rir max"
-              value={item.targetRirMax}
-              onChange={(v) => patch(item.id, { targetRirMax: v })}
+          <div className="bevel-sm bg-ink-2 p-3">
+            <div className="flex items-center gap-2">
+              <input
+                value={labels[item.id] ?? ''}
+                list="exercices"
+                placeholder="nom de l'exercice"
+                onChange={(e) => setLabels({ ...labels, [item.id]: e.target.value })}
+                className="min-w-0 flex-1 bg-transparent font-bold text-bone outline-none placeholder:text-ash/50"
+              />
+              <IconButton onClick={() => move(index, -1)}>↑</IconButton>
+              <IconButton onClick={() => move(index, 1)}>↓</IconButton>
+              <IconButton
+                onClick={() => setDraft({ ...draft, items: draft.items.filter((i) => i.id !== item.id) })}
+              >
+                ✕
+              </IconButton>
+            </div>
+
+            <div className="mt-2 grid grid-cols-3 gap-1.5">
+              <Num label="séries" value={item.sets} onChange={(v) => patch(item.id, { sets: v })} />
+              <Num label="rep min" value={item.repMin} onChange={(v) => patch(item.id, { repMin: v })} />
+              <Num label="rep max" value={item.repMax} onChange={(v) => patch(item.id, { repMax: v })} />
+              <Num label="repos s" value={item.restSec} onChange={(v) => patch(item.id, { restSec: v })} />
+              <Num
+                label="rir min"
+                value={item.targetRirMin}
+                onChange={(v) => patch(item.id, { targetRirMin: v })}
+              />
+              <Num
+                label="rir max"
+                value={item.targetRirMax}
+                onChange={(v) => patch(item.id, { targetRirMax: v })}
+              />
+            </div>
+
+            <textarea
+              value={item.notes}
+              placeholder="conseil d'exécution"
+              rows={2}
+              onChange={(e) => patch(item.id, { notes: e.target.value })}
+              className="bevel-in mt-2 w-full min-w-0 resize-none bg-ink-3 p-2 text-p2 text-ash outline-none placeholder:text-ash/40"
             />
           </div>
-
-          <textarea
-            value={item.notes}
-            placeholder="conseil d'exécution"
-            rows={2}
-            onChange={(e) => patch(item.id, { notes: e.target.value })}
-            className="bevel-in mt-2 w-full min-w-0 resize-none bg-ink-3 p-2 text-p2 text-ash outline-none placeholder:text-ash/40"
-          />
-        </div>
+        </Fragment>
       ))}
 
       <button
@@ -472,9 +539,17 @@ function SessionEditor({
       <button
         type="button"
         onClick={() => {
-          const items = draft.items
+          const kept = draft.items
             .filter((it) => (labels[it.id] ?? '').trim())
-            .map((it) => ({ ...it, exerciseId: slug(labels[it.id]) }));
+            .map((it) => {
+              const label = labels[it.id].trim();
+              // Un exercice renomme au catalogue garde son identifiant, donc son
+              // historique : on ne re-slugifie que si le nom a vraiment change ici.
+              const untouched = it.exerciseId !== '' && resolveName(it.exerciseId) === label;
+              return { ...it, exerciseId: untouched ? it.exerciseId : slug(label) };
+            });
+          // Une ligne supprimee peut laisser un membre de paire tout seul.
+          const items = regroup(kept, linksOf(kept), GOALS[goal].restSec);
           const names = Object.fromEntries(
             items.map((it) => [it.exerciseId, labels[it.id].trim()]),
           );

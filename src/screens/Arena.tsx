@@ -34,9 +34,11 @@ import {
   isFinished,
   logSet,
   moveTo,
+  nextCursor,
   repRange,
   rirTarget,
   suggestion,
+  supersetRange,
   totalSets,
   undoLastSet,
 } from '../store/session';
@@ -105,8 +107,10 @@ export function Arena() {
   });
 
   // Un exercice n'a qu'une annonce, a sa premiere serie : la montee en charge, ou le
-  // palier. Les deux s'excluent — l'un veut `hold`, l'autre non —, une ref suffit.
-  const announced = useRef<number | null>(null);
+  // palier. Les deux s'excluent — l'un veut `hold`, l'autre non. Un ensemble, et non
+  // un seul index : dans un superset le curseur revient sur un exercice deja annonce,
+  // et l'annonce se rejouerait a chaque tour, son compris.
+  const announced = useRef(new Set<number>());
 
   /**
    * Les exercices decharges a la main pendant cette seance : planIndex → la charge
@@ -133,10 +137,10 @@ export function Arena() {
     const stallAtCursor = s.trend === 'hold' ? plateau(state, step) : null;
     const worthAnnouncing =
       (s.trend !== 'hold' || (stallAtCursor !== null && cut === undefined)) &&
-      announced.current !== live.cursor.planIndex;
+      !announced.current.has(live.cursor.planIndex);
     setBanner(worthAnnouncing);
     if (worthAnnouncing) {
-      announced.current = live.cursor.planIndex;
+      announced.current.add(live.cursor.planIndex);
       if (s.trend === 'hold') sfx.warn();
       else sfx.powerup();
     }
@@ -159,6 +163,9 @@ export function Arena() {
 
   const done = live.entries.length;
   const total = totalSets(live.plan);
+  // Dans un superset, on doit savoir avant de valider qu'on enchaine, et sur quoi.
+  const chained = step.restSec === 0 && nextCursor(live).planIndex < live.plan.length;
+  const upcoming = chained ? live.plan[nextCursor(live).planIndex] : null;
   const target = rirTarget(step);
   // La proposition ne tient que tant qu'elle decrit la valeur au compteur : des
   // que le pouce touche la charge, elle s'efface plutot que de mentir.
@@ -194,8 +201,16 @@ export function Arena() {
 
     logSet(live, { reps, weight, rir: isLastSet ? rir : null });
 
-    const lastOfSession = live.cursor.planIndex >= live.plan.length - 1 && isLastSet;
-    setRest(lastOfSession ? null : { startedAt: Date.now(), duration: step.restSec });
+    // C'est le curseur suivant qui sait si le combat s'arrete la : dans un superset,
+    // la derniere serie de la seance n'est pas forcement celle du dernier exercice.
+    const lastOfSession = nextCursor(live).planIndex >= live.plan.length;
+    // Un repos nul est un enchainement, pas une pause : l'afficher ferait sonner la
+    // cloche entre les deux mouvements de la paire.
+    setRest(
+      lastOfSession || step.restSec === 0
+        ? null
+        : { startedAt: Date.now(), duration: step.restSec },
+    );
   };
 
   return (
@@ -294,6 +309,8 @@ export function Arena() {
           </h1>
 
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {step.supersetGroup && <Tag tone="impact">superset {step.supersetGroup}</Tag>}
+            {upcoming && <Tag>puis {upcoming.exerciseName}</Tag>}
             <Tag tone="blood">
               série {live.cursor.setIndex}/{step.sets}
             </Tag>
@@ -396,7 +413,10 @@ export function Arena() {
         {/* Actions secondaires */}
         <section className="pad-x mt-3 flex flex-wrap gap-1.5">
           <Small onClick={() => addSet(live)}>+ série</Small>
-          <Small onClick={() => moveTo(live.cursor.planIndex + 1)}>passer l'exercice</Small>
+          {/* Passer un membre de superset seul laisserait la paire boiteuse : on saute le groupe. */}
+          <Small onClick={() => moveTo(supersetRange(live.plan, live.cursor.planIndex)[1] + 1)}>
+            passer l'exercice
+          </Small>
           {live.entries.length > 0 && (
             <Small
               onClick={() => {
@@ -423,7 +443,7 @@ export function Arena() {
           <span className="notch relative flex h-[70px] w-full items-center justify-center overflow-hidden bg-blood">
             <span className="speedlines absolute inset-0 opacity-40" />
             <span className="fight-text fight-shadow relative text-p3 text-bone">
-              {isLastSet && live.cursor.planIndex === live.plan.length - 1 ? 'finish him' : 'impact'}
+              {nextCursor(live).planIndex >= live.plan.length ? 'finish him' : 'impact'}
             </span>
           </span>
         </button>
