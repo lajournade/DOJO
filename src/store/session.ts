@@ -3,7 +3,7 @@
  * curseur, cloture. Toutes les mutations passent par `dispatch`, donc chacune
  * est immediatement persistee et synchronisee.
  */
-import type { LiveSession, PlanStep, Program, ProgramSession, SetEntry, UserView } from '../types';
+import type { Cursor, LiveSession, PlanStep, Program, ProgramSession, SetEntry, UserView } from '../types';
 import { dispatch, getView } from './state';
 import { exerciseName, todayIso, typicalMinutes } from './selectors';
 import { advise, gainLabel, plateau, type Advice, type Plateau, type Trend } from './progression';
@@ -151,6 +151,31 @@ export function supersetRange(plan: PlanStep[], planIndex: number): [number, num
   return [first, last];
 }
 
+/** Series deja validees sur un exercice de la seance. */
+const doneSets = (live: LiveSession, planIndex: number) =>
+  live.entries.filter((e) => e.itemId === live.plan[planIndex].id).length;
+
+/**
+ * La premiere serie encore a jouer a partir d'un groupe, en entrant dedans.
+ *
+ * Dans le cas nominal c'est sa premiere serie : rien n'a ete joue. Mais un exercice
+ * reporte a la deuxieme serie — la machine prise pendant le repos — garde ses series
+ * validees dans le journal, et l'on y revient la ou on l'avait laisse plutot que de
+ * rejouer la premiere. Un groupe entierement joue est traverse.
+ */
+export function resumeCursor(live: LiveSession, planIndex: number): Cursor {
+  if (planIndex >= live.plan.length) return { planIndex, setIndex: 1 };
+
+  const [first, last] = supersetRange(live.plan, planIndex);
+  const rounds = Math.max(...live.plan.slice(first, last + 1).map((s) => s.sets));
+  for (let round = 1; round <= rounds; round += 1) {
+    for (let i = first; i <= last; i += 1) {
+      if (round <= live.plan[i].sets && doneSets(live, i) < round) return { planIndex: i, setIndex: round };
+    }
+  }
+  return resumeCursor(live, last + 1);
+}
+
 /**
  * Curseur suivant.
  *
@@ -158,7 +183,7 @@ export function supersetRange(plan: PlanStep[], planIndex: number): [number, num
  * tourne — A1 s1, A2 s1, A1 s2 — jusqu'a epuiser le tour le plus long ; un
  * exercice qui a moins de series que son partenaire est simplement saute.
  */
-export function nextCursor(live: LiveSession) {
+export function nextCursor(live: LiveSession): Cursor {
   const { planIndex, setIndex } = live.cursor;
   const step = live.plan[planIndex];
   if (!step) return { planIndex: planIndex + 1, setIndex: 1 };
@@ -166,7 +191,7 @@ export function nextCursor(live: LiveSession) {
   const [first, last] = supersetRange(live.plan, planIndex);
   if (first === last) {
     if (setIndex < step.sets) return { planIndex, setIndex: setIndex + 1 };
-    return { planIndex: planIndex + 1, setIndex: 1 };
+    return resumeCursor(live, planIndex + 1);
   }
 
   const rounds = Math.max(...live.plan.slice(first, last + 1).map((s) => s.sets));
@@ -179,7 +204,7 @@ export function nextCursor(live: LiveSession) {
     }
     if (round <= live.plan[i].sets) return { planIndex: i, setIndex: round };
   }
-  return { planIndex: last + 1, setIndex: 1 };
+  return resumeCursor(live, last + 1);
 }
 
 export const isFinished = (live: LiveSession) => live.cursor.planIndex >= live.plan.length;
@@ -200,6 +225,30 @@ export function logSet(live: LiveSession, values: { reps: number; weight: number
 
 export function moveTo(planIndex: number, setIndex = 1) {
   dispatch('session.cursor', { cursor: { planIndex, setIndex } });
+}
+
+/** Il reste quelque chose a jouer avant : on peut reporter l'exercice en cours. */
+export const canPostpone = (live: LiveSession) =>
+  supersetRange(live.plan, live.cursor.planIndex)[1] + 1 < live.plan.length;
+
+/**
+ * La machine est prise : l'exercice en cours passe derriere le suivant, et le combat
+ * reprend sur celui-ci. On revient sur l'exercice reporte une fois l'autre joue —
+ * c'est le simple ordre du plan qui y ramene. Un superset se deplace d'un bloc, comme
+ * partout ailleurs. Un second appui, machine toujours prise, le repousse d'un cran.
+ */
+export function postponeStep(live: LiveSession) {
+  if (!canPostpone(live)) return;
+  const [first, last] = supersetRange(live.plan, live.cursor.planIndex);
+  const [nextFirst, nextLast] = supersetRange(live.plan, last + 1);
+  const range = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, k) => from + k);
+  const order = [
+    ...range(0, first - 1),
+    ...range(nextFirst, nextLast),
+    ...range(first, last),
+    ...range(nextLast + 1, live.plan.length - 1),
+  ];
+  dispatch('session.reorder', { order, cursor: { planIndex: first, setIndex: 1 } });
 }
 
 /** Une serie de plus — sur toute la paire quand on est dans un superset, sinon elle se desaccorde. */

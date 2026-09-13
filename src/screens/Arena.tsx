@@ -30,11 +30,13 @@ import { activeProgram, bestWeight } from '../store/selectors';
 import {
   abortSession,
   addSet,
+  canPostpone,
   finishSession,
   isFinished,
   logSet,
   moveTo,
   nextCursor,
+  postponeStep,
   repRange,
   rirTarget,
   suggestion,
@@ -68,7 +70,9 @@ export function Arena() {
   const { left: restLeft, done: restDone } = useRestCountdown(rest);
 
   const step = live?.plan[live.cursor.planIndex] ?? null;
-  const cursorKey = live ? `${live.cursor.planIndex}:${live.cursor.setIndex}` : '';
+  // L'identifiant plutot que la position : reporter un exercice change ce que le
+  // curseur pointe sans le deplacer, et les compteurs doivent suivre.
+  const cursorKey = live && step ? `${step.id}:${live.cursor.setIndex}` : '';
   const isLastSet = step ? live!.cursor.setIndex >= step.sets : false;
 
   // La couleur de l'adversaire suit la seance : la meme qu'a la selection.
@@ -109,23 +113,24 @@ export function Arena() {
   // Un exercice n'a qu'une annonce, a sa premiere serie : la montee en charge, ou le
   // palier. Les deux s'excluent — l'un veut `hold`, l'autre non. Un ensemble, et non
   // un seul index : dans un superset le curseur revient sur un exercice deja annonce,
-  // et l'annonce se rejouerait a chaque tour, son compris.
-  const announced = useRef(new Set<number>());
+  // et l'annonce se rejouerait a chaque tour, son compris. Cle par identifiant et non
+  // par position : reporter un exercice deplace tout ce qui le suit.
+  const announced = useRef(new Set<string>());
 
   /**
-   * Les exercices decharges a la main pendant cette seance : planIndex → la charge
-   * du palier. La baisse se reporte sur les series suivantes du meme exercice, mais
+   * Les exercices decharges a la main pendant cette seance : identifiant du pas → la
+   * charge du palier. La baisse se reporte sur les series suivantes du meme exercice, mais
    * seulement sur celles qui portaient cette charge : l'echauffement 40 / 60 / 80
    * garde ses paliers, comme le fait deja `advise`. Rien n'est ecrit au journal —
    * la seance suivante repartira de l'historique.
    */
-  const deloads = useRef(new Map<number, number>());
+  const deloads = useRef(new Map<string, number>());
 
   // Chaque nouvelle serie repart de ce qui a ete fait la derniere fois.
   useEffect(() => {
     if (!live || !step) return;
     const s = suggestion(state, live);
-    const cut = deloads.current.get(live.cursor.planIndex);
+    const cut = deloads.current.get(step.id);
     setWeight(cut !== undefined && s.weight === cut ? deloadWeight(s.weight) : s.weight);
     setReps(s.reps);
     setRir(null);
@@ -137,10 +142,10 @@ export function Arena() {
     const stallAtCursor = s.trend === 'hold' ? plateau(state, step) : null;
     const worthAnnouncing =
       (s.trend !== 'hold' || (stallAtCursor !== null && cut === undefined)) &&
-      !announced.current.has(live.cursor.planIndex);
+      !announced.current.has(step.id);
     setBanner(worthAnnouncing);
     if (worthAnnouncing) {
-      announced.current.add(live.cursor.planIndex);
+      announced.current.add(step.id);
       if (s.trend === 'hold') sfx.warn();
       else sfx.powerup();
     }
@@ -298,7 +303,7 @@ export function Arena() {
       {/* Seule cette zone defile : la barre d'action reste sous le pouce. */}
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-clip pb-3">
         <motion.section
-          key={live.cursor.planIndex}
+          key={step.id}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.25 }}
@@ -357,7 +362,7 @@ export function Arena() {
                 sessions={stall.sessions}
                 weight={deloadWeight(stall.weight)}
                 onDeload={() => {
-                  deloads.current.set(live.cursor.planIndex, stall.weight);
+                  deloads.current.set(step.id, stall.weight);
                   // La baisse ne touche que le poids de travail : sur une rampe, on la
                   // decide des l'echauffement, mais le compteur n'en bouge qu'a la
                   // serie qui portait la charge bloquee.
@@ -417,6 +422,18 @@ export function Arena() {
           <Small onClick={() => moveTo(supersetRange(live.plan, live.cursor.planIndex)[1] + 1)}>
             passer l'exercice
           </Small>
+          {/* La machine est prise : le suivant d'abord, on y revient apres. */}
+          {canPostpone(live) && (
+            <Small
+              onClick={() => {
+                postponeStep(live);
+                setRest(null);
+                sfx.select();
+              }}
+            >
+              reporter
+            </Small>
+          )}
           {live.entries.length > 0 && (
             <Small
               onClick={() => {

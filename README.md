@@ -117,6 +117,13 @@ tombe qu'à la sortie de la paire. Le repos du premier passe à zéro en même t
 et lui revient si on délie. Séparer les deux exercices défait le superset : la lettre ne
 survit pas à la rupture, elle ne décrit rien d'autre que le voisinage.
 
+Une machine prise n'arrête pas la séance : dans l'arène, `reporter` fait passer l'exercice
+derrière le suivant, et le combat reprend sur celui-ci. L'exercice reporté revient de lui-même
+une fois l'autre joué — c'est l'ordre du plan qui y ramène, rien d'autre. Un superset se
+déplace d'un bloc, un exercice entamé reprend à la série où on l'avait laissé, et si la
+machine est toujours prise en y revenant, un second appui le repousse d'un cran de plus.
+`passer l'exercice` reste le geste pour l'abandonner tout à fait.
+
 Choisir un programme le pose comme **programme en cours** — celui du joueur, pas celui du dojo : deux
 personnes peuvent suivre le même sans partager une seule charge.
 

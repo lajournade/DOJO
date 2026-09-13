@@ -137,6 +137,7 @@ export type OpType =
   | 'session.start'
   | 'session.cursor'
   | 'session.plan'
+  | 'session.reorder'
   | 'set.log'
   | 'set.edit'
   | 'set.remove'

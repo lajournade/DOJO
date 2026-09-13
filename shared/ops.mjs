@@ -28,6 +28,18 @@ const handlers = {
     if (step) Object.assign(step, patch);
   },
 
+  /**
+   * Reordonne le plan de la seance en cours — un exercice reporte parce que la machine
+   * est prise. `order` est une permutation des index du plan ; le curseur voyage dans
+   * la meme operation, pour ne jamais pointer un plan qu'il ne decrit plus.
+   */
+  'session.reorder': (s, { userId, order, cursor }) => {
+    const live = s.liveSessions[userId];
+    if (!live) return;
+    live.plan = order.map((i) => live.plan[i]);
+    if (cursor) live.cursor = cursor;
+  },
+
   /** Enregistre une serie realisee. */
   'set.log': (s, { userId, entry, cursor }) => {
     const live = s.liveSessions[userId];
