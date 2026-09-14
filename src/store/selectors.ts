@@ -42,6 +42,13 @@ export function lastSet(s: UserView, exerciseId: string, setIndex: number): SetE
   return null;
 }
 
+/** Le nombre de series de la derniere seance ou l'exercice a ete joue, `null` s'il ne l'a jamais ete. */
+export function knownSets(s: UserView, exerciseId: string): number | null {
+  const last = historyOf(s, exerciseId)[0];
+  if (!last) return null;
+  return Math.max(...last.entries.map((e) => e.setIndex));
+}
+
 /** Meilleure charge jamais soulevee sur un exercice (sert a doser l'impact). */
 export function bestWeight(s: UserView, exerciseId: string): number {
   let best = 0;

@@ -5,7 +5,8 @@
  */
 import type { Cursor, LiveSession, PlanStep, Program, ProgramSession, SetEntry, UserView } from '../types';
 import { dispatch, getView } from './state';
-import { exerciseName, todayIso, typicalMinutes } from './selectors';
+import { findExercise, slug } from './programs';
+import { exerciseName, knownSets, todayIso, typicalMinutes } from './selectors';
 import { advise, gainLabel, plateau, type Advice, type Plateau, type Trend } from './progression';
 
 /** Instantane du programme au moment du demarrage : l'editer ensuite ne touche pas la seance engagee. */
@@ -251,6 +252,38 @@ export function postponeStep(live: LiveSession) {
   dispatch('session.reorder', { order, cursor: { planIndex: first, setIndex: 1 } });
 }
 
+/**
+ * La machine ne se libere pas : l'exercice en cours cede sa place a un autre, pour cette
+ * seance seulement — le programme n'en sait rien. Un exercice deja joue apporte son
+ * nombre de series, et `advise` retrouvera sa charge tout seul dans l'historique. Faute
+ * d'historique, c'est ce qui etait au compteur qui reste (`carry`), a corriger a la main ;
+ * un nom inconnu entre en plus au catalogue, pour etre propose la prochaine fois. Le
+ * conseil d'execution parlait de l'ancien exercice : il ne suit pas.
+ */
+export function replaceStep(live: LiveSession, name: string, counter: { weight: number; reps: number }) {
+  const label = name.trim();
+  if (!label) return;
+  const state = getView();
+  const step = live.plan[live.cursor.planIndex];
+  if (!step) return;
+
+  const existing = findExercise(state.exercises, label);
+  const exerciseId = existing?.id ?? slug(label);
+  if (!exerciseId || exerciseId === step.exerciseId) return;
+  if (!existing) dispatch('exercise.upsert', { exercise: { id: exerciseId, name: label } });
+
+  // Jamais moins de series que celle ou l'on se trouve : le curseur doit rester dans le plan.
+  const known = knownSets(state, exerciseId);
+  const patch: Partial<PlanStep> = {
+    exerciseId,
+    exerciseName: existing?.name ?? label,
+    sets: known === null ? step.sets : Math.max(known, live.cursor.setIndex),
+    carry: counter,
+    notes: '',
+  };
+  dispatch('session.plan', { planIndex: live.cursor.planIndex, patch });
+}
+
 /** Une serie de plus — sur toute la paire quand on est dans un superset, sinon elle se desaccorde. */
 export function addSet(live: LiveSession) {
   const [first, last] = supersetRange(live.plan, live.cursor.planIndex);
@@ -289,14 +322,16 @@ export function suggestion(state: UserView, live: LiveSession): Advice {
   const advice = advise(state, step, live.cursor.setIndex);
   if (advice) return advice;
 
-  // Jamais fait : on reprend ce qui vient d'etre porte sur cet exercice aujourd'hui.
+  // Jamais fait : on reprend ce qui vient d'etre porte sur cet exercice aujourd'hui —
+  // ou, s'il vient de remplacer un autre, ce que le compteur affichait a ce moment-la.
   const today = [...live.entries].reverse().find((e) => e.itemId === step.id);
+  const seed = today ?? step.carry ?? null;
   return {
-    weight: today?.weight ?? 0,
-    reps: today?.reps ?? step.repMin ?? 8,
+    weight: seed?.weight ?? 0,
+    reps: seed?.reps ?? step.repMin ?? 8,
     trend: 'hold',
     reason: '',
-    from: today?.weight ?? 0,
+    from: seed?.weight ?? 0,
   };
 }
 

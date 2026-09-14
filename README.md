@@ -124,6 +124,12 @@ déplace d'un bloc, un exercice entamé reprend à la série où on l'avait lais
 machine est toujours prise en y revenant, un second appui le repousse d'un cran de plus.
 `passer l'exercice` reste le geste pour l'abandonner tout à fait.
 
+Et si la machine ne se libérera pas, `remplacer` met un autre exercice à sa place — pour
+cette séance seulement, le programme n'en sait rien. Le titre devient une cellule : on y
+tape un nom, le catalogue le complète. Un exercice déjà joué ramène son nombre de séries et
+sa charge de l'historique ; un nom nouveau garde ce qui était au compteur, à corriger à la
+main, et entre au catalogue pour être proposé la prochaine fois.
+
 Choisir un programme le pose comme **programme en cours** — celui du joueur, pas celui du dojo : deux
 personnes peuvent suivre le même sans partager une seule charge.
 

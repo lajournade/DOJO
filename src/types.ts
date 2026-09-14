@@ -93,6 +93,11 @@ export interface SessionLog {
  */
 export interface PlanStep extends ProgramItem {
   exerciseName: string;
+  /**
+   * Ce que le compteur affichait quand l'exercice a ete remplace par un inconnu :
+   * sans historique, c'est de la que repart la suggestion. Absent sinon.
+   */
+  carry?: { weight: number; reps: number } | null;
 }
 
 export interface Cursor {

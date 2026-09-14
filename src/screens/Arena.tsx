@@ -38,6 +38,7 @@ import {
   nextCursor,
   postponeStep,
   repRange,
+  replaceStep,
   rirTarget,
   suggestion,
   supersetRange,
@@ -65,14 +66,18 @@ export function Arena() {
   const [flash, setFlash] = useState(0);
   const [striking, setStriking] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  // La saisie du remplacant : `null` tant que le titre reste un titre.
+  const [draftName, setDraftName] = useState<string | null>(null);
   const { shake, props: shakeProps } = useShake();
   const breath = useFrame(2, 2.5);
   const { left: restLeft, done: restDone } = useRestCountdown(rest);
 
   const step = live?.plan[live.cursor.planIndex] ?? null;
   // L'identifiant plutot que la position : reporter un exercice change ce que le
-  // curseur pointe sans le deplacer, et les compteurs doivent suivre.
-  const cursorKey = live && step ? `${step.id}:${live.cursor.setIndex}` : '';
+  // curseur pointe sans le deplacer, et les compteurs doivent suivre. L'exercice
+  // aussi : remplace sur place, le pas garde son identifiant mais change de nom.
+  const stepKey = step ? `${step.id}:${step.exerciseId}` : '';
+  const cursorKey = live && step ? `${stepKey}:${live.cursor.setIndex}` : '';
   const isLastSet = step ? live!.cursor.setIndex >= step.sets : false;
 
   // La couleur de l'adversaire suit la seance : la meme qu'a la selection.
@@ -130,11 +135,12 @@ export function Arena() {
   useEffect(() => {
     if (!live || !step) return;
     const s = suggestion(state, live);
-    const cut = deloads.current.get(step.id);
+    const cut = deloads.current.get(stepKey);
     setWeight(cut !== undefined && s.weight === cut ? deloadWeight(s.weight) : s.weight);
     setReps(s.reps);
     setRir(null);
     setShowNotes(false);
+    setDraftName(null);
     setAdvice(s);
     setDeloaded(cut !== undefined);
 
@@ -142,10 +148,10 @@ export function Arena() {
     const stallAtCursor = s.trend === 'hold' ? plateau(state, step) : null;
     const worthAnnouncing =
       (s.trend !== 'hold' || (stallAtCursor !== null && cut === undefined)) &&
-      !announced.current.has(step.id);
+      !announced.current.has(stepKey);
     setBanner(worthAnnouncing);
     if (worthAnnouncing) {
-      announced.current.add(step.id);
+      announced.current.add(stepKey);
       if (s.trend === 'hold') sfx.warn();
       else sfx.powerup();
     }
@@ -309,9 +315,24 @@ export function Arena() {
           transition={{ duration: 0.25 }}
           className="pad-x mt-3"
         >
-          <h1 className="fight-shadow text-p3 font-bold uppercase leading-8 text-bone">
-            {step.exerciseName}
-          </h1>
+          {draftName === null ? (
+            <h1 className="fight-shadow text-p3 font-bold uppercase leading-8 text-bone">
+              {step.exerciseName}
+            </h1>
+          ) : (
+            <ExerciseInput
+              value={draftName}
+              names={state.exercises.map((e) => e.name)}
+              onChange={setDraftName}
+              onCancel={() => setDraftName(null)}
+              onSubmit={() => {
+                // Le remplacant herite du compteur tel qu'il est, retouches comprises.
+                replaceStep(live, draftName, { weight, reps });
+                setDraftName(null);
+                sfx.select();
+              }}
+            />
+          )}
 
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {step.supersetGroup && <Tag tone="impact">superset {step.supersetGroup}</Tag>}
@@ -362,7 +383,7 @@ export function Arena() {
                 sessions={stall.sessions}
                 weight={deloadWeight(stall.weight)}
                 onDeload={() => {
-                  deloads.current.set(step.id, stall.weight);
+                  deloads.current.set(stepKey, stall.weight);
                   // La baisse ne touche que le poids de travail : sur une rampe, on la
                   // decide des l'echauffement, mais le compteur n'en bouge qu'a la
                   // serie qui portait la charge bloquee.
@@ -434,6 +455,17 @@ export function Arena() {
               reporter
             </Small>
           )}
+          {/* La machine ne se liberera pas : un autre exercice a la place, pour cette seance. */}
+          {draftName === null && (
+            <Small
+              onClick={() => {
+                setDraftName('');
+                setRest(null);
+              }}
+            >
+              remplacer
+            </Small>
+          )}
           {live.entries.length > 0 && (
             <Small
               onClick={() => {
@@ -465,6 +497,63 @@ export function Arena() {
           </span>
         </button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Le titre devenu cellule : un nom se tape, le catalogue le complete, Entree valide.
+ * Un nom vide ne remplace rien — c'est la meme chose qu'annuler.
+ */
+function ExerciseInput({
+  value,
+  names,
+  onChange,
+  onCancel,
+  onSubmit,
+}: {
+  value: string;
+  names: string[];
+  onChange: (v: string) => void;
+  onCancel: () => void;
+  onSubmit: () => void;
+}) {
+  const submit = () => (value.trim() ? onSubmit() : onCancel());
+  return (
+    <div className="bevel-sm flex items-center gap-2 bg-ink-2 p-2">
+      <input
+        autoFocus
+        list="exercices"
+        value={value}
+        placeholder="nom de l'exercice"
+        enterKeyHint="done"
+        autoComplete="off"
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') submit();
+          if (e.key === 'Escape') onCancel();
+        }}
+        className="min-w-0 flex-1 bg-transparent text-p2 font-bold uppercase text-bone outline-none placeholder:text-ash/50"
+      />
+      <datalist id="exercices">
+        {names.map((n) => (
+          <option key={n} value={n} />
+        ))}
+      </datalist>
+      <button
+        type="button"
+        onClick={submit}
+        className="bevel-sm keycap h-9 w-9 shrink-0 bg-impact text-p2 text-line"
+      >
+        ✓
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        className="bevel-sm keycap h-9 w-9 shrink-0 bg-ink-3 text-p2 text-ash"
+      >
+        ✕
+      </button>
     </div>
   );
 }

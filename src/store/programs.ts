@@ -5,7 +5,7 @@
  * charge : elle pose les fourchettes de repetitions, et ce sont elles que
  * `progression.ts` relit pour transposer les charges d'un cycle a l'autre.
  */
-import type { Program, ProgramGoal, ProgramItem } from '../types';
+import type { Exercise, Program, ProgramGoal, ProgramItem } from '../types';
 
 export interface GoalPreset {
   label: string;
@@ -23,6 +23,27 @@ export const GOALS: Record<ProgramGoal, GoalPreset> = {
 
 /** Du plus lourd au plus long : l'ordre des touches, et celui de la bibliotheque. */
 export const GOAL_ORDER: ProgramGoal[] = ['force', 'hypertrophie', 'endurance'];
+
+/** Identifiant lisible et stable derive du nom, aligne sur celui de l'import du classeur. */
+export function slug(text: string): string {
+  return text
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 48);
+}
+
+/**
+ * L'exercice du catalogue qui porte ce nom, ou `null`. La comparaison passe par le
+ * slug : ni la casse ni les accents ne font un exercice nouveau.
+ */
+export function findExercise(exercises: Exercise[], name: string): Exercise | null {
+  const key = slug(name);
+  if (!key) return null;
+  return exercises.find((e) => e.id === key || slug(e.name) === key) ?? null;
+}
 
 const uid = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;

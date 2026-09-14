@@ -12,20 +12,9 @@ import { Fragment, useEffect, useState } from 'react';
 import { useHold } from '../fx/hold';
 import { navigate } from '../router';
 import { activeProgram, exerciseName } from '../store/selectors';
-import { GOALS, GOAL_ORDER, blankItem, blankProgram, duplicateProgram, nextCode } from '../store/programs';
+import { GOALS, GOAL_ORDER, blankItem, blankProgram, duplicateProgram, nextCode, slug } from '../store/programs';
 import { dispatch, useStore } from '../store/state';
 import type { Program as ProgramType, ProgramGoal, ProgramItem, ProgramSession } from '../types';
-
-/** Identifiant lisible et stable derive du nom, aligne sur celui de l'import du classeur. */
-function slug(text: string): string {
-  return text
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 48);
-}
 
 export function Program() {
   const { state } = useStore();
