@@ -16,7 +16,7 @@ import { Sprite, useFrame } from '../components/Sprite';
 import { Stage } from '../components/Stage';
 import { sfx } from '../fx/audio';
 import { useShake } from '../fx/shake';
-import { FOE, FOE_FRAME, HERO, HERO_FRAME, HERO_PALETTE, foePalette } from '../fx/sprites';
+import { HERO, HERO_FRAME, costume } from '../fx/sprites';
 import { keepAwake, rearmOnVisible, releaseAwake } from '../fx/wakelock';
 import { navigate } from '../router';
 import {
@@ -26,7 +26,7 @@ import {
   plateau,
   type Advice,
 } from '../store/progression';
-import { activeProgram, bestWeight } from '../store/selectors';
+import { bestWeight } from '../store/selectors';
 import {
   abortSession,
   addSet,
@@ -47,7 +47,7 @@ import {
 } from '../store/session';
 import { useStore } from '../store/state';
 
-/** Duree de la frame d'attaque et du recul de l'adversaire. */
+/** Duree du flash et du bond a chaque serie validee. */
 const STRIKE_MS = 220;
 
 export function Arena() {
@@ -79,13 +79,6 @@ export function Arena() {
   const stepKey = step ? `${step.id}:${step.exerciseId}` : '';
   const cursorKey = live && step ? `${stepKey}:${live.cursor.setIndex}` : '';
   const isLastSet = step ? live!.cursor.setIndex >= step.sets : false;
-
-  // La couleur de l'adversaire suit la seance : la meme qu'a la selection.
-  const foeIndex = useMemo(() => {
-    const program = activeProgram(state);
-    const i = program?.sessions.findIndex((s) => s.id === live?.sessionId) ?? -1;
-    return i < 0 ? 0 : i;
-  }, [state, live?.sessionId]);
 
   // Ecran allume tant que la seance dure.
   useEffect(() => {
@@ -195,7 +188,7 @@ export function Arena() {
     sfx.hit(isRecord ? 1 : power);
     if (comboLabel(nextCombo) && nextCombo % 3 === 0) sfx.combo(Math.floor(nextCombo / 3));
 
-    // Le heros frappe, l'adversaire encaisse et recule.
+    // Le combattant encaisse la serie : flash et bond.
     setStriking(true);
     clearTimeout(strikeTimer.current);
     strikeTimer.current = setTimeout(() => setStriking(false), STRIKE_MS) as unknown as number;
@@ -274,30 +267,20 @@ export function Arena() {
         />
       </div>
 
-      {/* La scene : le heros frappe, l'adversaire encaisse. */}
+      {/* La scene : le combattant seul, frais puis fatigue passee la moitie de la
+          seance ; chaque serie validee le fait flasher et bondir. */}
       <div className="relative mt-2 border-y-2 border-line">
-        <Stage className="h-32">
+        <Stage className="h-40" center>
           <div
             className="transition-transform duration-100"
-            style={{ transform: striking ? 'translateX(6px)' : 'none' }}
+            style={{ transform: striking ? 'translateY(-6px)' : 'none' }}
           >
             <Sprite
               sprite={HERO}
-              palette={HERO_PALETTE}
-              frame={striking ? HERO_FRAME.hit : breath}
-              scale={3}
-            />
-          </div>
-          <div
-            className="transition-transform duration-100"
-            style={{ transform: striking ? 'translateX(8px)' : 'none' }}
-          >
-            <Sprite
-              sprite={FOE}
-              palette={foePalette(foeIndex)}
-              frame={striking ? FOE_FRAME.hurt : breath}
+              palette={costume(state.user.palette)}
+              frame={(total && done * 2 >= total ? HERO_FRAME.tired : HERO_FRAME.fresh) + breath}
               flash={striking}
-              scale={3}
+              scale={2}
             />
           </div>
         </Stage>

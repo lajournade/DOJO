@@ -9,19 +9,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { sfx } from '../fx/audio';
-import { FOE, HERO, HERO_PALETTE, foePalette } from '../fx/sprites';
+import { HERO, costume } from '../fx/sprites';
+import { useStore } from '../store/state';
 import { Sprite } from './Sprite';
 
 interface Props {
   code: string;
   name: string;
-  index: number;
   /** Faux quand le moment VS a deja eu lieu ailleurs : on entre direct sur « fight! ». */
   withVs?: boolean;
   onDone: () => void;
 }
 
-export function FightIntro({ code, name, index, withVs = true, onDone }: Props) {
+export function FightIntro({ code, name, withVs = true, onDone }: Props) {
+  const { state } = useStore();
   const [phase, setPhase] = useState<0 | 1>(withVs ? 0 : 1);
   // La sortie ne part qu'une fois : le toucher et le minuteur visent la meme porte.
   const left = useRef(false);
@@ -59,18 +60,9 @@ export function FightIntro({ code, name, index, withVs = true, onDone }: Props) 
       onClick={done}
       className="speedlines fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-ink"
     >
-      {/* Bande diagonale : la separation des deux camps. */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-30"
-        style={{
-          background:
-            'linear-gradient(105deg, transparent 0 46%, var(--color-magenta) 46% 54%, transparent 54%)',
-        }}
-      />
-
-      <div className="relative flex w-full items-end justify-between px-2">
+      <div className="relative flex w-full items-end justify-center gap-6 px-2">
         <motion.div initial={{ x: -140 }} animate={{ x: 0 }} transition={{ duration: 0.3 }}>
-          <Sprite sprite={HERO} palette={HERO_PALETTE} scale={5} />
+          <Sprite sprite={HERO} palette={costume(state.user.palette)} scale={3} />
           <p className="fight-text fight-shadow mt-1 text-center text-p1 text-cyan">vous</p>
         </motion.div>
 
@@ -84,8 +76,8 @@ export function FightIntro({ code, name, index, withVs = true, onDone }: Props) 
         </motion.span>
 
         <motion.div initial={{ x: 140 }} animate={{ x: 0 }} transition={{ duration: 0.3 }}>
-          <Sprite sprite={FOE} palette={foePalette(index)} scale={5} />
-          <p className="fight-text fight-shadow mt-1 text-center text-p1 text-blood-hot">{code}</p>
+          <p className="fight-text arcade-title text-p5">{code}</p>
+          <p className="label-text mt-1 text-center text-p2 text-blood-hot">séance</p>
         </motion.div>
       </div>
 

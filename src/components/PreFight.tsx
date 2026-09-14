@@ -12,7 +12,7 @@
 import { useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { sfx } from '../fx/audio';
-import { FOE, HERO, HERO_PALETTE, foePalette } from '../fx/sprites';
+import { HERO, HERO_BUST, costume } from '../fx/sprites';
 import { previewSession, repRange, rirTarget, type StepPreview } from '../store/session';
 import { useStore } from '../store/state';
 import type { ProgramSession } from '../types';
@@ -20,8 +20,6 @@ import { Sprite, useFrame } from './Sprite';
 
 interface Props {
   session: ProgramSession;
-  /** Rang de la seance dans le programme : il donne sa couleur a l'adversaire. */
-  index: number;
   onFight: () => void;
   onBack: () => void;
 }
@@ -29,7 +27,7 @@ interface Props {
 /** Les charges s'ecrivent a la francaise : « 72,5 kg », jamais « 72.5 ». */
 const kg = (v: number) => `${v.toLocaleString('fr-FR')} kg`;
 
-export function PreFight({ session, index, onFight, onBack }: Props) {
+export function PreFight({ session, onFight, onBack }: Props) {
   const { state } = useStore();
   const preview = useMemo(() => previewSession(state, session), [state, session]);
   const breath = useFrame(2, 2.5);
@@ -61,21 +59,14 @@ export function PreFight({ session, index, onFight, onBack }: Props) {
         <div className="relative flex items-center justify-between gap-2">
           <Sprite
             sprite={HERO}
-            palette={HERO_PALETTE}
+            palette={costume(state.user.palette)}
             frame={breath}
-            scale={4}
-            cropY={2}
-            cropH={16}
+            scale={3}
+            cropY={HERO_BUST.y}
+            cropH={HERO_BUST.h}
           />
           <span className="fight-text arcade-title text-p4">vs</span>
-          <Sprite
-            sprite={FOE}
-            palette={foePalette(index)}
-            frame={breath}
-            scale={4}
-            cropY={2}
-            cropH={16}
-          />
+          <span className="fight-text arcade-title text-p5">{session.code}</span>
         </div>
 
         <div className="relative mt-1 flex items-baseline gap-2">

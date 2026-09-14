@@ -1,14 +1,15 @@
 /**
- * Les combattants, en donnees claires plutot qu'en images : chaque frame est un
- * tableau de lignes, un caractere par pixel, `.` pour le transparent, les autres
- * indexant une palette. Rien de binaire dans le depot, une frame se relit et se
- * corrige a la main, et changer d'adversaire ne coute qu'un tableau de couleurs.
+ * Le combattant, en donnees claires plutot qu'en images : chaque frame est un
+ * tableau de lignes, un caractere par pixel, `.` pour le transparent, les
+ * autres indexant une palette. Rien de binaire dans le depot, une frame se relit
+ * et se corrige a la main, et changer de costume ne coute qu'un tableau de
+ * couleurs.
+ *
+ * Les dessins viennent d'images generees (fond vert, style pixel art) passees
+ * par `scripts/pixelize.py`, puis retouchees ici. L'image ne rentre pas au depot.
  *
  * Le rendu est fait par <Sprite> ; ici on ne produit que la geometrie.
  */
-
-export const SPRITE_W = 24;
-export const SPRITE_H = 32;
 
 export type Palette = Record<string, string>;
 
@@ -27,46 +28,46 @@ export interface Sprite {
 }
 
 /**
- * Fusion des suites : un sprite 24x32 tombe de 768 rectangles a environ 150.
- * C'est ce qui rend le rendu SVG viable a plusieurs sprites a l'ecran.
+ * Fusion des suites : un sprite 48x64 tombe de 3072 rectangles a quelques
+ * centaines. C'est ce qui rend le rendu SVG viable a plusieurs sprites a l'ecran.
  */
-function encode(rows: string[]): Run[] {
+function encode(rows: string[], w: number): Run[] {
   const runs: Run[] = [];
   rows.forEach((raw, y) => {
-    const row = raw.padEnd(SPRITE_W, '.');
+    const row = raw.padEnd(w, '.');
     let x = 0;
-    while (x < SPRITE_W) {
+    while (x < w) {
       const key = row[x];
-      let w = 1;
-      while (x + w < SPRITE_W && row[x + w] === key) w += 1;
-      if (key !== '.') runs.push({ x, y, w, key });
-      x += w;
+      let n = 1;
+      while (x + n < w && row[x + n] === key) n += 1;
+      if (key !== '.') runs.push({ x, y, w: n, key });
+      x += n;
     }
   });
   return runs;
 }
 
-const sprite = (frames: string[][]): Sprite => ({
-  w: SPRITE_W,
-  h: SPRITE_H,
-  frames: frames.map(encode),
-});
+/** Toutes les frames d'un sprite partagent la grille de la premiere. */
+const sprite = (frames: string[][]): Sprite => {
+  const w = Math.max(...frames[0].map((r) => r.length));
+  const h = frames[0].length;
+  return { w, h, frames: frames.map((f) => encode(f, w)) };
+};
 
 /**
- * Frame de respiration : une ligne vide inseree en haut, la nuque retiree — la
- * tete s'enfonce d'un pixel dans les epaules, le reste du corps ne bouge pas.
+ * Frame de respiration : une ligne vide inseree en haut, la ligne de cou
+ * retiree — la tete s'enfonce d'un pixel dans les epaules, le reste du corps
+ * ne bouge pas.
  */
 const breathe = (rows: string[], neck: number) => [
-  rows[0],
-  rows[1],
-  rows[0],
-  ...rows.slice(2, neck),
+  '.'.repeat(rows[0].length),
+  ...rows.slice(0, neck),
   ...rows.slice(neck + 1),
 ];
 
 /* ------------------------------------------------------------------ palettes */
 
-/** `b` (ceinture, bandeau) et `k` (cheveux) portent l'identite d'un combattant. */
+/** `b` (ceinture, bandeau, gants) et `k` (cheveux) portent l'identite d'un joueur. */
 const BASE: Palette = {
   o: '#000000',
   k: '#2a1e3c',
@@ -78,14 +79,12 @@ const BASE: Palette = {
   b: '#e01b24',
 };
 
-export const HERO_PALETTE: Palette = BASE;
-
 /**
- * Un adversaire par seance, obtenu par permutation de palette : c'est le truc des
- * costumes alternatifs des jeux de combat, et chaque seance gagne sa silhouette
+ * Un costume par joueur, obtenu par permutation de palette : c'est le truc des
+ * costumes alternatifs des jeux de combat, et chaque profil gagne sa silhouette
  * de couleur pour le prix d'un tableau.
  */
-const FOE_PALETTES: Palette[] = [
+const COSTUMES: Palette[] = [
   { ...BASE, b: '#e01b24', k: '#2a1e3c', W: '#4a4f66' },
   { ...BASE, b: '#29b6d8', k: '#123a4a', W: '#2f4f66', s: '#e0b088', S: '#a87850' },
   { ...BASE, b: '#d84fa0', k: '#3a1c3a', W: '#5a3a5a' },
@@ -93,195 +92,229 @@ const FOE_PALETTES: Palette[] = [
   { ...BASE, b: '#ffd400', k: '#4a3a10', W: '#6a5a2a' },
 ];
 
-export const foePalette = (index: number): Palette =>
-  FOE_PALETTES[((index % FOE_PALETTES.length) + FOE_PALETTES.length) % FOE_PALETTES.length];
+export const costume = (index: number): Palette =>
+  COSTUMES[((index % COSTUMES.length) + COSTUMES.length) % COSTUMES.length];
 
 /* -------------------------------------------------------------------- dessins */
 
-// Le heros : karategi, ceinture coloree, de profil vers la droite.
-const HERO_IDLE = [
-  '........................',
-  '........................',
-  '.......ooooooo..........',
-  '......okkkkkkkoo........',
-  '.....okkkkkkkkkko.......',
-  '.....okkkkkssssso.......',
-  '.....okkksoesssso.......',
-  '.....okkssssssSSo.......',
-  '......okssssssSo........',
-  '......oksssoSSo.........',
-  '.......oSSSSSo..........',
-  '........ossso...........',
-  '......ooowwwooo.........',
-  '.....owwwwwwwwwo........',
-  '....owwwwwwwwwwwo.......',
-  '....owWwwwwwwwwwoo......',
-  '....owWwwwwwwwwwsso.....',
-  '....owWwwwwwwwwwSSo.....',
-  '....owWwwwwwwwwoo.......',
-  '.....owWwwwwwwwo........',
-  '.....owWwwwwwwwo........',
-  '.....obbbbbbbbbo........',
-  '.....obbbbbbbbbo........',
-  '.....owwwwoowwwo........',
-  '.....owwwo..owwwo.......',
-  '....owwwo....owwwo......',
-  '....owwo......owwo......',
-  '...owwo........owwo.....',
-  '...owwo........owwo.....',
-  '..osso..........osso....',
-  '..oSSo..........oSSo....',
-  '..oooo..........oooo....',
+// Frais : garde haute, kimono net. La premiere moitie de la seance.
+const HERO_FRESH = [
+  '.......................o........................',
+  '.....................kkkkkkkk...................',
+  '....................okkkkkkkk...................',
+  '....................okkkkkkko...................',
+  '................bbbbkkkkkkkko...................',
+  '...............bbb.bkbbbbbbb....................',
+  '.............bbb..bbkkkSSkkko...................',
+  '.................bb.kSskSksSo...................',
+  '...............bbbkokkssssskk...................',
+  '...............bkkWkskSsSsSkwSkk................',
+  '..............kSWwwSskSssSSSsWSWSSk.............',
+  '............oSSSwwWwsSSSkSskswWwwwWk............',
+  '............SsSSwwWwWokkSSSkwWwwwSSS............',
+  '...........ksssSswWSkbSSksSkwWwwWkssk...........',
+  '...........kssSSSsWkbbkSksSSwWwwSsssS...........',
+  '...........kSSsskWkbbbkSksSswWwwksssS...........',
+  '...........kSssSbkkbbbkSkskwwWWwkSSsk...........',
+  '..........oSsSSSkbkbbkkkSSSwWwWkSssSsk..........',
+  '..........osSSsskbbkkSwkSkwwWwWksssssS..........',
+  '..........osSsssSkbksswWkWwWkkkossssssk.........',
+  '..........oSSsssSkoWwWwskwwSSSbkSSSSSsk.........',
+  '...........kssSSSSSwwwWSswWkSkbbkkkSsSk.........',
+  '...........kSSSSSkWwwwWSwwWkSkbbkbkSssso........',
+  '...........oSSSSkkwWwwSWwWwSSkbbkbkSssSo........',
+  '............kkk..kWWWSSwsWwwkkkbkbkSsSSo........',
+  '..................kSSkWSkSwWWSk.okSSSsS.........',
+  '..................obbbkkbkkkkko...kSSko.........',
+  '..................kSkkobbkbbkkk.................',
+  '.................kwwwWkkkkkWwwWo................',
+  '................kswwwkbkkbkSwwWS................',
+  '................WWwwWkbkWkbSwwkWo...............',
+  '...............ksWwwSbbSwkbSwwkWS...............',
+  '..............oWWWwwSbbSwkbSwWWWWk..............',
+  '...............kWWwwkbbSwkbSWWWwko..............',
+  '...............SwWWkkbbkWkbkWWwwS...............',
+  '..............oswwwskbkSSkbkwwwwwk..............',
+  '..............SwwwwwkbkWWkbkwwwwwS..............',
+  '..............SwwwwwSkkWSkbkwwwwwso.............',
+  '.............kwwwwwwwwWkkWWswwwwwwS.............',
+  '.............kwwwwwwwWWkkWWwwwwwwwS.............',
+  '.............SwwwwwwwWW.oWWwwwwwwwwk............',
+  '............owwwwwwwWWk..kWWwwwwwwwk............',
+  '............oswwwwwWsS...kWWWwwwwwwk............',
+  '............kWwwwwwwwk....SwWwwwwwwso...........',
+  '...........kWWwwwwwwS.....oWwwwwwwwso...........',
+  '..........kswWwwwwWWk......kwwwwwwwwk...........',
+  '..........SwwwwwwWWk.......kWwwwwwwWWk..........',
+  '..........SwwwwwWWwk........kWwwwwwWWS..........',
+  '.........kswwwwWWwS.........kWWwwwwWwwo.........',
+  '.........kwwwwwWwwk.........kWwWwwwWwwk.........',
+  '.........kwwwwwwwsk.........kWwwWwwWwwWo........',
+  '........owwwwwwwwS...........kwwwwwwwwso........',
+  '........kwwwwwwwWk...........kWwwwWwwwwk........',
+  '........WwwwwwwwWo............SwwwwwwwwS........',
+  '.......kwwwwwwwWWo............SWwwwwwwwWk.......',
+  '.......kwwwwwwWWk.............kWWWwwwwwwk.......',
+  '........kwwwwWWWk.............oWWswwwwwSo.......',
+  '.........kSwwwWkk..............SWwwwwwkk........',
+  '........oSSkkkk.................oSWSkkSo........',
+  '........SssSk.....................okSSsk........',
+  '.......ksssSk......................kSsssk.......',
+  '......kSssssk......................SSsssSk......',
+  '.....kSSSSsSk......................oSsSSSSk.....',
+  '.....kkkkkko........................okkkkkk.....',
 ];
 
-// Le buste avance, le bras se detend, le poing part devant.
-const HERO_HIT = [
-  '........................',
-  '........................',
-  '........ooooooo.........',
-  '.......okkkkkkkoo.......',
-  '......okkkkkkkkkko......',
-  '......okkkkkssssso......',
-  '......okkksoesssso......',
-  '......okkssssssSSo......',
-  '.......okssssssSo.......',
-  '.......oksssoSSo........',
-  '........oSSSSSo.........',
-  '.........ossso..........',
-  '.......ooowwwooo........',
-  '......owwwwwwwwwo.......',
-  '.....owwwwwwwwwwwoooooo.',
-  '.....owWwwwwwwwwwwwwwwso',
-  '.....owWwwwwwwwwwwwwwsso',
-  '.....owWwwwwwwwwoooooSSo',
-  '.....owWwwwwwwwwo...ooo.',
-  '......owWwwwwwwwo.......',
-  '......obbbbbbbbbo.......',
-  '......obbbbbbbbbo.......',
-  '......owwwwoowwwo.......',
-  '.....owwwwo..owwwo......',
-  '....owwwwo....owwwo.....',
-  '...owwwwo......owwo.....',
-  '..owwwwo........owwo....',
-  '..owwwo.........owwo....',
-  '.owwwo...........owwo...',
-  '.osso.............osso..',
-  '.oSSo.............oSSo..',
-  '.oooo.............oooo..',
+// Fatigue : kimono dechire, bleus, la garde tient encore. La seconde moitie.
+const HERO_TIRED = [
+  '.......................ko.......................',
+  '.....................okkkkkko...................',
+  '.....................kkkkkkkk...................',
+  '.................bbbkkkkkkkkk...................',
+  '...............bbb..kbkkkkkko...................',
+  '.............bbb..bbkkbbbbbk....................',
+  '.............bb..bb.kkSkSSkko...................',
+  '................bb..oSSSSSsk....................',
+  '..............bbb..oSkSsSsSkkk..................',
+  '.................kSSkSSsSsSSsSSk.kk.............',
+  '..............oSSsWsSSSSSSSssSsWSko.............',
+  '............okSSwwWWkSSSSSSSSSwWSSSk............',
+  '............ksSkssSbbSkkSSSsSWwwksssk...........',
+  '...........oSSsSSWkbbSSSsssssSswWSSSS...........',
+  '............SsSSkSbbbbSSSsssSWWWSsSSS...........',
+  '............SSsSkkbbbbkSSsSSSssSSSsSSo..........',
+  '...........ksSSkbbbbkkSsSssSSWwSSSSSSSo.........',
+  '...........SSSSSbbkkSSssSSsskwskSsssssk.........',
+  '..........kSsssSbbbkWkSSSSSSWswWkssssSS.........',
+  '..........oSssssSkkWwkSsSsSSwWwsoSssSSSk........',
+  '..........kssSSSSkSWwSSSSSSSwSSkbokkSssso.......',
+  '..........kssSSSSoSwsskSSSSwWkSkbbkbSsssS.......',
+  '...........kSSSSk.WwwwSSSSSwWkSSbbbbksSSW.......',
+  '...........oSSko.kwwwWsSSSWwwSSSbbbbksSSk.......',
+  '.................WWsSkSWWSwsWwkSbbkkkSSS........',
+  '................kSokkbkkkkkkkwWk...okSkk........',
+  '................o..SkkbkbbkbbkwS.....kSS........',
+  '..................kwwwWkkbkkkSko......kS........',
+  '..................WwwsSbkkkkwwSS................',
+  '.................WwWwwSbSWbkwwSwk...............',
+  '................SsSSwwkbSsbkwwSSwk..............',
+  '...............kkkWWwwbbWsbkwwSWSk..............',
+  '...............koWWWkWbbWsbkwwSWSk..............',
+  '................SwwwWkbbWWbbWSSwwk..............',
+  '...............kwwwwwSbbkkbbkWwwwWo.............',
+  '...............SwsSkwSbkWWbbSwwwSsS.............',
+  '..............ksSSSSWSbkWSbbSwwwssSk............',
+  '.............kSksSsSWkbkWSkkWwwwwwwk............',
+  '.............okSsssSwwWSkSWWWwwwwkSS............',
+  '..............oSSSsWwwWWokWWwswwWSSko...........',
+  '..............SswWwwwWWS.oWWwwwwSSsS............',
+  '.............kwwwwwwWwwk..kWWwwwSsssk...........',
+  '.............Wwsswwwwwk...oSWWwwsSssk...........',
+  '............kWwswwwwWko....kwWWwwwSSS...........',
+  '...........SwswwwwWWWo.....oWwsWwwWWwS..........',
+  '..........kWwwwwwWWWk......kkwwwwwwwwso.........',
+  '..........okwwwwWWWWo......kkwswwwwwsWo.........',
+  '..........SSWwwwWWWW........kWkwwwwwSSk.........',
+  '..........SsSWSwwWwk.........kSSwwwSSSwk........',
+  '.........ksssSSwWwwS.........okWwwwSsSwS........',
+  '.........ksssSSwwwwS..........ksWwWSSWwwk.......',
+  '.........ksSSkwwwkWk..........kwWWwwSwwwo.......',
+  '........oSsSSwwwkok...........owsWswwwwk........',
+  '........SSSSwwwWS.o............SSWWwwwwSk.......',
+  '.......kssSwwwWWW..............oWwWWwwwwsk......',
+  '.......kSwwwwWWsW..............kWwwWWwwwSS......',
+  '........SSWwwwwkS..............SWwwwwwsSoo......',
+  '........kSSSWwk.................kwsSwskk........',
+  '........SSSSoS..................oWkoSSSS........',
+  '.......ksSSk.....................k..kSssk.......',
+  '......kSsssS........................kssSSk......',
+  '....oSSsssSk........................SSssSsk.....',
+  '....kSSSSsk.........................oksSSSSk....',
+  '....oookkk............................kkkkko....',
 ];
 
-// L'adversaire : plus massif, torse nu, bandeau, de profil vers la gauche.
-const FOE_IDLE = [
-  '........................',
-  '........................',
-  '..........ooooooo.......',
-  '.........okkkkkkko......',
-  '........okkkkkkkkko.....',
-  '........obbbbbbbbbo.....',
-  '.......ossssseosskko....',
-  '.......osssssssskko.....',
-  '.......ossSssssko.......',
-  '........oSssSSko........',
-  '.........oSSSSo.........',
-  '..........osso..........',
-  '......ooooossoooo.......',
-  '.....ossssssssssso......',
-  '....osssssssssssssso....',
-  '...ossssssssssssssSso...',
-  '...osssssssssssssSSso...',
-  '...oSssssssssssssSSo....',
-  '....oSsssssssssssSo.....',
-  '.....oSsssssssssso......',
-  '.....oSsssssssssso......',
-  '.....obbbbbbbbbbbo......',
-  '.....obbbbbbbbbbbo......',
-  '.....oWWWooWWWWWo.......',
-  '....oWWWo..oWWWWo.......',
-  '....oWWo....oWWWo.......',
-  '...oWWo......oWWo.......',
-  '...oWWo......oWWo.......',
-  '..oWWo........oWWo......',
-  '..osso........osso......',
-  '..oSSo........oSSo......',
-  '..oooo........oooo......',
+// Vainqueur : poing leve, sourire, les habits en lambeaux. L'ecran de resultats.
+const HERO_VICTORY = [
+  '...................................kkk..........',
+  '.................................kSkbbo.........',
+  '......................kkkkk......kSkbbk.........',
+  '....................kkkkkkkk.....SSSkbb.........',
+  '....................kkkkkkkk.....kkkkbbo........',
+  '.................bbkkkkkkkkk......kkkkkb........',
+  '..............bbbbbkkbbkbbkk.......okkbbk.......',
+  '...........bbbb...bkkkkSSkkk........kbbbo.......',
+  '.................bb.kkSSSSSk........kkkSk.......',
+  '..............bbb...obSsSsSk....k....SssSo......',
+  '..............bb...kkksSSskkkkSSkk...SSssk......',
+  '.............kSkkSSWSSSSSSSSWWwSSSkkksSSSS......',
+  '.............kkSwwsSSsSSSSSSSssSsSSSSssSsS......',
+  '.............SSSswWSSSSSSSSSSWWSSsSsSSsssS......',
+  '............kSSSSwWSSsSSSSssSWwSSSsSSSsSsS......',
+  '............SSSSSwwSssssssssSswkSSSSssSSSk......',
+  '............SSSsSwwSSssSSsSsSswkkSSsSSSkk.......',
+  '...........kSSsSWwwsSssSSsSSSwskkokkko..........',
+  '..........kSSSSSksssSssSSssSswWSk...............',
+  '..........ksSssSkWwsSSSSSSSSwWwWSk..............',
+  '..........SssssSkWwWWSSsSsSSwswWk...............',
+  '.........ksSsSSSkWwWwSSSSSSsWwwW................',
+  '.........SsSSSSkkWwwwSSSSSSwWwWk................',
+  '........kssSSkk..kwwsskSSSWwwwWk................',
+  '........kSsSSk...SsswWWSSSwswsWk................',
+  '........SbsSSk...kSWSWWWSWsWWWS.................',
+  '........SSSssk....okkkkkkSkkkk..................',
+  '........SssSS.....okkkkkbbbbbko.................',
+  '........SssSk.....WwwsSkbkkSWWS.................',
+  '........kkkk.....kwwwWkbkkbSwWsk................',
+  '.......obbbb....kwwWwsbbWkbWwSWS................',
+  '.......obkkk...kWSkWwWbbwSbSwSSWk...............',
+  '........kbbkk..SkSSwwSbSwSbSwSWkS...............',
+  '.......obbbkSk..kwWSSkbSwSbSwWWWk...............',
+  '.......obbbkkk.owwwwWkbkWkbSSSwwS...............',
+  '.......obbkkkk.SwwWwwSbkkkbkWwwswk..............',
+  '........okkkk.kwWSSSwbbSWkbkwwwsSS..............',
+  '.............kWSSSskWbbSSkbkswwwssk.............',
+  '.............SkSSSsSwkkSkWWWwwwwswS.............',
+  '.............kksSsSSwwWSkWWwWwwwSSS.............',
+  '..............kSWSswwWWk.SWwwwwsSsSo............',
+  '.............kWwwwwwwWW..kWWwwwSSss.............',
+  '.............swwwwwWswS..oSWWwwsSssk............',
+  '............kswSwwwwwko...kWWWwwsssS............',
+  '...........kWswwwwsWko....kWwWWwwSSwk...........',
+  '..........kwwwwwwWWWk.....kSswwwwwswso..........',
+  '..........kSwwwwWWWSo.....kkswwwwwwwso..........',
+  '..........kkwwwwWWWS.......ksSswwwwsSk..........',
+  '..........sSWsswWWWk........SkSwwwsSSsk.........',
+  '.........kSsSSSwWwwo........kkSwwwSSSwS.........',
+  '.........kSssSswWwwo.........kWWwwSSSssk........',
+  '.........ksSSSswwSso.........osWWwwSWwwk........',
+  '.........SSSSwwwSoS...........WwWswswwS.........',
+  '........SSSSwwwWk.............SSWWwwwwSk........',
+  '.......kwSSwwwWWk.............oSwWWwwwws........',
+  '.......kWwwwwWWwS..............WwwWWwwwSS.......',
+  '........SWwwwsskS.............kswwwwwwWok.......',
+  '.......okSkSwwk.o.............kkwwWwwkk.........',
+  '........SSSSkSo.................WkoSSSS.........',
+  '.......ksSSk....................k..kSSsk........',
+  '......kssssk.......................kSsSSk.......',
+  '....kSSsssSk.......................kSssSSk......',
+  '....kSSSSsk........................oksSSSSk.....',
+  '....okkkkk...........................kkkkkk.....',
 ];
 
-// Encaissement : la tete part en arriere, le buste se creuse.
-const FOE_HURT = [
-  '........................',
-  '........................',
-  '...........ooooooo......',
-  '..........okkkkkkkoo....',
-  '..........obbbbbbbbo....',
-  '.........osssssssskko...',
-  '.........osssoosskkoo...',
-  '.........osssssssko.....',
-  '..........oSSssko.......',
-  '...........oSSSo........',
-  '..........osso..........',
-  '.........osso...........',
-  '......ooooosooooo.......',
-  '.....ossssssssssso......',
-  '....ossssssssssssso.....',
-  '...osssssssssssssSo.....',
-  '...osssssssssssssSo.....',
-  '...oSssssssssssssSo.....',
-  '....oSssssssssssso......',
-  '.....oSssssssssso.......',
-  '.....oSssssssssso.......',
-  '.....obbbbbbbbbbo.......',
-  '.....obbbbbbbbbbo.......',
-  '.....oWWWooWWWWo........',
-  '....oWWWo..oWWWo........',
-  '....oWWo....oWWo........',
-  '...oWWo......oWWo.......',
-  '...oWWo.......oWWo......',
-  '..oWWo.........oWWo.....',
-  '..osso.........osso.....',
-  '..oSSo.........oSSo.....',
-  '..oooo.........oooo.....',
-];
+/**
+ * Frames du combattant : 0-1 frais en respiration, 2-3 fatigue en respiration,
+ * 4 vainqueur. `HERO_FRAME` donne la premiere frame de chaque etat ; on y
+ * ajoute l'index de respiration (0 ou 1).
+ */
+export const HERO = sprite([
+  HERO_FRESH,
+  breathe(HERO_FRESH, 9),
+  HERO_TIRED,
+  breathe(HERO_TIRED, 9),
+  HERO_VICTORY,
+  breathe(HERO_VICTORY, 10),
+]);
+export const HERO_FRAME = { fresh: 0, tired: 2, victory: 4 } as const;
 
-// K.O. : a terre, en travers du sol.
-const FOE_KO = [
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '..............oooo......',
-  '.....ooo.....oWWWWo.....',
-  '....osso....oWWWWo......',
-  '...osssoooooWWWo........',
-  '..okssssssssbbbo........',
-  '..okkssssssbbbbo........',
-  '..obbbsssssssWWWo.......',
-  '..okkoossssssoWWWo......',
-  '...ooo.ossssso.oWWo.....',
-  '.......ossssSo..osso....',
-  '........oSSSo...oSSo....',
-  '.........ooo.....oooo...',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-];
-
-/** Frames du heros : 0 et 1 en respiration, 2 au moment du coup. */
-export const HERO = sprite([HERO_IDLE, breathe(HERO_IDLE, 11), HERO_HIT]);
-export const HERO_FRAME = { idle: 0, hit: 2 } as const;
-
-/** Frames de l'adversaire : 0 et 1 en garde, 2 touche, 3 a terre. */
-export const FOE = sprite([FOE_IDLE, breathe(FOE_IDLE, 11), FOE_HURT, FOE_KO]);
-export const FOE_FRAME = { idle: 0, hurt: 2, ko: 3 } as const;
+/** Les lignes du buste, pour les portraits recadres : du bandeau aux poings. */
+export const HERO_BUST = { y: 0, h: 26 } as const;

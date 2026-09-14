@@ -3,3 +3,4 @@ dist/
 data/
 *.local
 .DS_Store
+scratch/

@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { useHold } from '../fx/hold';
 import { sfx } from '../fx/audio';
-import { HERO, foePalette } from '../fx/sprites';
+import { HERO, HERO_BUST, costume } from '../fx/sprites';
 import { navigate } from '../router';
 import { dispatch, setCurrentUser, useStore } from '../store/state';
 import type { User } from '../types';
@@ -156,11 +156,11 @@ function PlayerCard({
         <div className="bevel-in halftone relative flex justify-center overflow-hidden bg-ink">
           <Sprite
             sprite={HERO}
-            palette={foePalette(user.palette)}
+            palette={costume(user.palette)}
             frame={frame}
-            scale={5}
-            cropY={2}
-            cropH={16}
+            scale={3}
+            cropY={HERO_BUST.y}
+            cropH={HERO_BUST.h}
           />
         </div>
         <p className="mt-1.5 truncate text-p2 font-bold uppercase text-bone">{user.name}</p>

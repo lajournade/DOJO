@@ -1,12 +1,12 @@
-/** Ecran de fin de seance : le K.O., puis le bilan qui se compte ligne a ligne. */
+/** Ecran de fin de seance : le poing leve, puis le bilan qui se compte ligne a ligne. */
 import { useEffect, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { Sprite, useFrame } from '../components/Sprite';
 import { Stage } from '../components/Stage';
 import { sfx } from '../fx/audio';
-import { FOE, FOE_FRAME, HERO, HERO_PALETTE, foePalette } from '../fx/sprites';
+import { HERO, HERO_FRAME, costume } from '../fx/sprites';
 import { navigate } from '../router';
-import { activeProgram, doneEntries, recentLogs, tonnage } from '../store/selectors';
+import { doneEntries, recentLogs, tonnage } from '../store/selectors';
 import { useStore } from '../store/state';
 import type { SessionLog, UserView } from '../types';
 
@@ -82,12 +82,6 @@ export function Results() {
   const log = useMemo(() => recentLogs(state)[0] ?? null, [state]);
   const breath = useFrame(2, 2.5);
 
-  const foeIndex = useMemo(() => {
-    const program = activeProgram(state);
-    const i = program?.sessions.findIndex((s) => s.id === log?.sessionId) ?? -1;
-    return i < 0 ? 0 : i;
-  }, [state, log?.sessionId]);
-
   useEffect(() => {
     if (loaded && !log) navigate('/', { replace: true });
   }, [loaded, log]);
@@ -118,11 +112,15 @@ export function Results() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-ink">
-      {/* L'adversaire est a terre, le combattant tient encore debout. */}
+      {/* Le combattant tient debout, le poing leve : la seance est battue. */}
       <div className="pad-top border-b-2 border-line">
-        <Stage className="h-32">
-          <Sprite sprite={HERO} palette={HERO_PALETTE} frame={breath} scale={3} />
-          <Sprite sprite={FOE} palette={foePalette(foeIndex)} frame={FOE_FRAME.ko} scale={3} />
+        <Stage className="h-40" center>
+          <Sprite
+            sprite={HERO}
+            palette={costume(state.user.palette)}
+            frame={HERO_FRAME.victory + breath}
+            scale={2}
+          />
         </Stage>
       </div>
 
@@ -133,7 +131,7 @@ export function Results() {
           transition={{ type: 'spring', stiffness: 200, damping: 13 }}
           className="fight-text arcade-title text-center text-p5"
         >
-          k.o.
+          you win
         </motion.h1>
 
         <div className="bevel bg-ink-2 p-3">

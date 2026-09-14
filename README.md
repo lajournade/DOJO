@@ -2,7 +2,8 @@
 
 Suivi de musculation en remplacement de l'onglet **Suivit 2** de `Sport 2026.xlsx`.
 Pensé pour le pouce sur iPhone 12 Pro, habillé en borne d'arcade pixel : la séance est
-un adversaire dont la barre de vie descend à chaque série validée.
+un combat dont la barre de vie descend à chaque série validée, et le combattant s'y use —
+frais au départ, kimono déchiré passée la moitié, poing levé à la fin.
 
 Plusieurs joueurs, sans compte ni mot de passe : on choisit son profil à l'ouverture et le
 téléphone s'en souvient. Les données vivent sur le PC, dans un fichier JSON.
@@ -82,13 +83,13 @@ server/     serveur HTTP sans dépendance : sert dist/ et l'API
 shared/     opérations appliquées à l'identique par le client et le serveur
 public/     icône, manifeste, et les deux polices bitmap embarquées
 src/        application React
-  screens/     Players (le choix du profil), Roster (sélection de l'adversaire), Arena (la
+  screens/     Players (le choix du profil), Roster (sélection de la séance), Arena (la
                séance), Results, History, Program (la bibliothèque et ses éditeurs)
   components/  PreFight (le briefing d'avant-combat), FightIntro, barres de vie, compteurs,
                PowerUp et Plateau (ce qui monte, ce qui piétine)
   store/       état, file d'envoi, synchronisation, sélecteurs, familles de programme
-  fx/          audio, secousse d'écran, écran allumé, appui long, sprites des combattants
-scripts/    import du classeur et état initial
+  fx/          audio, secousse d'écran, écran allumé, appui long, sprites du combattant
+scripts/    import du classeur, état initial, transcription d'images en sprites
 ```
 
 ### Joueurs et programmes
@@ -137,8 +138,26 @@ personnes peuvent suivre le même sans partager une seule charge.
 
 Tout le dessin tient sur une grille de pixels : deux polices bitmap (Press Start 2P pour
 les titres, Silkscreen pour le texte), des cadres crénelés en `box-shadow`, une palette
-fixe, et des combattants décrits en clair dans `src/fx/sprites.ts` — un caractère par
-pixel, rendus en `<svg>` par `src/components/Sprite.tsx`. Aucune image binaire.
+fixe, et un combattant décrit en clair dans `src/fx/sprites.ts` — un caractère par
+pixel sur 48 × 64, rendu en `<svg>` par `src/components/Sprite.tsx`. Aucune image binaire.
+
+Le combattant a trois états, et c'est la séance qui les enchaîne : **frais** jusqu'à la
+moitié des séries, **fatigué** ensuite (kimono en lambeaux, bleus), **vainqueur** sur l'écran
+de résultats. Chaque joueur le porte à ses couleurs — ceinture, bandeau, cheveux — par
+permutation de palette (`costume` dans `sprites.ts`), comme les costumes alternatifs des
+jeux de combat.
+
+Les dessins ne sont pas faits à la main pixel par pixel : ils viennent d'images générées
+(un personnage sur fond vert uni, style pixel art, gros aplats, contour noir) passées par
+`scripts/pixelize.py`, qui cadre le sujet, le réduit à la grille et remplace chaque pixel
+par la clé de la couleur la plus proche de la palette :
+
+```bash
+python3 scripts/pixelize.py scratch/chatgpt/default.png --name HERO_FRESH --preview /tmp/fresh.png
+```
+
+Le tableau imprimé se colle dans `sprites.ts` et se retouche là, en texte ; l'aperçu sert à
+juger avant de coller. L'image source reste dans `scratch/`, hors git.
 
 Les polices sont **embarquées dans `public/fonts/`** (sous-ensemble latin, 28 Ko en tout,
 licence dans `OFL.txt`) : l'application ne demande rien au réseau une fois chargée.
@@ -193,7 +212,7 @@ Le verdict ne touche que les séries qui portaient le poids de travail — l'éc
 40 / 60 / 80 du squat garde ses valeurs, seule la série lourde monte. Et rien n'est imposé :
 un appui sur le compteur suffit à revenir sur la proposition, qui s'efface alors du bandeau.
 
-Rien de tout cela n'attend le premier coup pour se dire. Entre le choix de l'adversaire
+Rien de tout cela n'attend le premier coup pour se dire. Entre le choix de la séance
 et la première série, le **briefing** annonce le combat : les exercices dans l'ordre, la
 charge que l'arène proposera pour chacun — les deux bouts de la rampe quand il y en a
 une (« 40 à 72,5 kg ») —, les montées du jour, et la durée. On sait quoi charger sur la

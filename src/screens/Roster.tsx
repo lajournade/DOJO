@@ -1,13 +1,13 @@
 /**
- * Ecran d'accueil : la selection du personnage, en grille de portraits.
- * Une tuile par seance du programme actif, avec son adversaire, sa couleur et ce
+ * Ecran d'accueil : la selection de la seance, en grille de tuiles.
+ * Une tuile par seance du programme actif, avec son code, sa couleur et ce
  * qui a ete fait la derniere fois. Le curseur clignotant designe la seance la
  * moins recemment jouee — c'est la suggestion du jour, pas une contrainte.
  */
 import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { sfx } from '../fx/audio';
-import { FOE, HERO, foePalette } from '../fx/sprites';
+import { HERO, HERO_BUST, costume } from '../fx/sprites';
 import { navigate } from '../router';
 import { activeProgram, doneEntries, lastRun, sinceLabel, tonnage } from '../store/selectors';
 import { startSession } from '../store/session';
@@ -22,8 +22,6 @@ import { SyncBadge } from '../components/SyncBadge';
 interface Pending {
   program: Program;
   session: ProgramSession;
-  /** Rang dans le programme : il fixe la couleur de l'adversaire, du roster a l'arene. */
-  index: number;
 }
 
 export function Roster() {
@@ -47,10 +45,10 @@ export function Roster() {
     return best?.id ?? null;
   }, [program, state]);
 
-  const launch = (session: ProgramSession, index: number) => {
+  const launch = (session: ProgramSession) => {
     if (!program) return;
     sfx.select();
-    setBrief({ program, session, index });
+    setBrief({ program, session });
   };
 
   return (
@@ -58,7 +56,6 @@ export function Roster() {
       {brief && (
         <PreFight
           session={brief.session}
-          index={brief.index}
           onBack={() => setBrief(null)}
           onFight={() => {
             setIntro(brief);
@@ -72,7 +69,6 @@ export function Roster() {
         <FightIntro
           code={intro.session.code}
           name={intro.session.name}
-          index={intro.index}
           withVs={false}
           onDone={() => {
             startSession(intro.program, intro.session);
@@ -101,11 +97,11 @@ export function Roster() {
           <span className="bevel-in flex shrink-0 overflow-hidden bg-ink">
             <Sprite
               sprite={HERO}
-              palette={foePalette(state.user.palette)}
+              palette={costume(state.user.palette)}
               frame={frame}
-              scale={2}
-              cropY={2}
-              cropH={12}
+              scale={1}
+              cropY={HERO_BUST.y}
+              cropH={HERO_BUST.h}
             />
           </span>
           <span className="min-w-0 flex-1 truncate text-p2 font-bold uppercase text-bone">
@@ -132,7 +128,7 @@ export function Roster() {
       )}
 
       <p className="pad-x fight-text mb-2 text-p1 tracking-[0.2em] text-cyan">
-        choisis ton adversaire
+        choisis ton combat
       </p>
 
       <main className="pad-x grid grid-cols-2 gap-2">
@@ -148,22 +144,15 @@ export function Roster() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06, duration: 0.25 }}
-              onClick={() => launch(session, i)}
+              onClick={() => launch(session)}
               className="bevel-sm keycap relative bg-ink-2 p-1.5 text-left"
             >
-              {/* Le portrait, dans son cadre creux, avec sa plaque de code. */}
-              <div className="bevel-in halftone relative flex justify-center overflow-hidden bg-ink">
-                <Sprite
-                  sprite={FOE}
-                  palette={foePalette(i)}
-                  frame={frame}
-                  scale={5}
-                  cropY={2}
-                  cropH={16}
-                />
-                <span className="fight-text absolute bottom-0 right-0 bg-line px-1.5 py-0.5 text-p3 text-impact">
-                  {session.code}
-                </span>
+              {/* La plaque de code, dans son cadre creux, a la couleur de la seance. */}
+              <div
+                className="bevel-in halftone fight-text flex h-20 items-center justify-center bg-ink text-p4"
+                style={{ color: costume(i).b }}
+              >
+                {session.code}
               </div>
 
               {/* Deux lignes au plus : le nom compte, mais la tuile ne doit pas s'etirer. */}

@@ -7,10 +7,12 @@ interface Props {
   children?: React.ReactNode;
   /** Hauteur du sol, en pixels : les combattants s'y posent. */
   floor?: number;
+  /** Un seul combattant : au milieu du tatami plutot qu'aux deux bords. */
+  center?: boolean;
   className?: string;
 }
 
-export function Stage({ children, floor = 20, className = '' }: Props) {
+export function Stage({ children, floor = 20, center = false, className = '' }: Props) {
   return (
     <div className={`relative overflow-hidden bg-ink-2 ${className}`}>
       {/* Cloison : des panneaux de 48 px, separes par un montant sombre. */}
@@ -37,7 +39,7 @@ export function Stage({ children, floor = 20, className = '' }: Props) {
 
       {/* Les combattants se posent deux pixels dans le sol. */}
       <div
-        className="absolute inset-x-0 flex items-end justify-between px-6"
+        className={`absolute inset-x-0 flex items-end px-6 ${center ? 'justify-center' : 'justify-between'}`}
         style={{ bottom: floor - 2 }}
       >
         {children}

@@ -60,7 +60,7 @@ export interface User {
   name: string;
   /** Le programme en cours, propre a chaque joueur. */
   activeProgramId: string | null;
-  /** Rang de couleur du portrait, passe a `foePalette`. */
+  /** Rang de couleur du costume, passe a `costume`. */
   palette: number;
 }
 
