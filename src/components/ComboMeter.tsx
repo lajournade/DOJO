@@ -17,7 +17,7 @@ export function ComboMeter({ count }: { count: number }) {
       initial={{ scale: 1.6, opacity: 0, x: -10 }}
       animate={{ scale: 1, opacity: 1, x: 0 }}
       transition={{ type: 'spring', stiffness: 520, damping: 18 }}
-      className="flex flex-col items-start leading-none"
+      className="flex shrink-0 flex-col items-end leading-none"
     >
       <span className="numeric fight-text arcade-title text-p4">{count}</span>
       <span className="fight-text fight-shadow mt-1 text-p1 text-bone">

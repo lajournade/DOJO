@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { Sprite, useFrame } from '../components/Sprite';
-import { Stage } from '../components/Stage';
 import { sfx } from '../fx/audio';
 import { HERO, HERO_FRAME, costume } from '../fx/sprites';
 import { navigate } from '../router';
@@ -113,15 +112,13 @@ export function Results() {
   return (
     <div className="flex min-h-dvh flex-col bg-ink">
       {/* Le combattant tient debout, le poing leve : la seance est battue. */}
-      <div className="pad-top border-b-2 border-line">
-        <Stage className="h-40" center>
-          <Sprite
-            sprite={HERO}
-            palette={costume(state.user.palette)}
-            frame={HERO_FRAME.victory + breath}
-            scale={2}
-          />
-        </Stage>
+      <div className="pad-top flex justify-center border-b-2 border-line pb-2">
+        <Sprite
+          sprite={HERO}
+          palette={costume(state.user.palette)}
+          frame={HERO_FRAME.victory + breath}
+          scale={3}
+        />
       </div>
 
       <div className="speedlines pad-x flex flex-1 flex-col justify-center gap-4 py-5">

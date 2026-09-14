@@ -17,8 +17,10 @@ interface Props {
   flip?: boolean;
   /** Facteur entier : un pixel du dessin vaut exactement `scale` pixels a l'ecran. */
   scale?: number;
-  /** Cadrage vertical, en pixels du dessin — pour ne montrer que le buste. */
+  /** Cadrage, en pixels du dessin — pour ne montrer que le buste. */
+  cropX?: number;
   cropY?: number;
+  cropW?: number;
   cropH?: number;
   className?: string;
 }
@@ -30,20 +32,23 @@ export function Sprite({
   flash = false,
   flip = false,
   scale = 3,
+  cropX = 0,
   cropY = 0,
+  cropW,
   cropH,
   className,
 }: Props) {
   const runs = sprite.frames[Math.min(frame, sprite.frames.length - 1)];
+  const w = cropW ?? sprite.w;
   const h = cropH ?? sprite.h;
 
   return (
     <svg
       aria-hidden
       className={className}
-      width={sprite.w * scale}
+      width={w * scale}
       height={h * scale}
-      viewBox={`0 ${cropY} ${sprite.w} ${h}`}
+      viewBox={`${cropX} ${cropY} ${w} ${h}`}
       shapeRendering="crispEdges"
       style={flip ? { transform: 'scaleX(-1)' } : undefined}
     >

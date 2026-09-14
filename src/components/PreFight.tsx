@@ -62,7 +62,9 @@ export function PreFight({ session, onFight, onBack }: Props) {
             palette={costume(state.user.palette)}
             frame={breath}
             scale={3}
+            cropX={HERO_BUST.x}
             cropY={HERO_BUST.y}
+            cropW={HERO_BUST.w}
             cropH={HERO_BUST.h}
           />
           <span className="fight-text arcade-title text-p4">vs</span>

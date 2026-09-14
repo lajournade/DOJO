@@ -100,7 +100,9 @@ export function Roster() {
               palette={costume(state.user.palette)}
               frame={frame}
               scale={1}
+              cropX={HERO_BUST.x}
               cropY={HERO_BUST.y}
+              cropW={HERO_BUST.w}
               cropH={HERO_BUST.h}
             />
           </span>

@@ -143,7 +143,9 @@ pixel sur 48 × 64, rendu en `<svg>` par `src/components/Sprite.tsx`. Aucune ima
 
 Le combattant a trois états, et c'est la séance qui les enchaîne : **frais** jusqu'à la
 moitié des séries, **fatigué** ensuite (kimono en lambeaux, bleus), **vainqueur** sur l'écran
-de résultats. Chaque joueur le porte à ses couleurs — ceinture, bandeau, cheveux — par
+de résultats. Dans l'arène il tient en portrait dans le bandeau de combat, à côté de ses deux
+barres de vie — l'exercice, puis la séance — comme dans les jeux dont l'app emprunte l'habit ;
+il apparaît en pied au briefing, à l'intro et aux résultats. Chaque joueur le porte à ses couleurs — ceinture, bandeau, cheveux — par
 permutation de palette (`costume` dans `sprites.ts`), comme les costumes alternatifs des
 jeux de combat.
 

@@ -159,7 +159,9 @@ function PlayerCard({
             palette={costume(user.palette)}
             frame={frame}
             scale={3}
+            cropX={HERO_BUST.x}
             cropY={HERO_BUST.y}
+            cropW={HERO_BUST.w}
             cropH={HERO_BUST.h}
           />
         </div>

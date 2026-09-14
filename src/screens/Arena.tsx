@@ -13,10 +13,9 @@ import { PowerUp } from '../components/PowerUp';
 import { RestTimer, useRestCountdown, type Rest } from '../components/RestTimer';
 import { RirPicker } from '../components/RirPicker';
 import { Sprite, useFrame } from '../components/Sprite';
-import { Stage } from '../components/Stage';
 import { sfx } from '../fx/audio';
 import { useShake } from '../fx/shake';
-import { HERO, HERO_FRAME, costume } from '../fx/sprites';
+import { HERO, HERO_BUST, HERO_FRAME, costume } from '../fx/sprites';
 import { keepAwake, rearmOnVisible, releaseAwake } from '../fx/wakelock';
 import { navigate } from '../router';
 import {
@@ -245,48 +244,38 @@ export function Arena() {
         )}
       </header>
 
-      {/* Le bandeau de combat : l'exercice a gauche, la seance a droite, le chrono au milieu. */}
-      <div className="pad-x flex items-start gap-2">
-        <HealthBar
-          name={`exo ${live.cursor.planIndex + 1}/${live.plan.length}`}
-          total={step.sets}
-          done={live.cursor.setIndex - 1}
-          side="left"
-          flash={flash}
-        />
+      {/* Le bandeau de combat, a la Street Fighter : le portrait du combattant, ses
+          deux barres de vie empilees — l'exercice, puis la seance —, le chrono au bout.
+          Frais jusqu'a la moitie de la seance, fatigue ensuite ; chaque serie
+          validee le fait flasher. */}
+      <div className="pad-x flex items-center gap-2 border-b-2 border-line pb-2">
+        <div className="bevel-in flex shrink-0 overflow-hidden bg-ink">
+          <Sprite
+            sprite={HERO}
+            palette={costume(state.user.palette)}
+            frame={(total && done * 2 >= total ? HERO_FRAME.tired : HERO_FRAME.fresh) + breath}
+            flash={striking}
+            scale={3}
+            cropX={HERO_BUST.x}
+            cropY={HERO_BUST.y}
+            cropW={HERO_BUST.w}
+            cropH={HERO_BUST.h}
+          />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <HealthBar
+            name={`exo ${live.cursor.planIndex + 1}/${live.plan.length}`}
+            total={step.sets}
+            done={live.cursor.setIndex - 1}
+            side="left"
+            flash={flash}
+          />
+          <HealthBar name={live.programCode} total={total} done={done} side="left" flash={flash} />
+        </div>
         <RoundClock
           seconds={rest && !restDone ? restLeft : total - done}
           resting={rest !== null && !restDone}
         />
-        <HealthBar
-          name={live.programCode}
-          total={total}
-          done={done}
-          side="right"
-          flash={flash}
-        />
-      </div>
-
-      {/* La scene : le combattant seul, frais puis fatigue passee la moitie de la
-          seance ; chaque serie validee le fait flasher et bondir. */}
-      <div className="relative mt-2 border-y-2 border-line">
-        <Stage className="h-40" center>
-          <div
-            className="transition-transform duration-100"
-            style={{ transform: striking ? 'translateY(-6px)' : 'none' }}
-          >
-            <Sprite
-              sprite={HERO}
-              palette={costume(state.user.palette)}
-              frame={(total && done * 2 >= total ? HERO_FRAME.tired : HERO_FRAME.fresh) + breath}
-              flash={striking}
-              scale={2}
-            />
-          </div>
-        </Stage>
-        <div className="pointer-events-none absolute bottom-1 left-3">
-          <ComboMeter count={combo} />
-        </div>
       </div>
 
       {/* Seule cette zone defile : la barre d'action reste sous le pouce. */}
@@ -298,24 +287,28 @@ export function Arena() {
           transition={{ duration: 0.25 }}
           className="pad-x mt-3"
         >
-          {draftName === null ? (
-            <h1 className="fight-shadow text-p3 font-bold uppercase leading-8 text-bone">
-              {step.exerciseName}
-            </h1>
-          ) : (
-            <ExerciseInput
-              value={draftName}
-              names={state.exercises.map((e) => e.name)}
-              onChange={setDraftName}
-              onCancel={() => setDraftName(null)}
-              onSubmit={() => {
-                // Le remplacant herite du compteur tel qu'il est, retouches comprises.
-                replaceStep(live, draftName, { weight, reps });
-                setDraftName(null);
-                sfx.select();
-              }}
-            />
-          )}
+          {/* Le titre a gauche, le compteur de combo a droite quand il y en a un. */}
+          <div className="flex items-start justify-between gap-2">
+            {draftName === null ? (
+              <h1 className="fight-shadow min-w-0 text-p3 font-bold uppercase leading-8 text-bone">
+                {step.exerciseName}
+              </h1>
+            ) : (
+              <ExerciseInput
+                value={draftName}
+                names={state.exercises.map((e) => e.name)}
+                onChange={setDraftName}
+                onCancel={() => setDraftName(null)}
+                onSubmit={() => {
+                  // Le remplacant herite du compteur tel qu'il est, retouches comprises.
+                  replaceStep(live, draftName, { weight, reps });
+                  setDraftName(null);
+                  sfx.select();
+                }}
+              />
+            )}
+            <ComboMeter count={combo} />
+          </div>
 
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {step.supersetGroup && <Tag tone="impact">superset {step.supersetGroup}</Tag>}
@@ -503,7 +496,7 @@ function ExerciseInput({
 }) {
   const submit = () => (value.trim() ? onSubmit() : onCancel());
   return (
-    <div className="bevel-sm flex items-center gap-2 bg-ink-2 p-2">
+    <div className="bevel-sm flex min-w-0 flex-1 items-center gap-2 bg-ink-2 p-2">
       <input
         autoFocus
         list="exercices"

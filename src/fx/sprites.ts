@@ -316,5 +316,5 @@ export const HERO = sprite([
 ]);
 export const HERO_FRAME = { fresh: 0, tired: 2, victory: 4 } as const;
 
-/** Les lignes du buste, pour les portraits recadres : du bandeau aux poings. */
-export const HERO_BUST = { y: 0, h: 26 } as const;
+/** Le cadre du buste, pour les portraits recadres : du bandeau aux poings, sans le vide. */
+export const HERO_BUST = { x: 8, y: 0, w: 32, h: 26 } as const;
