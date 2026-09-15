@@ -5,13 +5,19 @@ Transcrit une image (fond uni, style pixel art) en lignes de caracteres pour
 autres indexant la palette BASE. Le depot ne garde que le texte, l'image
 generee reste hors git.
 
-    python3 scripts/pixelize.py scratch/chatgpt/default.png --name HERO_IDLE
-    python3 scripts/pixelize.py scratch/chatgpt/victory.jpeg --preview /tmp/v.png
+    python3 scripts/pixelize.py scratch/chatgpt/default.png --name HERO_FRESH
+    python3 scripts/pixelize.py scratch/chatgpt/low_hp.png --preview /tmp/t.png
 
 Le fond est lu dans le coin haut-gauche (ou `--bg 00ff00`), le sujet est cadre
 sur sa plus grande composante connexe (les etincelles, textes et miettes
 tombent), puis pose au sol de la grille, centre. Chaque pixel prend la cle de
-la couleur la plus proche dans la palette.
+la couleur la plus proche dans la palette. Les references sont des bustes
+coupes a la ceinture, d'ou la grille carree ; une image en pied se coupe
+avant de passer ici.
+
+La ceinture est noire sur les references et le sang rouge : le script sort
+`o`/`k` pour l'une et `b` pour l'autre. En collant dans `sprites.ts`, passer
+le sang en `r` puis peindre la ceinture en `b`, la couleur d'identite.
 """
 import argparse
 import sys
@@ -24,13 +30,14 @@ from scipy import ndimage
 # permutation de palette a l'ecran se fait sur elles.
 PALETTE = {
     'o': '#000000',
-    'k': '#2a1e3c',
+    'k': '#5a3418',
     's': '#f5c8a0',
     'S': '#be8c69',
     'w': '#f5f0e6',
     'W': '#aaafbe',
     'e': '#ffffff',
     'b': '#e01b24',
+    'r': '#b0142a',
 }
 
 
@@ -43,7 +50,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('image')
     ap.add_argument('--w', type=int, default=48, help='largeur de la grille (defaut 48)')
-    ap.add_argument('--h', type=int, default=64, help='hauteur de la grille (defaut 64)')
+    ap.add_argument('--h', type=int, default=48, help='hauteur de la grille (defaut 48)')
     ap.add_argument('--bg', help='couleur du fond en hex, sinon le pixel (0,0)')
     ap.add_argument('--tolerance', type=float, default=90, help='distance RGB max au fond (defaut 90)')
     ap.add_argument('--margin', type=int, default=1, help='colonnes vides de chaque cote (defaut 1)')

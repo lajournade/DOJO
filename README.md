@@ -139,15 +139,16 @@ personnes peuvent suivre le même sans partager une seule charge.
 Tout le dessin tient sur une grille de pixels : deux polices bitmap (Press Start 2P pour
 les titres, Silkscreen pour le texte), des cadres crénelés en `box-shadow`, une palette
 fixe, et un combattant décrit en clair dans `src/fx/sprites.ts` — un caractère par
-pixel sur 48 × 64, rendu en `<svg>` par `src/components/Sprite.tsx`. Aucune image binaire.
+pixel sur 48 × 48, rendu en `<svg>` par `src/components/Sprite.tsx`. Aucune image binaire.
 
-Le combattant a trois états, et c'est la séance qui les enchaîne : **frais** jusqu'à la
-moitié des séries, **fatigué** ensuite (kimono en lambeaux, bleus), **vainqueur** sur l'écran
-de résultats. Dans l'arène il tient en portrait dans le bandeau de combat, à côté de ses deux
-barres de vie — l'exercice, puis la séance — comme dans les jeux dont l'app emprunte l'habit ;
-il apparaît en pied au briefing, à l'intro et aux résultats. Chaque joueur le porte à ses couleurs — ceinture, bandeau, cheveux — par
-permutation de palette (`costume` dans `sprites.ts`), comme les costumes alternatifs des
-jeux de combat.
+Le combattant est un buste, coupé à la ceinture, et a trois états que la séance enchaîne :
+**frais** jusqu'à la moitié des séries, **fatigué** ensuite (œil au beurre noir, kimono en
+lambeaux, sang), **vainqueur** sur l'écran de résultats. Dans l'arène il tient en portrait
+— tête et épaules — dans le bandeau de combat, à côté de ses deux barres de vie — l'exercice,
+puis la séance — comme dans les jeux dont l'app emprunte l'habit ; il apparaît en buste
+entier à l'intro et aux résultats. Chaque joueur le porte à ses couleurs — ceinture, cheveux —
+par permutation de palette (`costume` dans `sprites.ts`), comme les costumes alternatifs des
+jeux de combat ; le sang, lui, reste rouge.
 
 Les dessins ne sont pas faits à la main pixel par pixel : ils viennent d'images générées
 (un personnage sur fond vert uni, style pixel art, gros aplats, contour noir) passées par
@@ -159,7 +160,9 @@ python3 scripts/pixelize.py scratch/chatgpt/default.png --name HERO_FRESH --prev
 ```
 
 Le tableau imprimé se colle dans `sprites.ts` et se retouche là, en texte ; l'aperçu sert à
-juger avant de coller. L'image source reste dans `scratch/`, hors git.
+juger avant de coller. Deux retouches sont attendues à chaque fois : le sang sort en `b`
+(rouge) et passe en `r`, puis la ceinture, noire sur les références, se peint en `b` — c'est
+elle qui prend la couleur du joueur. L'image source reste dans `scratch/`, hors git.
 
 Les polices sont **embarquées dans `public/fonts/`** (sous-ensemble latin, 28 Ko en tout,
 licence dans `OFL.txt`) : l'application ne demande rien au réseau une fois chargée.

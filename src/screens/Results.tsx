@@ -111,7 +111,7 @@ export function Results() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-ink">
-      {/* Le combattant tient debout, le poing leve : la seance est battue. */}
+      {/* Le combattant, le poing leve : la seance est battue. */}
       <div className="pad-top flex justify-center border-b-2 border-line pb-2">
         <Sprite
           sprite={HERO}
