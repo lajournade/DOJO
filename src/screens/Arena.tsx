@@ -12,6 +12,7 @@ import { Plateau } from '../components/Plateau';
 import { PowerUp } from '../components/PowerUp';
 import { RestTimer, useRestCountdown, type Rest } from '../components/RestTimer';
 import { RirPicker } from '../components/RirPicker';
+import { SessionMap } from '../components/SessionMap';
 import { Sprite, useFrame } from '../components/Sprite';
 import { sfx } from '../fx/audio';
 import { useShake } from '../fx/shake';
@@ -29,18 +30,15 @@ import { bestWeight } from '../store/selectors';
 import {
   abortSession,
   addSet,
-  canPostpone,
   finishSession,
   isFinished,
+  jumpTo,
   logSet,
-  moveTo,
   nextCursor,
-  postponeStep,
   repRange,
   replaceStep,
   rirTarget,
   suggestion,
-  supersetRange,
   totalSets,
   undoLastSet,
 } from '../store/session';
@@ -65,6 +63,8 @@ export function Arena() {
   const [flash, setFlash] = useState(0);
   const [striking, setStriking] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  // La carte de la seance, par-dessus l'arene : pour aller jouer un autre exercice.
+  const [showMap, setShowMap] = useState(false);
   // La saisie du remplacant : `null` tant que le titre reste un titre.
   const [draftName, setDraftName] = useState<string | null>(null);
   const { shake, props: shakeProps } = useShake();
@@ -72,9 +72,8 @@ export function Arena() {
   const { left: restLeft, done: restDone } = useRestCountdown(rest);
 
   const step = live?.plan[live.cursor.planIndex] ?? null;
-  // L'identifiant plutot que la position : reporter un exercice change ce que le
-  // curseur pointe sans le deplacer, et les compteurs doivent suivre. L'exercice
-  // aussi : remplace sur place, le pas garde son identifiant mais change de nom.
+  // L'identifiant plutot que la position, et l'exercice avec : remplace sur place,
+  // le pas garde son identifiant mais change de nom, et les compteurs doivent suivre.
   const stepKey = step ? `${step.id}:${step.exerciseId}` : '';
   const cursorKey = live && step ? `${stepKey}:${live.cursor.setIndex}` : '';
   const isLastSet = step ? live!.cursor.setIndex >= step.sets : false;
@@ -110,8 +109,8 @@ export function Arena() {
   // Un exercice n'a qu'une annonce, a sa premiere serie : la montee en charge, ou le
   // palier. Les deux s'excluent — l'un veut `hold`, l'autre non. Un ensemble, et non
   // un seul index : dans un superset le curseur revient sur un exercice deja annonce,
-  // et l'annonce se rejouerait a chaque tour, son compris. Cle par identifiant et non
-  // par position : reporter un exercice deplace tout ce qui le suit.
+  // et l'annonce se rejouerait a chaque tour, son compris — de meme quand on revient
+  // par la carte sur un exercice quitte en route.
   const announced = useRef(new Set<string>());
 
   /**
@@ -223,6 +222,20 @@ export function Arena() {
     >
       <ImpactFx hits={hits} />
 
+      {showMap && (
+        <SessionMap
+          live={live}
+          onClose={() => setShowMap(false)}
+          onPick={(i) => {
+            // Aller ailleurs, c'est quitter le repos en cours : il appartenait a l'exercice qu'on laisse.
+            jumpTo(live, i);
+            setRest(null);
+            setShowMap(false);
+            sfx.select();
+          }}
+        />
+      )}
+
       <header className="pad-top pad-x flex items-center justify-between gap-2 pb-1.5">
         <button
           type="button"
@@ -236,12 +249,22 @@ export function Arena() {
         >
           ← quitter
         </button>
-        {/* Le reseau peut tomber en pleine seance : on le signale sans jamais interrompre. */}
-        {status === 'offline' && (
-          <span className="bevel-sm numeric fight-text bg-blood/30 px-1.5 py-0.5 text-p1 text-impact">
-            hors ligne {pending}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Le reseau peut tomber en pleine seance : on le signale sans jamais interrompre. */}
+          {status === 'offline' && (
+            <span className="bevel-sm numeric fight-text bg-blood/30 px-1.5 py-0.5 text-p1 text-impact">
+              hors ligne {pending}
+            </span>
+          )}
+          {/* La seance entiere, et le saut vers un autre exercice quand la machine est prise. */}
+          <button
+            type="button"
+            onClick={() => setShowMap(true)}
+            className="fight-text text-p1 tracking-[0.2em] text-ash"
+          >
+            carte →
+          </button>
+        </div>
       </header>
 
       {/* Le bandeau de combat, a la Street Fighter : le portrait du combattant, ses
@@ -415,22 +438,6 @@ export function Arena() {
         {/* Actions secondaires */}
         <section className="pad-x mt-3 flex flex-wrap gap-1.5">
           <Small onClick={() => addSet(live)}>+ série</Small>
-          {/* Passer un membre de superset seul laisserait la paire boiteuse : on saute le groupe. */}
-          <Small onClick={() => moveTo(supersetRange(live.plan, live.cursor.planIndex)[1] + 1)}>
-            passer l'exercice
-          </Small>
-          {/* La machine est prise : le suivant d'abord, on y revient apres. */}
-          {canPostpone(live) && (
-            <Small
-              onClick={() => {
-                postponeStep(live);
-                setRest(null);
-                sfx.select();
-              }}
-            >
-              reporter
-            </Small>
-          )}
           {/* La machine ne se liberera pas : un autre exercice a la place, pour cette seance. */}
           {draftName === null && (
             <Small

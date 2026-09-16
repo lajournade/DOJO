@@ -29,9 +29,11 @@ const handlers = {
   },
 
   /**
-   * Reordonne le plan de la seance en cours — un exercice reporte parce que la machine
-   * est prise. `order` est une permutation des index du plan ; le curseur voyage dans
-   * la meme operation, pour ne jamais pointer un plan qu'il ne decrit plus.
+   * Reordonne le plan de la seance en cours. `order` est une permutation des index du
+   * plan ; le curseur voyage dans la meme operation, pour ne jamais pointer un plan
+   * qu'il ne decrit plus. Plus rien ne l'emet — l'arene ne reporte plus d'exercice, on
+   * saute vers un autre par la carte — mais une file d'attente d'avant peut encore en
+   * porter un, et une operation inconnue ferait echouer toute la salve.
    */
   'session.reorder': (s, { userId, order, cursor }) => {
     const live = s.liveSessions[userId];
