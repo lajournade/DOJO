@@ -29,6 +29,17 @@ const handlers = {
   },
 
   /**
+   * Un exercice de plus en fin de plan, pour cette seance seulement — le programme n'en
+   * sait rien. Le curseur voyage dans la meme operation : l'arene y va tout de suite.
+   */
+  'session.append': (s, { userId, step, cursor }) => {
+    const live = s.liveSessions[userId];
+    if (!live) return;
+    live.plan.push(step);
+    if (cursor) live.cursor = cursor;
+  },
+
+  /**
    * Reordonne le plan de la seance en cours. `order` est une permutation des index du
    * plan ; le curseur voyage dans la meme operation, pour ne jamais pointer un plan
    * qu'il ne decrit plus. Plus rien ne l'emet — l'arene ne reporte plus d'exercice, on

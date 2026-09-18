@@ -134,6 +134,12 @@ tape un nom, le catalogue le complète. Un exercice déjà joué ramène son nom
 sa charge de l'historique ; un nom nouveau garde ce qui était au compteur, à corriger à la
 main, et entre au catalogue pour être proposé la prochaine fois.
 
+Et un exercice de plus se glisse en fin de séance depuis la carte : `+ exercice`, un nom, et
+l'arène y va tout de suite — ce qu'on quittait reste `entamé` et revient à son tour. Là aussi le
+programme n'en sait rien : le rab vaut pour cette séance, et entre au journal comme le reste.
+Un exercice déjà pratiqué ramène ses séries et sa charge ; un inconnu prend les valeurs de la
+famille du programme, à corriger au compteur.
+
 Choisir un programme le pose comme **programme en cours** — celui du joueur, pas celui du dojo : deux
 personnes peuvent suivre le même sans partager une seule charge.
 

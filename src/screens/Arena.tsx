@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { BigStepper } from '../components/BigStepper';
 import { ComboMeter, comboLabel } from '../components/ComboMeter';
+import { ExerciseInput } from '../components/ExerciseInput';
 import { HealthBar, RoundClock } from '../components/HealthBar';
 import { ImpactFx, type Hit } from '../components/ImpactFx';
 import { Plateau } from '../components/Plateau';
@@ -30,6 +31,7 @@ import { bestWeight } from '../store/selectors';
 import {
   abortSession,
   addSet,
+  appendStep,
   finishSession,
   isFinished,
   jumpTo,
@@ -225,10 +227,18 @@ export function Arena() {
       {showMap && (
         <SessionMap
           live={live}
+          names={state.exercises.map((e) => e.name)}
           onClose={() => setShowMap(false)}
           onPick={(i) => {
             // Aller ailleurs, c'est quitter le repos en cours : il appartenait a l'exercice qu'on laisse.
             jumpTo(live, i);
+            setRest(null);
+            setShowMap(false);
+            sfx.select();
+          }}
+          onAdd={(name) => {
+            // Un exercice de plus, et on y va : meme depart que le saut.
+            appendStep(live, name);
             setRest(null);
             setShowMap(false);
             sfx.select();
@@ -480,63 +490,6 @@ export function Arena() {
           </span>
         </button>
       </div>
-    </div>
-  );
-}
-
-/**
- * Le titre devenu cellule : un nom se tape, le catalogue le complete, Entree valide.
- * Un nom vide ne remplace rien — c'est la meme chose qu'annuler.
- */
-function ExerciseInput({
-  value,
-  names,
-  onChange,
-  onCancel,
-  onSubmit,
-}: {
-  value: string;
-  names: string[];
-  onChange: (v: string) => void;
-  onCancel: () => void;
-  onSubmit: () => void;
-}) {
-  const submit = () => (value.trim() ? onSubmit() : onCancel());
-  return (
-    <div className="bevel-sm flex min-w-0 flex-1 items-center gap-2 bg-ink-2 p-2">
-      <input
-        autoFocus
-        list="exercices"
-        value={value}
-        placeholder="nom de l'exercice"
-        enterKeyHint="done"
-        autoComplete="off"
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') submit();
-          if (e.key === 'Escape') onCancel();
-        }}
-        className="min-w-0 flex-1 bg-transparent text-p2 font-bold uppercase text-bone outline-none placeholder:text-ash/50"
-      />
-      <datalist id="exercices">
-        {names.map((n) => (
-          <option key={n} value={n} />
-        ))}
-      </datalist>
-      <button
-        type="button"
-        onClick={submit}
-        className="bevel-sm keycap h-9 w-9 shrink-0 bg-impact text-p2 text-line"
-      >
-        ✓
-      </button>
-      <button
-        type="button"
-        onClick={onCancel}
-        className="bevel-sm keycap h-9 w-9 shrink-0 bg-ink-3 text-p2 text-ash"
-      >
-        ✕
-      </button>
     </div>
   );
 }

@@ -3,9 +3,18 @@
  * curseur, cloture. Toutes les mutations passent par `dispatch`, donc chacune
  * est immediatement persistee et synchronisee.
  */
-import type { Cursor, LiveSession, PlanStep, Program, ProgramSession, SetEntry, UserView } from '../types';
+import type {
+  Cursor,
+  LiveSession,
+  PlanStep,
+  Program,
+  ProgramGoal,
+  ProgramSession,
+  SetEntry,
+  UserView,
+} from '../types';
 import { dispatch, getView } from './state';
-import { findExercise, slug } from './programs';
+import { blankItem, findExercise, slug } from './programs';
 import { exerciseName, knownSets, todayIso, typicalMinutes } from './selectors';
 import { advise, gainLabel, plateau, type Advice, type Plateau, type Trend } from './progression';
 
@@ -310,6 +319,44 @@ export function replaceStep(live: LiveSession, name: string, counter: { weight: 
     notes: '',
   };
   dispatch('session.plan', { planIndex: live.cursor.planIndex, patch });
+}
+
+/**
+ * La famille du programme d'ou vient la seance, pour pre-remplir ce qu'on y ajoute. Un
+ * programme supprime en cours de route retombe sur l'hypertrophie, la famille du milieu.
+ */
+function sessionGoal(state: UserView, live: LiveSession): ProgramGoal {
+  return (
+    state.programs.find((p) => p.sessions.some((s) => s.id === live.sessionId))?.goal ??
+    'hypertrophie'
+  );
+}
+
+/**
+ * Un exercice de plus, en fin de plan — pour cette seance seulement, le programme n'en sait
+ * rien. L'ordre prevu ne bouge pas : il vient apres tout le reste, et l'on y va tout de
+ * suite, comme `jumpTo` ; ce qu'on quitte reviendra de lui-meme. Un exercice deja joue
+ * apporte son nombre de series et `advise` retrouvera sa charge ; un inconnu prend les
+ * valeurs de la famille, et entre au catalogue pour etre propose la prochaine fois.
+ */
+export function appendStep(live: LiveSession, name: string) {
+  const label = name.trim();
+  if (!label) return;
+  const state = getView();
+
+  const existing = findExercise(state.exercises, label);
+  const exerciseId = existing?.id ?? slug(label);
+  if (!exerciseId) return;
+  if (!existing) dispatch('exercise.upsert', { exercise: { id: exerciseId, name: label } });
+
+  const item = blankItem(sessionGoal(state, live));
+  const step: PlanStep = {
+    ...item,
+    exerciseId,
+    exerciseName: existing?.name ?? label,
+    sets: knownSets(state, exerciseId) ?? item.sets,
+  };
+  dispatch('session.append', { step, cursor: { planIndex: live.plan.length, setIndex: 1 } });
 }
 
 /** Une serie de plus — sur toute la paire quand on est dans un superset, sinon elle se desaccorde. */

@@ -2,20 +2,28 @@
  * La carte de la seance, ouverte depuis l'arene : tous les exercices dans l'ordre
  * prevu, ce qui est fini, ce qui est entame, ou l'on en est. Un appui sur un exercice
  * y mene — c'est le geste quand la machine est prise. Rien n'est reordonne : l'ordre
- * du plan reste celui du programme, `nextCursor` ramene sur ce qui reste.
+ * du plan reste celui du programme, `nextCursor` ramene sur ce qui reste. La derniere
+ * ligne ajoute un exercice en fin de plan, pour cette seance seulement.
  */
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { doneSets, stepStatus } from '../store/session';
 import type { LiveSession } from '../types';
+import { ExerciseInput } from './ExerciseInput';
 
 interface Props {
   live: LiveSession;
+  /** Les noms du catalogue, pour completer celui qu'on ajoute. */
+  names: string[];
   onPick: (planIndex: number) => void;
+  onAdd: (name: string) => void;
   onClose: () => void;
 }
 
-export function SessionMap({ live, onPick, onClose }: Props) {
+export function SessionMap({ live, names, onPick, onAdd, onClose }: Props) {
   const remaining = live.plan.filter((_, i) => stepStatus(live, i) !== 'done').length;
+  // La saisie de l'exercice a ajouter : `null` tant que la ligne reste un bouton.
+  const [draft, setDraft] = useState<string | null>(null);
 
   return (
     <motion.div
@@ -95,6 +103,29 @@ export function SessionMap({ live, onPick, onClose }: Props) {
               </motion.button>
             );
           })}
+
+          {/* Un exercice de plus, en fin de plan : la ligne devient une cellule. */}
+          {draft === null ? (
+            <button
+              type="button"
+              onClick={() => setDraft('')}
+              className="bevel-sm bg-ink-2 p-2.5 text-left"
+            >
+              <div className="flex items-start gap-2">
+                <span className="fight-text numeric w-4 shrink-0 text-p2 text-impact">+</span>
+                <p className="min-w-0 flex-1 text-p2 font-bold uppercase leading-6 text-ash">exercice</p>
+              </div>
+            </button>
+          ) : (
+            <ExerciseInput
+              value={draft}
+              names={names}
+              listId="exercices-carte"
+              onChange={setDraft}
+              onCancel={() => setDraft(null)}
+              onSubmit={() => onAdd(draft)}
+            />
+          )}
         </div>
       </main>
     </motion.div>
