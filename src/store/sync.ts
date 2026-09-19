@@ -23,10 +23,10 @@ async function fetchState(): Promise<AppState> {
   return (await res.json()) as AppState;
 }
 
-function scheduleRetry() {
+function scheduleRetry(task: () => Promise<unknown> = flush) {
   clearTimeout(retryTimer);
   retryTimer = setTimeout(() => {
-    void flush();
+    void task();
   }, retryDelay) as unknown as number;
   retryDelay = Math.min(retryDelay * 2, RETRY_MAX);
 }
@@ -51,8 +51,6 @@ export async function flush(): Promise<boolean> {
     queue.drop(ops);
     retryDelay = RETRY_MIN;
     setStatus(queue.size ? 'syncing' : 'idle');
-    if (queue.size) void flush();
-    return true;
   } catch {
     setStatus('offline', queue.size);
     scheduleRetry();
@@ -60,6 +58,9 @@ export async function flush(): Promise<boolean> {
   } finally {
     flushing = false;
   }
+  // Ce qui s'est ajoute pendant l'envoi part aussitot — une fois le garde leve.
+  if (queue.size) void flush();
+  return true;
 }
 
 /** Recharge l'etat serveur, en preservant les operations locales pas encore confirmees. */
@@ -82,13 +83,15 @@ export async function boot() {
   await flush();
   const ok = await pull();
   if (!ok) {
-    // Serveur injoignable au lancement : on repart au moins avec ce qu'on avait localement.
+    // Serveur injoignable au lancement : on repart au moins avec ce qu'on avait localement,
+    // et l'on reessaie le demarrage entier — l'etat de reference n'est pas encore la.
     setState(getState());
-    scheduleRetry();
+    scheduleRetry(boot);
   }
 }
 
-export function startSyncDaemon() {
+/** Branche les envois sur les mutations et les reveils. Renvoie de quoi tout debrancher. */
+export function startSyncDaemon(): () => void {
   // Une salve par rafale de mutations : valider quatre series d'affilee ne fait qu'un envoi.
   let debounce: number | undefined;
   setFlushScheduler(() => {
@@ -99,16 +102,26 @@ export function startSyncDaemon() {
   const wake = () => {
     if (document.visibilityState !== 'visible') return;
     retryDelay = RETRY_MIN;
-    if (queue.size) void flush();
+    // La file d'abord ; une fois passee, l'etat de reference — il a pu manquer au lancement.
+    if (queue.size) void flush().then((ok) => ok && pull());
     else void pull();
   };
-  document.addEventListener('visibilitychange', wake);
-  window.addEventListener('online', wake);
   // Dernier envoi opportuniste quand l'onglet passe en arriere-plan.
-  window.addEventListener('pagehide', () => {
+  const farewell = () => {
     const ops: Op[] = queue.all();
     if (ops.length && navigator.sendBeacon) {
       navigator.sendBeacon('/api/ops', new Blob([JSON.stringify(ops)], { type: 'application/json' }));
     }
-  });
+  };
+  document.addEventListener('visibilitychange', wake);
+  window.addEventListener('online', wake);
+  window.addEventListener('pagehide', farewell);
+
+  return () => {
+    clearTimeout(debounce);
+    setFlushScheduler(() => {});
+    document.removeEventListener('visibilitychange', wake);
+    window.removeEventListener('online', wake);
+    window.removeEventListener('pagehide', farewell);
+  };
 }

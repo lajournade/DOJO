@@ -19,7 +19,7 @@ export function App() {
 
   useEffect(() => {
     void boot();
-    startSyncDaemon();
+    return startSyncDaemon();
   }, []);
 
   return (

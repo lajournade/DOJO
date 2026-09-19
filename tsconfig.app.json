@@ -10,7 +10,8 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "types": [
-      "vite/client"
+      "vite/client",
+      "node"
     ],
     "strict": true,
     "noUnusedLocals": true,
@@ -26,6 +27,7 @@
   },
   "include": [
     "src",
-    "shared"
+    "shared",
+    "server/**/*.test.ts"
   ]
 }

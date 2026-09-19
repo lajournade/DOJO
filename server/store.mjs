@@ -2,6 +2,9 @@
  * Persistance de l'etat : un seul fichier JSON, ecrit de facon atomique.
  * Quelques joueurs, quelques milliers de series par an — un fichier suffit,
  * il se sauvegarde avec un `cp` et se lit avec n'importe quel editeur.
+ *
+ * `createStore` rend le fichier, le seed et la rotation parametrables : le serveur
+ * n'en cree qu'un, les tests en ouvrent autant qu'ils ont de dossiers temporaires.
  */
 import { readFile, writeFile, rename, mkdir, readdir, unlink, copyFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -9,17 +12,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-export const DATA_FILE = process.env.DOJO_DATA ?? join(ROOT, 'data', 'sport.json');
-const BACKUP_DIR = join(dirname(DATA_FILE), 'backups');
-const SEED_FILE = join(ROOT, 'scripts', 'seed.json');
-const KEEP_BACKUPS = 14;
 
 /** Le joueur qu'on invente en reprenant un etat d'avant les profils. */
 const FIRST_USER = 'u-1';
-
-let state = null;
-/** Les ecritures s'enchainent sur cette promesse : jamais deux writeFile concurrents. */
-let writeChain = Promise.resolve();
 
 const emptyState = () => ({
   rev: 0,
@@ -69,64 +64,86 @@ function migrate(s) {
   return true;
 }
 
-/** Le fichier d'avant la conversion, garde de cote : la sauvegarde du jour arrive trop tard. */
-async function archiveV1() {
-  await mkdir(BACKUP_DIR, { recursive: true });
-  const day = new Date().toISOString().slice(0, 10);
-  const target = join(BACKUP_DIR, `sport-v1-${day}.json`);
-  if (existsSync(target)) return;
-  await copyFile(DATA_FILE, target);
-  console.log(`[dojo] etat mono-joueur archive dans ${target}`);
-}
+/**
+ * @param {object} [options]
+ * @param {string} [options.file]  le fichier d'etat (`DOJO_DATA` cote serveur)
+ * @param {string} [options.seed]  l'etat initial si le fichier n'existe pas
+ * @param {number} [options.keep]  nombre de sauvegardes datees conservees
+ * @param {(message: string) => void} [options.log]
+ */
+export function createStore({
+  file = join(ROOT, 'data', 'sport.json'),
+  seed = join(ROOT, 'scripts', 'seed.json'),
+  keep = 14,
+  log = console.log,
+} = {}) {
+  const backupDir = join(dirname(file), 'backups');
 
-export async function load() {
-  if (state) return state;
-  await mkdir(dirname(DATA_FILE), { recursive: true });
+  let state = null;
+  /** Les ecritures s'enchainent sur cette promesse : jamais deux writeFile concurrents. */
+  let writeChain = Promise.resolve();
 
-  const fresh = !existsSync(DATA_FILE);
-  if (fresh) {
-    // Premier demarrage : on part de l'historique importe du classeur.
-    state = existsSync(SEED_FILE) ? JSON.parse(await readFile(SEED_FILE, 'utf8')) : emptyState();
-    console.log(`[dojo] etat initialise depuis ${existsSync(SEED_FILE) ? 'scripts/seed.json' : 'zero'}`);
-  } else {
-    state = JSON.parse(await readFile(DATA_FILE, 'utf8'));
+  /** Le fichier d'avant la conversion, garde de cote : la sauvegarde du jour arrive trop tard. */
+  async function archiveV1() {
+    await mkdir(backupDir, { recursive: true });
+    const day = new Date().toISOString().slice(0, 10);
+    const target = join(backupDir, `sport-v1-${day}.json`);
+    if (existsSync(target)) return;
+    await copyFile(file, target);
+    log(`[dojo] etat mono-joueur archive dans ${target}`);
   }
 
-  const converted = migrate(state);
-  if (converted && !fresh) await archiveV1();
-  if (converted || fresh) await persist();
+  async function load() {
+    if (state) return state;
+    await mkdir(dirname(file), { recursive: true });
 
-  return state;
-}
+    const fresh = !existsSync(file);
+    if (fresh) {
+      // Premier demarrage : on part de l'historique importe du classeur.
+      state = existsSync(seed) ? JSON.parse(await readFile(seed, 'utf8')) : emptyState();
+      log(`[dojo] etat initialise depuis ${existsSync(seed) ? seed : 'zero'}`);
+    } else {
+      state = JSON.parse(await readFile(file, 'utf8'));
+    }
 
-export function get() {
-  if (!state) throw new Error('store non charge');
-  return state;
-}
+    const converted = migrate(state);
+    if (converted && !fresh) await archiveV1();
+    if (converted || fresh) await persist();
 
-/** Ecriture atomique : fichier temporaire puis rename (jamais de JSON tronque). */
-async function persist() {
-  const snapshot = JSON.stringify(state, null, 2);
-  const tmp = `${DATA_FILE}.${process.pid}.tmp`;
-  await writeFile(tmp, snapshot, 'utf8');
-  await rename(tmp, DATA_FILE);
-}
+    return state;
+  }
 
-export function save() {
-  writeChain = writeChain.then(persist).catch((err) => {
-    console.error('[dojo] echec de sauvegarde', err);
-  });
-  return writeChain;
-}
+  function get() {
+    if (!state) throw new Error('store non charge');
+    return state;
+  }
 
-/** Une copie datee par jour, les 14 dernieres conservees. */
-export async function backup() {
-  if (!existsSync(DATA_FILE)) return;
-  await mkdir(BACKUP_DIR, { recursive: true });
-  const day = new Date().toISOString().slice(0, 10);
-  const target = join(BACKUP_DIR, `sport-${day}.json`);
-  if (existsSync(target)) return;
-  await copyFile(DATA_FILE, target);
-  const old = (await readdir(BACKUP_DIR)).filter((f) => f.startsWith('sport-20')).sort();
-  await Promise.all(old.slice(0, -KEEP_BACKUPS).map((f) => unlink(join(BACKUP_DIR, f))));
+  /** Ecriture atomique : fichier temporaire puis rename (jamais de JSON tronque). */
+  async function persist() {
+    const snapshot = JSON.stringify(state, null, 2);
+    const tmp = `${file}.${process.pid}.tmp`;
+    await writeFile(tmp, snapshot, 'utf8');
+    await rename(tmp, file);
+  }
+
+  function save() {
+    writeChain = writeChain.then(persist).catch((err) => {
+      console.error('[dojo] echec de sauvegarde', err);
+    });
+    return writeChain;
+  }
+
+  /** Une copie datee par jour, les `keep` dernieres conservees. */
+  async function backup() {
+    if (!existsSync(file)) return;
+    await mkdir(backupDir, { recursive: true });
+    const day = new Date().toISOString().slice(0, 10);
+    const target = join(backupDir, `sport-${day}.json`);
+    if (existsSync(target)) return;
+    await copyFile(file, target);
+    const old = (await readdir(backupDir)).filter((f) => f.startsWith('sport-20')).sort();
+    await Promise.all(old.slice(0, -keep).map((f) => unlink(join(backupDir, f))));
+  }
+
+  return { file, backupDir, load, get, save, backup };
 }

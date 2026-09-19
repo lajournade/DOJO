@@ -203,11 +203,13 @@ export function Arena() {
     setHits((h) => [...h, hit]);
     setTimeout(() => setHits((h) => h.filter((x) => x.id !== hit.id)), 900);
 
-    logSet(live, { reps, weight, rir: isLastSet ? rir : null });
-
     // C'est le curseur suivant qui sait si le combat s'arrete la : dans un superset,
     // la derniere serie de la seance n'est pas forcement celle du dernier exercice.
+    // A lire avant d'ecrire au journal : l'operation avance le curseur de `live` en place.
     const lastOfSession = nextCursor(live).planIndex >= live.plan.length;
+
+    logSet(live, { reps, weight, rir: isLastSet ? rir : null });
+
     // Un repos nul est un enchainement, pas une pause : l'afficher ferait sonner la
     // cloche entre les deux mouvements de la paire.
     setRest(

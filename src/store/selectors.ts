@@ -97,7 +97,10 @@ export function formatDate(iso: string): string {
 /** "il y a 3 jours", pour situer la derniere seance d'un coup d'oeil. */
 export function sinceLabel(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number);
-  const days = Math.round((Date.now() - new Date(y, m - 1, d).getTime()) / 86_400_000);
+  // De minuit a minuit : une seance jouee le matin reste « aujourd'hui » le soir.
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const days = Math.round((today - new Date(y, m - 1, d).getTime()) / 86_400_000);
   if (days <= 0) return "aujourd'hui";
   if (days === 1) return 'hier';
   if (days < 7) return `il y a ${days} j`;

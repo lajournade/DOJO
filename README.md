@@ -77,10 +77,39 @@ Pour régénérer l'état initial depuis le classeur :
 python3 scripts/extract-xlsx.py ~/Downloads/"Sport 2026.xlsx"
 ```
 
+## Tests
+
+```bash
+npm test             # vitest, avec la couverture : rouge sous 80 % (lignes, fonctions, branches, instructions)
+npm run test:watch   # en continu, sans couverture
+```
+
+Vitest hérite de `vite.config.ts`, sans fichier dédié. Les tests tournent sous Node ; ceux qui
+rendent l'interface le disent en tête de fichier (`/** @vitest-environment jsdom */`), et
+`src/test/setup.ts` fournit à jsdom ce qui lui manque (`matchMedia` en animations réduites,
+`confirm`, la vidéo du repli d'écran allumé). Trois étages :
+
+- **la logique, sous Node** — `shared/ops.test.ts` (les dix-sept opérations et l'idempotence),
+  `src/store/*.test.ts` (montée en charge, sélecteurs, familles, curseur de séance, file et
+  synchronisation), `server/*.test.ts` (persistance, migration, sauvegardes, routes et CSV) ;
+- **les composants à horloge, sous jsdom** — le compteur qui accélère, l'intro VS, le repos,
+  le son et l'écran allumé, avec des horloges factices ;
+- **un scénario par cas d'usage de cette page, dans `src/conops/`** — premier lancement, séance
+  complète, reprise et abandon, machine prise, remplacer, ajouter un exercice, superset,
+  bibliothèque, montée en charge, bloqué et décharge, transposition, réseau coupé, historique et
+  export, multi-joueurs. Chacun monte `<App/>` dans jsdom et parle au **vrai serveur**, lancé sur
+  un port libre avec un `sport.json` temporaire ; `src/test/appareil.ts` fait les gestes du
+  pouce (`clic`, `saisir`, `appuyerLong`, `basculerAppareil`…) et `src/test/serveur.ts` relit le
+  fichier pour vérifier ce qui a atterri. Les états de départ viennent de `src/test/fabrique.ts`.
+
+`fixtures/` tient les deux états figés qui servent à la migration ; `data/` n'est jamais lu par
+un test. Trois fichiers sont hors couverture : `src/fx/sprites.ts` (des pixels), `src/main.tsx`
+et `server/index.mjs` (l'amorçage, qui écoute un port).
+
 ## Structure
 
 ```
-server/     serveur HTTP sans dépendance : sert dist/ et l'API
+server/     serveur HTTP sans dépendance : store.mjs (le fichier), app.mjs (l'API), index.mjs (le port)
 shared/     opérations appliquées à l'identique par le client et le serveur
 public/     icône, manifeste, et les deux polices bitmap embarquées
 src/        application React
@@ -91,6 +120,7 @@ src/        application React
   store/       état, file d'envoi, synchronisation, sélecteurs, familles de programme
   fx/          audio, secousse d'écran, écran allumé, appui long, sprites du combattant
 scripts/    import du classeur, état initial, transcription d'images en sprites
+fixtures/   états figés pour les tests ; src/test/ le harnais, src/conops/ les scénarios
 ```
 
 ### Joueurs et programmes

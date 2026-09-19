@@ -1,0 +1,17 @@
+{
+  "rev": 1,
+  "appliedOps": ["op-1"],
+  "exercises": [{ "id": "squat-barre", "name": "Squat barre" }],
+  "programs": [
+    {
+      "id": "prog-p1",
+      "code": "P1",
+      "name": "Programme",
+      "goal": "hypertrophie",
+      "sessions": []
+    }
+  ],
+  "users": [{ "id": "u-1", "name": "Ludo", "activeProgramId": "prog-p1", "palette": 0 }],
+  "logs": [],
+  "liveSessions": {}
+}

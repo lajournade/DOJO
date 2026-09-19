@@ -1,0 +1,54 @@
+{
+  "rev": 3,
+  "appliedOps": ["op-1", "op-2", "op-3"],
+  "exercises": [
+    { "id": "squat-barre", "name": "Squat barre" },
+    { "id": "developpe-couche", "name": "Développé couché" }
+  ],
+  "programs": [
+    {
+      "id": "prog-p1",
+      "code": "P1",
+      "name": "Programme d'avant les profils",
+      "active": true,
+      "sessions": [
+        {
+          "id": "ses-a",
+          "code": "A",
+          "name": "Séance A",
+          "items": [
+            { "id": "it-1", "exerciseId": "squat-barre", "sets": 3, "repMin": 8, "repMax": 12, "targetRirMin": 2, "targetRirMax": 2, "restSec": 90, "notes": "" }
+          ]
+        }
+      ]
+    }
+  ],
+  "logs": [
+    {
+      "id": "log-2026-08-24-a",
+      "programCode": "P1-A",
+      "sessionId": "ses-a",
+      "date": "2026-08-24",
+      "startedAt": null,
+      "endedAt": null,
+      "entries": [
+        { "exerciseId": "squat-barre", "exerciseName": "Squat barre", "setIndex": 1, "reps": 8, "weight": 60, "rir": null },
+        { "exerciseId": "squat-barre", "exerciseName": "Squat barre", "setIndex": 2, "reps": 8, "weight": 80, "rir": null },
+        { "exerciseId": "squat-barre", "exerciseName": "Squat barre", "setIndex": 3, "reps": 8, "weight": 100, "rir": 2 }
+      ]
+    }
+  ],
+  "liveSession": {
+    "id": "log-2026-08-31-a",
+    "programCode": "P1-A",
+    "sessionId": "ses-a",
+    "date": "2026-08-31",
+    "startedAt": "2026-08-31T08:00:00.000Z",
+    "endedAt": null,
+    "entries": [],
+    "plan": [
+      { "id": "it-1", "exerciseId": "squat-barre", "exerciseName": "Squat barre", "sets": 3, "repMin": 8, "repMax": 12, "targetRirMin": 2, "targetRirMax": 2, "restSec": 90, "notes": "" }
+    ],
+    "cursor": { "planIndex": 0, "setIndex": 1 }
+  }
+}
