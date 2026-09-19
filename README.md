@@ -183,8 +183,9 @@ Le combattant est un buste, coupé à la ceinture, et a trois états que la séa
 **frais** jusqu'à la moitié des séries, **fatigué** ensuite (œil au beurre noir, kimono en
 lambeaux, sang), **vainqueur** sur l'écran de résultats. Dans l'arène il tient en portrait
 — tête et épaules — dans le bandeau de combat, à côté de ses deux barres de vie — l'exercice,
-puis la séance — comme dans les jeux dont l'app emprunte l'habit ; il apparaît en buste
-entier à l'intro et aux résultats. Chaque joueur le porte à ses couleurs — ceinture, cheveux —
+puis la séance — et du chrono de la séance, minutes et secondes écoulées depuis le premier
+round, comme dans les jeux dont l'app emprunte l'habit ; il apparaît en buste entier à
+l'intro et aux résultats. Chaque joueur le porte à ses couleurs — ceinture, cheveux —
 par permutation de palette (`costume` dans `sprites.ts`), comme les costumes alternatifs des
 jeux de combat ; le sang, lui, reste rouge.
 

@@ -57,6 +57,9 @@ describe('une seance complete', () => {
     expect(app.texte()).toContain('8–12 reps');
     expect(app.texte()).toContain('record 100 kg');
     expect(app.texte()).toContain('60'); // la charge de la premiere serie, l'echauffement
+    // Le chrono de la seance tourne des l'entree dans l'arene.
+    expect(app.texte()).toContain('temps');
+    expect(app.texte()).toMatch(/\d{2}:\d{2}/);
 
     await app.clicBouton('impact');
     await app.attendre('série 2/3');

@@ -7,7 +7,7 @@ import { motion } from 'motion/react';
 import { BigStepper } from '../components/BigStepper';
 import { ComboMeter, comboLabel } from '../components/ComboMeter';
 import { ExerciseInput } from '../components/ExerciseInput';
-import { HealthBar, RoundClock } from '../components/HealthBar';
+import { HealthBar, RoundClock, useElapsed } from '../components/HealthBar';
 import { ImpactFx, type Hit } from '../components/ImpactFx';
 import { Plateau } from '../components/Plateau';
 import { PowerUp } from '../components/PowerUp';
@@ -69,6 +69,8 @@ export function Arena() {
   const [draftName, setDraftName] = useState<string | null>(null);
   const { shake, props: shakeProps } = useShake();
   const breath = useFrame(2, 2.5);
+  // Le chrono de la seance : depuis `startedAt`, donc il survit a un rechargement.
+  const elapsed = useElapsed(live?.startedAt ?? null);
 
   const step = live?.plan[live.cursor.planIndex] ?? null;
   // L'identifiant plutot que la position, et l'exercice avec : remplace sur place,
@@ -266,9 +268,9 @@ export function Arena() {
       </header>
 
       {/* Le bandeau de combat, a la Street Fighter : le portrait du combattant, ses
-          deux barres de vie empilees — l'exercice, puis la seance —, le chrono au bout.
-          Frais jusqu'a la moitie de la seance, fatigue ensuite ; chaque serie
-          validee le fait flasher. */}
+          deux barres de vie empilees — l'exercice, puis la seance —, le chrono de la
+          seance au bout. Frais jusqu'a la moitie de la seance, fatigue ensuite ; chaque
+          serie validee le fait flasher. */}
       <div className="pad-x flex items-center gap-2 border-b-2 border-line pb-2">
         <div className="bevel-in flex shrink-0 overflow-hidden bg-ink">
           <Sprite
@@ -293,7 +295,7 @@ export function Arena() {
           />
           <HealthBar name={live.programCode} total={total} done={done} side="left" flash={flash} />
         </div>
-        <RoundClock seconds={total - done} />
+        <RoundClock seconds={elapsed} />
       </div>
 
       {/* Seule cette zone defile : la barre d'action reste sous le pouce. */}

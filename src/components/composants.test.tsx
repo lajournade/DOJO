@@ -4,12 +4,12 @@ import { act, createElement, type ReactElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { BigStepper } from './BigStepper';
 import { FightIntro } from './FightIntro';
-import { HealthBar, RoundClock } from './HealthBar';
+import { HealthBar, RoundClock, useElapsed } from './HealthBar';
 import { comboLabel } from './ComboMeter';
 
 /**
  * Les composants a horloge, sous horloges factices : l'acceleration du compteur,
- * l'intro VS. L'integration les traverse en temps reel, mais
+ * l'intro VS, le chrono de la seance. L'integration les traverse en temps reel, mais
  * ne peut pas attendre une seconde d'appui a chaque fois.
  */
 let racine: HTMLElement;
@@ -136,7 +136,7 @@ describe('FightIntro', () => {
 });
 
 describe('HealthBar et RoundClock', () => {
-  it('change de couleur en descendant, et le chrono compte les series restantes', async () => {
+  it('change de couleur en descendant, et le chrono affiche minutes et secondes', async () => {
     await rendre(createElement(HealthBar, { name: 'exo', total: 10, done: 0, side: 'left', flash: 0 }));
     const html = () => racine.innerHTML;
     const vert = html();
@@ -147,9 +147,32 @@ describe('HealthBar et RoundClock', () => {
     expect(new Set([vert, orange, rouge]).size).toBe(3);
     await rendre(createElement(HealthBar, { name: 'exo', total: 0, done: 0, side: 'left', flash: 0 }));
 
-    await rendre(createElement(RoundClock, { seconds: 7 }));
-    expect(racine.textContent).toContain('07');
-    expect(racine.textContent).toContain('sér.');
+    await rendre(createElement(RoundClock, { seconds: 303 }));
+    expect(racine.textContent).toContain('05:03');
+    expect(racine.textContent).toContain('temps');
+    // Au-dela de l'heure, les minutes continuent de compter plutot que de boucler.
+    await rendre(createElement(RoundClock, { seconds: 100 * 60 + 9 }));
+    expect(racine.textContent).toContain('100:09');
+  });
+
+  it("le chrono de seance compte depuis l'horodatage de depart, seconde par seconde", async () => {
+    function Chrono({ startedAt }: { startedAt: string | null }) {
+      return createElement(RoundClock, { seconds: useElapsed(startedAt) });
+    }
+    vi.setSystemTime(new Date('2026-09-18T10:05:03Z'));
+    await rendre(createElement(Chrono, { startedAt: '2026-09-18T10:00:00Z' }));
+    expect(racine.textContent).toContain('05:03');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(57_000);
+    });
+    expect(racine.textContent).toContain('06:00');
+    // Sans seance, la boite reste a zero et ne tourne pas.
+    await rendre(createElement(Chrono, { startedAt: null }));
+    expect(racine.textContent).toContain('00:00');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000);
+    });
+    expect(racine.textContent).toContain('00:00');
   });
 
   it('nomme les combos', () => {
