@@ -1,16 +1,15 @@
 /** @vitest-environment jsdom */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, createElement, useState, type ReactElement } from 'react';
+import { act, createElement, type ReactElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { BigStepper } from './BigStepper';
 import { FightIntro } from './FightIntro';
-import { RestTimer, useRestCountdown } from './RestTimer';
 import { HealthBar, RoundClock } from './HealthBar';
 import { comboLabel } from './ComboMeter';
 
 /**
  * Les composants a horloge, sous horloges factices : l'acceleration du compteur,
- * l'intro VS, le decompte du repos. L'integration les traverse en temps reel, mais
+ * l'intro VS. L'integration les traverse en temps reel, mais
  * ne peut pas attendre une seconde d'appui a chaque fois.
  */
 let racine: HTMLElement;
@@ -136,32 +135,8 @@ describe('FightIntro', () => {
   });
 });
 
-describe('RestTimer', () => {
-  function Repos({ duration }: { duration: number }) {
-    const [rest] = useState(() => ({ startedAt: Date.now(), duration }));
-    const { left, done } = useRestCountdown(rest);
-    return createElement(RestTimer, { left, done, round: 2, onDismiss: () => {}, onExtend: () => {} });
-  }
-
-  it("decompte depuis l'horodatage de depart et sonne a zero", async () => {
-    vi.setSystemTime(new Date('2026-09-18T10:00:00Z'));
-    await rendre(createElement(Repos, { duration: 90 }));
-    expect(racine.textContent).toContain('repos');
-    expect(racine.textContent).toContain('1:30 restantes');
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(30_000);
-    });
-    expect(racine.textContent).toContain('1:00 restantes');
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(60_000);
-    });
-    expect(racine.textContent).toContain('round 2');
-    expect(racine.textContent).toContain('à toi de jouer');
-  });
-});
-
 describe('HealthBar et RoundClock', () => {
-  it('change de couleur en descendant et clignote sous les cinq secondes', async () => {
+  it('change de couleur en descendant, et le chrono compte les series restantes', async () => {
     await rendre(createElement(HealthBar, { name: 'exo', total: 10, done: 0, side: 'left', flash: 0 }));
     const html = () => racine.innerHTML;
     const vert = html();
@@ -172,11 +147,7 @@ describe('HealthBar et RoundClock', () => {
     expect(new Set([vert, orange, rouge]).size).toBe(3);
     await rendre(createElement(HealthBar, { name: 'exo', total: 0, done: 0, side: 'left', flash: 0 }));
 
-    await rendre(createElement(RoundClock, { seconds: 125, resting: true }));
-    expect(racine.textContent).toContain('repos');
-    await rendre(createElement(RoundClock, { seconds: 3, resting: true }));
-    expect(racine.innerHTML).toContain('pulsing');
-    await rendre(createElement(RoundClock, { seconds: 7, resting: false }));
+    await rendre(createElement(RoundClock, { seconds: 7 }));
     expect(racine.textContent).toContain('07');
     expect(racine.textContent).toContain('sér.');
   });

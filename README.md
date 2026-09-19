@@ -92,8 +92,8 @@ rendent l'interface le disent en tête de fichier (`/** @vitest-environment jsdo
 - **la logique, sous Node** — `shared/ops.test.ts` (les dix-sept opérations et l'idempotence),
   `src/store/*.test.ts` (montée en charge, sélecteurs, familles, curseur de séance, file et
   synchronisation), `server/*.test.ts` (persistance, migration, sauvegardes, routes et CSV) ;
-- **les composants à horloge, sous jsdom** — le compteur qui accélère, l'intro VS, le repos,
-  le son et l'écran allumé, avec des horloges factices ;
+- **les composants à horloge, sous jsdom** — le compteur qui accélère, l'intro VS, le son et
+  l'écran allumé, avec des horloges factices ;
 - **un scénario par cas d'usage de cette page, dans `src/conops/`** — premier lancement, séance
   complète, reprise et abandon, machine prise, remplacer, ajouter un exercice, superset,
   bibliothèque, montée en charge, bloqué et décharge, transposition, réseau coupé, historique et
@@ -134,20 +134,19 @@ catalogue d'exercices et la **bibliothèque de programmes**.
 Un programme appartient à une famille — **force**, **hypertrophie** ou **endurance** — qui
 range la bibliothèque et pré-remplit les exercices qu'on y ajoute :
 
-| Famille | Répétitions | Repos | RIR visé |
-|---|---|---|---|
-| force | 3 – 5 | 180 s | 2 |
-| hypertrophie | 8 – 12 | 90 s | 2 |
-| endurance | 15 – 20 | 60 s | 3 |
+| Famille | Répétitions | RIR visé |
+|---|---|---|
+| force | 3 – 5 | 2 |
+| hypertrophie | 8 – 12 | 2 |
+| endurance | 15 – 20 | 3 |
 
 Rien n'y est imposé : ces valeurs se corrigent ligne à ligne dans l'éditeur.
 
 Deux exercices voisins peuvent être **enchaînés en superset** — un bouton entre les deux
 lignes de l'éditeur, et la lettre du groupe se pose toute seule. L'arène alterne alors leurs
-séries au lieu de les jouer bloc par bloc : traction, dips, traction, dips, et le repos ne
-tombe qu'à la sortie de la paire. Le repos du premier passe à zéro en même temps que le lien,
-et lui revient si on délie. Séparer les deux exercices défait le superset : la lettre ne
-survit pas à la rupture, elle ne décrit rien d'autre que le voisinage.
+séries au lieu de les jouer bloc par bloc : traction, dips, traction, dips. Séparer les deux
+exercices défait le superset : la lettre ne survit pas à la rupture, elle ne décrit rien
+d'autre que le voisinage.
 
 Une machine prise n'arrête pas la séance : dans l'arène, `carte` ouvre la séance entière —
 les exercices dans l'ordre prévu, une coche sur ce qui est fini, `entamé` sur ce qu'on a

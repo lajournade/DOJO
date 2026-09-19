@@ -64,28 +64,20 @@ export function HealthBar({ name, total, done, side, flash }: Props) {
 }
 
 /**
- * La boite centrale du bandeau : le chrono de round. Elle affiche le repos qui
- * s'ecoule, et sinon le nombre de series restantes — la boite ne reste jamais vide.
+ * La boite centrale du bandeau : le compte des series restantes — la boite ne
+ * reste jamais vide.
  */
-export function RoundClock({ seconds, resting }: { seconds: number; resting: boolean }) {
+export function RoundClock({ seconds }: { seconds: number }) {
   const count = String(Math.max(0, Math.ceil(seconds))).padStart(2, '0');
 
   return (
-    <div
-      className={`bevel-in flex h-14 w-14 shrink-0 flex-col items-center justify-center bg-line ${
-        resting ? '' : 'opacity-90'
-      }`}
-    >
+    <div className="bevel-in flex h-14 w-14 shrink-0 flex-col items-center justify-center bg-line opacity-90">
       {/* Deux chiffres tant que possible ; au-dela, la boite se resserre plutot
           que de plafonner sur un nombre faux. */}
-      <span
-        className={`fight-text numeric ${count.length > 2 ? 'text-p2' : 'text-p3'} ${
-          resting ? 'text-impact' : 'text-bone'
-        } ${resting && seconds <= 5 ? 'pulsing' : ''}`}
-      >
+      <span className={`fight-text numeric text-bone ${count.length > 2 ? 'text-p2' : 'text-p3'}`}>
         {count}
       </span>
-      <span className="label-text text-p1 text-ash">{resting ? 'repos' : 'sér.'}</span>
+      <span className="label-text text-p1 text-ash">sér.</span>
     </div>
   );
 }

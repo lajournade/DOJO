@@ -283,8 +283,8 @@ function ProgramEditor({
           ))}
         </div>
         <p className="label-text mt-1 text-p2 text-ash/70">
-          {GOALS[program.goal].repMin}–{GOALS[program.goal].repMax} reps · repos{' '}
-          {GOALS[program.goal].restSec} s · rir {GOALS[program.goal].rir}
+          {GOALS[program.goal].repMin}–{GOALS[program.goal].repMax} reps · rir{' '}
+          {GOALS[program.goal].rir}
         </p>
       </div>
 
@@ -357,12 +357,9 @@ const linksOf = (items: ProgramItem[]) =>
  * Renumerote les groupes de haut en bas — A, B, C — a partir des liens poses.
  *
  * La lettre ne se saisit jamais : elle se deduit, ce qui evite les groupes en
- * double et les lettres a trous quand on deplace ou supprime une ligne. Le repos
- * suit le lien : zero pour qui enchaine — c'est ce que « superset » veut dire ici,
- * et l'arene s'en sert pour ne pas afficher de pause —, et celui de la famille
- * rendu a qui sort d'une paire, sans quoi delier laisserait un exercice sans repos.
+ * double et les lettres a trous quand on deplace ou supprime une ligne.
  */
-function regroup(items: ProgramItem[], links: boolean[], restSec: number): ProgramItem[] {
+function regroup(items: ProgramItem[], links: boolean[]): ProgramItem[] {
   const groups: (string | null)[] = items.map(() => null);
   let rank = 0;
 
@@ -375,12 +372,7 @@ function regroup(items: ProgramItem[], links: boolean[], restSec: number): Progr
     groups[i] = groups[i - 1];
   }
 
-  return items.map((it, i) => {
-    const group = groups[i];
-    const chained = group !== null && groups[i + 1] === group;
-    if (chained) return { ...it, supersetGroup: group, restSec: 0 };
-    return { ...it, supersetGroup: group, restSec: it.restSec === 0 ? restSec : it.restSec };
-  });
+  return items.map((it, i) => ({ ...it, supersetGroup: groups[i] }));
 }
 
 
@@ -420,7 +412,7 @@ function SessionEditor({
       [items[index], items[target]] = [items[target], items[index]];
       // Un deplacement peut separer une paire : `regroup` la dissout alors plutot
       // que de laisser une lettre orpheline sur un exercice devenu solitaire.
-      return { ...d, items: regroup(items, linksOf(items), GOALS[goal].restSec) };
+      return { ...d, items: regroup(items, linksOf(items)) };
     });
 
   /** Enchaine — ou desenchaine — une ligne avec celle du dessus. */
@@ -428,7 +420,7 @@ function SessionEditor({
     setDraft((d) => {
       const links = linksOf(d.items);
       links[index] = !links[index];
-      return { ...d, items: regroup(d.items, links, GOALS[goal].restSec) };
+      return { ...d, items: regroup(d.items, links) };
     });
 
   return (
@@ -462,7 +454,7 @@ function SessionEditor({
                     linked ? 'bg-impact text-line' : 'bg-ink-2 text-ash/60'
                   }`}
                 >
-                  {linked ? `⛓ superset ${item.supersetGroup}` : '⛓ enchaîner sans repos'}
+                  {linked ? `⛓ superset ${item.supersetGroup}` : '⛓ enchaîner en superset'}
                 </button>
               );
             })()}
@@ -489,7 +481,6 @@ function SessionEditor({
               <Num label="séries" value={item.sets} onChange={(v) => patch(item.id, { sets: v })} />
               <Num label="rep min" value={item.repMin} onChange={(v) => patch(item.id, { repMin: v })} />
               <Num label="rep max" value={item.repMax} onChange={(v) => patch(item.id, { repMax: v })} />
-              <Num label="repos s" value={item.restSec} onChange={(v) => patch(item.id, { restSec: v })} />
               <Num
                 label="rir min"
                 value={item.targetRirMin}
@@ -538,7 +529,7 @@ function SessionEditor({
               return { ...it, exerciseId: untouched ? it.exerciseId : slug(label) };
             });
           // Une ligne supprimee peut laisser un membre de paire tout seul.
-          const items = regroup(kept, linksOf(kept), GOALS[goal].restSec);
+          const items = regroup(kept, linksOf(kept));
           const names = Object.fromEntries(
             items.map((it) => [it.exerciseId, labels[it.id].trim()]),
           );

@@ -21,10 +21,9 @@ export interface ProgramItem {
   repMax: number | null;
   targetRirMin: number | null;
   targetRirMax: number | null;
-  restSec: number;
   notes: string;
   /**
-   * Les items consecutifs qui partagent cette lettre s'enchainent sans repos :
+   * Les items consecutifs qui partagent cette lettre s'enchainent en superset :
    * l'arene alterne leurs series au lieu de les jouer bloc par bloc. Absent ou
    * `null` sur un exercice qui se joue seul.
    */

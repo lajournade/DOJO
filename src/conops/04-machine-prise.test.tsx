@@ -15,7 +15,7 @@ describe('machine prise : la carte de la seance', () => {
 
   beforeAll(async () => {
     const p = programme({
-      sessions: [seance('A', [item('squat-barre', { sets: 2 }), item('developpe-couche', { sets: 2 }), item('traction', { sets: 2, restSec: 0 })])],
+      sessions: [seance('A', [item('squat-barre', { sets: 2 }), item('developpe-couche', { sets: 2 }), item('traction', { sets: 2 })])],
     });
     serveur = await demarrerServeur(etat({ programs: [p] }));
     app = await demarrerAppareil(serveur, { localStorage: { 'dojo.user.v1': 'u-1' } });
@@ -65,7 +65,6 @@ describe('machine prise : la carte de la seance', () => {
   it("marque « entame » ce qu'on laisse en route, et y ramene", async () => {
     await app.clicBouton('impact'); // squat 1/2
     await app.attendre('série 2/2');
-    await app.clic('passer');
     await app.clic('carte →');
     await app.attendre('restants');
     await app.clic('Développé couché');

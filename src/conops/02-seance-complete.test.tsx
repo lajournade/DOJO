@@ -59,14 +59,10 @@ describe('une seance complete', () => {
     expect(app.texte()).toContain('60'); // la charge de la premiere serie, l'echauffement
 
     await app.clicBouton('impact');
-    await app.attendre('repos');
-    expect(app.texte()).toContain('série 2/3');
-    await app.clic('passer');
-    await app.attendreAbsence('repos');
+    await app.attendre('série 2/3');
 
     await app.clicBouton('impact');
     await app.attendre('série 3/3');
-    await app.clic('passer');
     expect(app.texte()).toContain('rir — dernière série');
     expect(app.texte()).toContain('102,5'); // la montee proposee sur la serie de travail
     await app.clicBouton('2');
@@ -76,12 +72,9 @@ describe('une seance complete', () => {
     await app.attendre('Développé couché');
     expect(app.texte()).toContain('exo 2/2');
     expect(app.texte()).toContain('série 1/3');
-    await app.clic('passer');
     await app.clicBouton('impact');
-    await app.clic('passer');
     await app.clicBouton('impact');
     await app.attendre('finish him');
-    await app.clic('passer');
     await app.clicBouton('3');
     expect(app.texte()).toContain('facile');
     await app.clicBouton('finish him');

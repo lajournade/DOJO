@@ -59,7 +59,6 @@ export function item(exerciseId: string, patch: Partial<ProgramItem> = {}): Prog
     repMax: 12,
     targetRirMin: 2,
     targetRirMax: 2,
-    restSec: 90,
     notes: '',
     supersetGroup: null,
     ...patch,
@@ -222,8 +221,8 @@ export const programmeForce = (): Program =>
     goal: 'force',
     sessions: [
       seance('A', [
-        item('squat-barre', { repMin: 5, repMax: 6, restSec: 180 }),
-        item('developpe-couche', { repMin: 5, repMax: 6, restSec: 180 }),
+        item('squat-barre', { repMin: 5, repMax: 6 }),
+        item('developpe-couche', { repMin: 5, repMax: 6 }),
       ]),
     ],
   });

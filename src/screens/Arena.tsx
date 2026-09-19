@@ -11,7 +11,6 @@ import { HealthBar, RoundClock } from '../components/HealthBar';
 import { ImpactFx, type Hit } from '../components/ImpactFx';
 import { Plateau } from '../components/Plateau';
 import { PowerUp } from '../components/PowerUp';
-import { RestTimer, useRestCountdown, type Rest } from '../components/RestTimer';
 import { RirPicker } from '../components/RirPicker';
 import { SessionMap } from '../components/SessionMap';
 import { Sprite, useFrame } from '../components/Sprite';
@@ -59,7 +58,6 @@ export function Arena() {
   const [advice, setAdvice] = useState<Advice | null>(null);
   const [banner, setBanner] = useState(false);
   const [deloaded, setDeloaded] = useState(false);
-  const [rest, setRest] = useState<Rest | null>(null);
   const [hits, setHits] = useState<Hit[]>([]);
   const [combo, setCombo] = useState(0);
   const [flash, setFlash] = useState(0);
@@ -71,7 +69,6 @@ export function Arena() {
   const [draftName, setDraftName] = useState<string | null>(null);
   const { shake, props: shakeProps } = useShake();
   const breath = useFrame(2, 2.5);
-  const { left: restLeft, done: restDone } = useRestCountdown(rest);
 
   const step = live?.plan[live.cursor.planIndex] ?? null;
   // L'identifiant plutot que la position, et l'exercice avec : remplace sur place,
@@ -168,8 +165,13 @@ export function Arena() {
   const done = live.entries.length;
   const total = totalSets(live.plan);
   // Dans un superset, on doit savoir avant de valider qu'on enchaine, et sur quoi.
-  const chained = step.restSec === 0 && nextCursor(live).planIndex < live.plan.length;
-  const upcoming = chained ? live.plan[nextCursor(live).planIndex] : null;
+  const next = nextCursor(live);
+  const chained =
+    next.planIndex < live.plan.length &&
+    next.planIndex !== live.cursor.planIndex &&
+    !!step.supersetGroup &&
+    live.plan[next.planIndex].supersetGroup === step.supersetGroup;
+  const upcoming = chained ? live.plan[next.planIndex] : null;
   const target = rirTarget(step);
   // La proposition ne tient que tant qu'elle decrit la valeur au compteur : des
   // que le pouce touche la charge, elle s'efface plutot que de mentir.
@@ -203,20 +205,7 @@ export function Arena() {
     setHits((h) => [...h, hit]);
     setTimeout(() => setHits((h) => h.filter((x) => x.id !== hit.id)), 900);
 
-    // C'est le curseur suivant qui sait si le combat s'arrete la : dans un superset,
-    // la derniere serie de la seance n'est pas forcement celle du dernier exercice.
-    // A lire avant d'ecrire au journal : l'operation avance le curseur de `live` en place.
-    const lastOfSession = nextCursor(live).planIndex >= live.plan.length;
-
     logSet(live, { reps, weight, rir: isLastSet ? rir : null });
-
-    // Un repos nul est un enchainement, pas une pause : l'afficher ferait sonner la
-    // cloche entre les deux mouvements de la paire.
-    setRest(
-      lastOfSession || step.restSec === 0
-        ? null
-        : { startedAt: Date.now(), duration: step.restSec },
-    );
   };
 
   return (
@@ -232,16 +221,13 @@ export function Arena() {
           names={state.exercises.map((e) => e.name)}
           onClose={() => setShowMap(false)}
           onPick={(i) => {
-            // Aller ailleurs, c'est quitter le repos en cours : il appartenait a l'exercice qu'on laisse.
             jumpTo(live, i);
-            setRest(null);
             setShowMap(false);
             sfx.select();
           }}
           onAdd={(name) => {
             // Un exercice de plus, et on y va : meme depart que le saut.
             appendStep(live, name);
-            setRest(null);
             setShowMap(false);
             sfx.select();
           }}
@@ -307,10 +293,7 @@ export function Arena() {
           />
           <HealthBar name={live.programCode} total={total} done={done} side="left" flash={flash} />
         </div>
-        <RoundClock
-          seconds={rest && !restDone ? restLeft : total - done}
-          resting={rest !== null && !restDone}
-        />
+        <RoundClock seconds={total - done} />
       </div>
 
       {/* Seule cette zone defile : la barre d'action reste sous le pouce. */}
@@ -408,20 +391,6 @@ export function Arena() {
           )}
         </motion.section>
 
-        {rest && (
-          <section className="pad-x mt-3">
-            <div className="bevel-sm bg-ink-2 p-2.5">
-              <RestTimer
-                left={restLeft}
-                done={restDone}
-                round={live.cursor.setIndex}
-                onDismiss={() => setRest(null)}
-                onExtend={(s) => setRest((r) => (r ? { ...r, duration: r.duration + s } : r))}
-              />
-            </div>
-          </section>
-        )}
-
         <section className="pad-x mt-3 grid gap-2">
           <BigStepper
             label="charge"
@@ -452,21 +421,13 @@ export function Arena() {
           <Small onClick={() => addSet(live)}>+ série</Small>
           {/* La machine ne se liberera pas : un autre exercice a la place, pour cette seance. */}
           {draftName === null && (
-            <Small
-              onClick={() => {
-                setDraftName('');
-                setRest(null);
-              }}
-            >
-              remplacer
-            </Small>
+            <Small onClick={() => setDraftName('')}>remplacer</Small>
           )}
           {live.entries.length > 0 && (
             <Small
               onClick={() => {
                 undoLastSet(live);
                 setCombo(0);
-                setRest(null);
               }}
             >
               annuler la dernière
@@ -487,7 +448,7 @@ export function Arena() {
           <span className="notch relative flex h-[70px] w-full items-center justify-center overflow-hidden bg-blood">
             <span className="speedlines absolute inset-0 opacity-40" />
             <span className="fight-text fight-shadow relative text-p3 text-bone">
-              {nextCursor(live).planIndex >= live.plan.length ? 'finish him' : 'impact'}
+              {next.planIndex >= live.plan.length ? 'finish him' : 'impact'}
             </span>
           </span>
         </button>

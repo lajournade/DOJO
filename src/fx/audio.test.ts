@@ -70,7 +70,6 @@ describe('le son', () => {
     sfx.fight();
     sfx.win();
     sfx.ko();
-    sfx.bell();
     sfx.powerup();
     sfx.warn();
     sfx.combo(2);

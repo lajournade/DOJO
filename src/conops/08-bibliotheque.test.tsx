@@ -35,13 +35,13 @@ describe('la bibliotheque de programmes', () => {
     await app.attendre('nom du programme');
     expect(app.champ('nom du programme').value).toBe('Nouveau programme');
     expect(app.champ('code').value).toBe('P1');
-    expect(app.texte()).toContain('8–12 reps · repos 90 s · rir 2');
+    expect(app.texte()).toContain('8–12 reps · rir 2');
 
     await app.saisirChamp('nom du programme', 'Push pull');
     await app.saisirChamp('code', 'pp');
     expect(app.champ('code').value).toBe('PP');
     await app.clic('force');
-    await app.attendre('3–5 reps · repos 180 s · rir 2');
+    await app.attendre('3–5 reps · rir 2');
     await app.clic('hypertrophie');
     await app.attendre('8–12 reps');
   });

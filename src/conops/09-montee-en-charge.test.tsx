@@ -44,10 +44,8 @@ describe('la montee en charge', () => {
     // L'echauffement garde ses valeurs, sans annonce.
     expect(app.texte()).not.toContain('power up');
     await app.clicBouton('impact');
-    await app.clic('passer');
     await app.clicBouton('impact');
     await app.attendre('série 3/3');
-    await app.clic('passer');
     expect(app.texte()).toContain('power up');
     expect(app.texte()).toContain('rir 2 ≥ cible 2 · 12 reps atteintes');
     expect(app.texte()).toContain('102,5');
@@ -68,7 +66,6 @@ describe('la montee en charge', () => {
     expect(app.texte()).toContain('power up');
     expect(app.texte()).toContain('+1 rep');
     expect(app.texte()).toContain('encore une rep avant la charge');
-    await app.clic('passer');
     await app.clicBouton('impact');
     await app.attendre('série 2/3');
     expect(app.texte()).not.toContain('power up');

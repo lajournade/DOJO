@@ -50,12 +50,10 @@ describe('la transposition entre cycles', () => {
     expect(app.texte()).toContain('62,5');
     expect(app.texte()).toContain('5–6 reps');
     await app.clicBouton('impact');
-    await app.clic('passer');
     expect(app.texte()).toContain('85');
     expect(app.texte()).toContain('cycle +5 kg'); // 80 → 85 : l'ecart se lit serie par serie
     await app.clicBouton('impact');
     await app.attendre('série 3/3');
-    await app.clic('passer');
     expect(app.texte()).toContain('107,5');
     await app.clicBouton('2');
     await app.clicBouton('impact');

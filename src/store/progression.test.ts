@@ -71,7 +71,7 @@ describe('advise — la double progression', () => {
 });
 
 describe('advise — la transposition entre cycles', () => {
-  const force = etape(item('squat-barre', { repMin: 5, repMax: 6, restSec: 180 }));
+  const force = etape(item('squat-barre', { repMin: 5, repMax: 6 }));
 
   it("reporte 100 kg × 8 a RIR 2 sur 107,5 kg pour 5 repetitions (l'exemple du README)", () => {
     const a = advise(avec(historiqueCycle()), force, 3);

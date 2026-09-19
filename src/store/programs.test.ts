@@ -30,14 +30,13 @@ describe('les familles', () => {
         sets: 3,
         repMin: GOALS[goal].repMin,
         repMax: GOALS[goal].repMax,
-        restSec: GOALS[goal].restSec,
         targetRirMin: GOALS[goal].rir,
         supersetGroup: null,
       });
       expect(it_.id).toMatch(/^it-/);
     }
-    expect(GOALS.force).toMatchObject({ repMin: 3, repMax: 5, restSec: 180, rir: 2 });
-    expect(GOALS.endurance).toMatchObject({ repMin: 15, repMax: 20, restSec: 60, rir: 3 });
+    expect(GOALS.force).toMatchObject({ repMin: 3, repMax: 5, rir: 2 });
+    expect(GOALS.endurance).toMatchObject({ repMin: 15, repMax: 20, rir: 3 });
   });
 
   it('blankProgram part vide, avec le code donne', () => {

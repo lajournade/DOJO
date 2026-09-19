@@ -103,7 +103,6 @@
               "repMax": 8,
               "targetRirMin": 2,
               "targetRirMax": 2,
-              "restSec": 150,
               "notes": "Descente contrôlée 2 s, cuisses au parallèle ou en dessous. Le mouvement le plus lourd de la semaine : il passe en premier, à froid mais échauffé."
             },
             {
@@ -114,7 +113,6 @@
               "repMax": 10,
               "targetRirMin": 1,
               "targetRirMax": 2,
-              "restSec": 60,
               "notes": "Angle mesuré, pas « à peu près » : au-delà de 30° le travail glisse vers le deltoïde antérieur. Amplitude complète, étirement marqué en bas."
             },
             {
@@ -125,7 +123,6 @@
               "repMax": 10,
               "targetRirMin": 1,
               "targetRirMax": 1,
-              "restSec": 90,
               "notes": "Coudes tirés vers les hanches, omoplates serrées. Ceinture de lest dès que 10 reps propres passent. Excentrique 3 s. Si tu as grimpé la veille : arrête-toi à 2 RIR, ne va pas à l'échec."
             },
             {
@@ -136,7 +133,6 @@
               "repMax": 15,
               "targetRirMin": 0,
               "targetRirMax": 1,
-              "restSec": 60,
               "notes": "Buste très légèrement penché, coudes menant le mouvement, pas de balancier. L'exercice qui construit la largeur."
             },
             {
@@ -147,7 +143,6 @@
               "repMax": 12,
               "targetRirMin": 1,
               "targetRirMax": 1,
-              "restSec": 75,
               "notes": "Assis plutôt qu'allongé : hanche fléchie = ischio-jambiers en position allongée, meilleur stimulus."
             },
             {
@@ -158,7 +153,6 @@
               "repMax": 15,
               "targetRirMin": 0,
               "targetRirMax": 1,
-              "restSec": 60,
               "notes": "Bras quasi tendus : du grand dorsal sans fléchisseurs du coude. C'est la série qui finance le V-taper — et la seule qui charge le dos sans rien ajouter à un coude déjà chargé par le bloc."
             },
             {
@@ -169,7 +163,6 @@
               "repMax": 8,
               "targetRirMin": 1,
               "targetRirMax": 1,
-              "restSec": 75,
               "notes": "Régression si besoin : genoux fléchis, puis jambes tendues. Sinon relevés de jambes suspendu, jambes tendues, sans élan."
             }
           ]
@@ -187,7 +180,6 @@
               "repMax": 10,
               "targetRirMin": 2,
               "targetRirMax": 2,
-              "restSec": 150,
               "notes": "Le hip hinge de la vidéo, enfin chargeable. Jambes quasi tendues, barre qui frôle les cuisses, descente jusqu'à l'étirement des ischios — pas plus bas."
             },
             {
@@ -198,7 +190,6 @@
               "repMax": 10,
               "targetRirMin": 1,
               "targetRirMax": 1,
-              "restSec": 60,
               "notes": "Buste penché en avant pour orienter la charge vers les pectoraux. Descente jusqu'à l'étirement, sans forcer l'épaule."
             },
             {
@@ -209,7 +200,6 @@
               "repMax": 12,
               "targetRirMin": 1,
               "targetRirMax": 1,
-              "restSec": 90,
               "notes": "Prise neutre, tirage vers la hanche. Le remplaçant chargeable du rowing inversé : rhomboïdes, grand rond, trapèzes."
             },
             {
@@ -220,7 +210,6 @@
               "repMax": 10,
               "targetRirMin": 1,
               "targetRirMax": 2,
-              "restSec": 60,
               "notes": "Conservé pour la force et le deltoïde antérieur — mais ce n'est pas lui qui élargit. Dos calé, pas de cambrure."
             },
             {
@@ -231,7 +220,6 @@
               "repMax": 10,
               "targetRirMin": 1,
               "targetRirMax": 2,
-              "restSec": 90,
               "notes": "Remplace le pistol squat : même travail unilatéral, mais la charge progresse indéfiniment sans être limitée par l'équilibre."
             },
             {
@@ -242,7 +230,6 @@
               "repMax": 20,
               "targetRirMin": 0,
               "targetRirMax": 0,
-              "restSec": 60,
               "notes": "Deuxième dose hebdomadaire, en séries longues. La poulie maintient la tension en bas d'amplitude, là où les haltères la perdent."
             },
             {
@@ -253,7 +240,6 @@
               "repMax": 20,
               "targetRirMin": 0,
               "targetRirMax": 1,
-              "restSec": 75,
               "notes": "Deltoïde postérieur et rotateurs externes : l'antagoniste direct de la posture d'escalade, épaules enroulées vers l'avant. Coudes hauts, mains qui finissent au niveau des oreilles."
             },
             {
@@ -264,7 +250,6 @@
               "repMax": 15,
               "targetRirMin": 1,
               "targetRirMax": 1,
-              "restSec": 60,
               "notes": "Prise pronation : brachio-radial et extenseurs du poignet. Remplace le curl supination — il fait le travail de bras et le contrepoids des fléchisseurs de doigts sursollicités par le bloc."
             }
           ]

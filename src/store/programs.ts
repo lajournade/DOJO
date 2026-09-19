@@ -11,14 +11,13 @@ export interface GoalPreset {
   label: string;
   repMin: number;
   repMax: number;
-  restSec: number;
   rir: number;
 }
 
 export const GOALS: Record<ProgramGoal, GoalPreset> = {
-  force: { label: 'force', repMin: 3, repMax: 5, restSec: 180, rir: 2 },
-  hypertrophie: { label: 'hypertrophie', repMin: 8, repMax: 12, restSec: 90, rir: 2 },
-  endurance: { label: 'endurance', repMin: 15, repMax: 20, restSec: 60, rir: 3 },
+  force: { label: 'force', repMin: 3, repMax: 5, rir: 2 },
+  hypertrophie: { label: 'hypertrophie', repMin: 8, repMax: 12, rir: 2 },
+  endurance: { label: 'endurance', repMin: 15, repMax: 20, rir: 3 },
 };
 
 /** Du plus lourd au plus long : l'ordre des touches, et celui de la bibliotheque. */
@@ -59,7 +58,6 @@ export function blankItem(goal: ProgramGoal): ProgramItem {
     repMax: preset.repMax,
     targetRirMin: preset.rir,
     targetRirMax: preset.rir,
-    restSec: preset.restSec,
     notes: '',
     supersetGroup: null,
   };

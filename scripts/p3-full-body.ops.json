@@ -52,7 +52,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Le pied arrière sur un banc, buste légèrement penché. Descente contrôlée, genou avant qui ne dépasse pas la pointe du pied. Un haltère dans chaque main.",
                 "supersetGroup": null
               },
@@ -64,7 +63,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 0,
                 "notes": "Superset A1 avec les dips : enchaîner sans repos. Coudes tirés vers les hanches, omoplates serrées. Repli machines : tirage vertical.",
                 "supersetGroup": "A"
               },
@@ -76,7 +74,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Superset A2. Buste penché en avant pour orienter la charge vers les pectoraux. Repos après la paire. Repli machines : développé couché haltères légèrement décliné.",
                 "supersetGroup": "A"
               },
@@ -88,7 +85,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 0,
                 "notes": "Superset B1 avec les élévations latérales : enchaîner sans repos. Coudes hauts, mains qui finissent au niveau des oreilles.",
                 "supersetGroup": "B"
               },
@@ -100,7 +96,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Superset B2. Amplitude complète, coudes menant le mouvement, sans balancier. Repos après la paire.",
                 "supersetGroup": "B"
               },
@@ -112,7 +107,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 0,
                 "notes": "Superset C1 avec les extensions triceps : enchaîner sans repos. Barre droite ou corde, coudes collés au corps.",
                 "supersetGroup": "C"
               },
@@ -124,7 +118,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Superset C2. Barre droite ou corde, coudes fixes le long du buste. Repos après la paire.",
                 "supersetGroup": "C"
               },
@@ -136,7 +129,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Jambes quasi tendues, dos neutre, barre qui frôle les cuisses. Descente jusqu'à l'étirement des ischio-jambiers, pas plus bas. Repli : hyperextensions.",
                 "supersetGroup": null
               }
@@ -155,7 +147,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Le pied arrière sur un banc, buste légèrement penché. Descente contrôlée, genou avant qui ne dépasse pas la pointe du pied. Un haltère dans chaque main.",
                 "supersetGroup": null
               },
@@ -167,7 +158,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 0,
                 "notes": "Superset A1 avec les dips : enchaîner sans repos. Coudes tirés vers les hanches, omoplates serrées. Repli machines : tirage vertical.",
                 "supersetGroup": "A"
               },
@@ -179,7 +169,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Superset A2. Buste penché en avant pour orienter la charge vers les pectoraux. Repos après la paire. Repli machines : développé couché haltères légèrement décliné.",
                 "supersetGroup": "A"
               },
@@ -191,7 +180,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 0,
                 "notes": "Superset B1 avec les élévations latérales : enchaîner sans repos. Coudes hauts, mains qui finissent au niveau des oreilles.",
                 "supersetGroup": "B"
               },
@@ -203,7 +191,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Superset B2. Amplitude complète, coudes menant le mouvement, sans balancier. Repos après la paire.",
                 "supersetGroup": "B"
               },
@@ -215,7 +202,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 0,
                 "notes": "Superset C1 avec les extensions triceps : enchaîner sans repos. Barre droite ou corde, coudes collés au corps.",
                 "supersetGroup": "C"
               },
@@ -227,7 +213,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Superset C2. Barre droite ou corde, coudes fixes le long du buste. Repos après la paire.",
                 "supersetGroup": "C"
               },
@@ -239,7 +224,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Jambes quasi tendues, dos neutre, barre qui frôle les cuisses. Descente jusqu'à l'étirement des ischio-jambiers, pas plus bas. Repli : hyperextensions.",
                 "supersetGroup": null
               }

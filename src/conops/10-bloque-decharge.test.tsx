@@ -49,11 +49,9 @@ describe('bloque, et la decharge manuelle', () => {
     expect(app.texte()).toContain('60'); // toujours : la baisse ne touche pas la rampe
 
     await app.clicBouton('impact');
-    await app.clic('passer');
     expect(app.texte()).toContain('80');
     await app.clicBouton('impact');
     await app.attendre('série 3/3');
-    await app.clic('passer');
     expect(app.texte()).toContain('97,5'); // la serie qui portait la charge bloquee
     expect(app.texte()).toContain('déchargé −2,5 kg');
     expect(app.texte()).not.toContain('stalled');
@@ -64,7 +62,6 @@ describe('bloque, et la decharge manuelle', () => {
     await app.clicBouton('impact');
     await app.attendre('Développé couché');
     await app.attendre('stalled');
-    await app.clic('passer');
     await app.clicBouton('impact'); // sans decharger : le bandeau se referme de lui-meme a la serie suivante
     await app.attendre('série 2/3');
     expect(app.texte()).not.toContain('stalled');

@@ -195,7 +195,7 @@ function Line({
         <p className="min-w-0 flex-1 text-p2 font-bold uppercase leading-6 text-bone">
           {step.exerciseName}
         </p>
-        {/* Deux lignes voisines qui portent la meme lettre s'enchainent sans repos. */}
+        {/* Deux lignes voisines qui portent la meme lettre s'enchainent en superset. */}
         {step.supersetGroup && (
           <span className="bevel-sm label-text shrink-0 bg-ink-3 px-1.5 text-p2 leading-6 text-impact">
             superset {step.supersetGroup}

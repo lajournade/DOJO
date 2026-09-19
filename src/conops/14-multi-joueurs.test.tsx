@@ -57,7 +57,6 @@ describe('deux joueurs, deux appareils', () => {
     await app.attendre('impact');
     expect(app.texte()).toContain('série 1/3'); // pas la serie 2 de Ludo
     await app.clicBouton('impact');
-    await app.clic('passer');
     await app.clicBouton('impact');
     await app.attendreSynchro();
     const json = await serveur.lireJson();

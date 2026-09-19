@@ -91,18 +91,6 @@ def parse_range(text):
     return lo, hi
 
 
-def parse_rest(text):
-    """'2-3 min' -> 150, '90 s' -> 90, '—' -> 60 (enchaine)."""
-    if text is None:
-        return 60
-    s = str(text)
-    nums = [float(n.replace(",", ".")) for n in re.findall(r"\d+(?:[.,]\d+)?", s)]
-    if not nums:
-        return 60
-    value = sum(nums) / len(nums)
-    return int(round(value * 60)) if "min" in s else int(round(value))
-
-
 def slug(text):
     """Identifiant stable et lisible derive du nom de l'exercice."""
     ascii_ = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
@@ -131,7 +119,6 @@ def build_program(prog_rows):
                     "repMax": rep_max,
                     "targetRirMin": rir_min,
                     "targetRirMax": rir_max,
-                    "restSec": parse_rest(cells.get(6)),
                     "notes": (cells.get(2) or "").strip(),
                 }
             )

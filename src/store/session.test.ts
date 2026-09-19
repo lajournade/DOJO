@@ -55,7 +55,7 @@ describe('previewSession — le briefing', () => {
     const p = previewSession(s, sessionA);
     expect(p.steps.every((st) => !st.known)).toBe(true);
     expect(p.sets).toBe(6);
-    // 6 series × (40 s + 90 s) moins le dernier repos : 690 s → 12 min.
+    // 6 series × 120 s : 12 min.
     expect(p.minutes).toBe(12);
     expect(p.estimated).toBe(true);
     expect([p.ups, p.shifts, p.stuck]).toEqual([0, 0, 0]);
@@ -97,7 +97,7 @@ describe('previewSession — le briefing', () => {
 describe('supersetRange, doneSets, stepStatus', () => {
   const plan = [
     etape(item('squat-barre')),
-    etape(item('traction', { supersetGroup: 'A', restSec: 0 })),
+    etape(item('traction', { supersetGroup: 'A' })),
     etape(item('dips', { supersetGroup: 'A' })),
     etape(item('presse-a-cuisses', { supersetGroup: 'B' })),
   ];
@@ -120,7 +120,7 @@ describe('supersetRange, doneSets, stepStatus', () => {
 });
 
 describe('groupCursor et resumeCursor', () => {
-  const plan = [etape(item('squat-barre')), etape(item('traction', { supersetGroup: 'A', restSec: 0, sets: 2 })), etape(item('dips', { supersetGroup: 'A' }))];
+  const plan = [etape(item('squat-barre')), etape(item('traction', { supersetGroup: 'A', sets: 2 })), etape(item('dips', { supersetGroup: 'A' }))];
 
   it("entre a la premiere serie non jouee, en rondes dans un superset", () => {
     expect(groupCursor(jouee(plan, [0, 0, 0]), 0)).toEqual({ planIndex: 0, setIndex: 1 });
@@ -155,7 +155,7 @@ describe('nextCursor', () => {
   });
 
   it('tourne dans un superset, en sautant le partenaire plus court', () => {
-    const plan = [etape(item('traction', { supersetGroup: 'A', restSec: 0, sets: 2 })), etape(item('dips', { supersetGroup: 'A' })), etape(item('squat-barre'))];
+    const plan = [etape(item('traction', { supersetGroup: 'A', sets: 2 })), etape(item('dips', { supersetGroup: 'A' })), etape(item('squat-barre'))];
     expect(nextCursor(jouee(plan, [0, 0, 0], { planIndex: 0, setIndex: 1 }))).toEqual({ planIndex: 1, setIndex: 1 });
     expect(nextCursor(jouee(plan, [1, 0, 0], { planIndex: 1, setIndex: 1 }))).toEqual({ planIndex: 0, setIndex: 2 });
     expect(nextCursor(jouee(plan, [2, 1, 0], { planIndex: 1, setIndex: 2 }))).toEqual({ planIndex: 1, setIndex: 3 });

@@ -27,11 +27,8 @@ export function totalSets(plan: PlanStep[]): number {
   return plan.reduce((sum, step) => sum + step.sets, 0);
 }
 
-/**
- * Duree d'execution d'une serie, repos exclu. C'est la seule part que le programme
- * ne dit pas : tout le reste de l'estimation vient des `restSec` prescrits.
- */
-const SET_SEC = 40;
+/** Forfait d'une serie, execution et recuperation comprises : le programme ne dit rien de plus. */
+const SET_SEC = 120;
 
 /** Ce qu'un exercice va couter aujourd'hui, tel que l'Arena le proposera. */
 export interface StepPreview {
@@ -111,14 +108,11 @@ export function previewSession(state: UserView, session: ProgramSession): Sessio
 
   // Une seance deja chronometree en dit plus long que n'importe quelle formule.
   const measured = typicalMinutes(state, session.id);
-  const planned = plan.reduce((sec, step) => sec + step.sets * (SET_SEC + step.restSec), 0);
-  // Le dernier repos n'a pas lieu : la seance s'arrete sur la derniere serie.
-  const lastRest = plan.length ? plan[plan.length - 1].restSec : 0;
 
   return {
     steps,
     sets: totalSets(plan),
-    minutes: measured ?? Math.max(1, Math.round((planned - lastRest) / 60)),
+    minutes: measured ?? Math.max(1, Math.round((totalSets(plan) * SET_SEC) / 60)),
     estimated: measured === null,
     ups: steps.filter((s) => s.trend === 'up' || s.trend === 'reps').length,
     shifts: steps.filter((s) => s.trend === 'shift').length,
@@ -176,7 +170,7 @@ export function stepStatus(live: LiveSession, planIndex: number): 'todo' | 'star
  * La premiere serie encore a jouer dans le groupe d'un exercice, en y entrant.
  *
  * Dans le cas nominal c'est sa premiere serie : rien n'a ete joue. Mais un exercice
- * quitte a la deuxieme serie — la machine prise pendant le repos — garde ses series
+ * quitte a la deuxieme serie — la machine prise entre deux series — garde ses series
  * validees dans le journal, et l'on y revient la ou on l'avait laisse plutot que de
  * rejouer la premiere. Un superset se parcourt en rondes, comme `nextCursor`.
  * `null` quand le groupe est entierement joue.

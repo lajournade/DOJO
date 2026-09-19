@@ -100,12 +100,6 @@ export const sfx = {
     noise(0.5, 0.2, 320);
     tone({ type: 'sawtooth', from: 300, to: 45, duration: 0.7, gain: 0.16 });
   },
-  /** Fin du temps de repos. */
-  bell() {
-    void unlock();
-    tone({ type: 'triangle', from: 1180, to: 1180, duration: 0.16, gain: 0.09 });
-    tone({ type: 'triangle', from: 1580, to: 1580, duration: 0.22, gain: 0.07, delay: 0.16 });
-  },
   /** Montee en charge : l'arpege court d'un bonus ramasse. */
   powerup() {
     void unlock();

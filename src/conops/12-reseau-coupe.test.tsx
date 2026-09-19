@@ -24,7 +24,6 @@ describe('perte du reseau et rejeu de la file', () => {
     await app.clicContenant('fight!');
     await app.attendre('impact');
     await app.clicBouton('impact');
-    await app.clic('passer');
     await app.attendreSynchro();
   });
 
@@ -38,7 +37,6 @@ describe('perte du reseau et rejeu de la file', () => {
   it("continue d'enregistrer hors ligne, en le signalant", async () => {
     await serveur.arreter();
     await app.clicBouton('impact');
-    await app.clic('passer');
     await app.clicBouton('2');
     await app.clicBouton('impact');
     await app.attendre('hors ligne 2');

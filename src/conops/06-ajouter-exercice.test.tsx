@@ -24,7 +24,6 @@ describe('ajouter un exercice depuis la carte', () => {
     await app.attendre('impact');
     await app.clicBouton('impact'); // le squat est entame
     await app.attendre('série 2/3');
-    await app.clic('passer');
   });
 
   afterAll(async () => {
@@ -62,7 +61,7 @@ describe('ajouter un exercice depuis la carte', () => {
     await app.attendreSynchro();
     const json = await serveur.lireJson();
     expect(json.exercises.map((e) => e.id)).toContain('souleve-de-terre');
-    expect(json.liveSessions['u-1'].plan[3]).toMatchObject({ exerciseId: 'souleve-de-terre', sets: 3, repMin: 3, repMax: 5, restSec: 180 });
+    expect(json.liveSessions['u-1'].plan[3]).toMatchObject({ exerciseId: 'souleve-de-terre', sets: 3, repMin: 3, repMax: 5 });
   });
 
   it("ferme la cellule sans rien ajouter sur un nom vide", async () => {

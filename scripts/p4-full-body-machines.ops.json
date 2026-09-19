@@ -52,7 +52,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Banc à 30° (au-delà, l'effort bascule sur les épaules), assise légèrement relevée. Pieds écartés, poussée dans les pieds, omoplates serrées contre le dossier, légère cambrure naturelle. Descendre bas pour l'étirement, remonter en faisant converger les haltères (rapprocher les coudes). Coudes légèrement rentrés, jamais ouverts à 90°, poitrine sortie vers le plafond.",
                 "supersetGroup": null
               },
@@ -64,7 +63,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Repli : hack squat ou squat à la Smith machine. Pieds assez bas sur le plateau pour maximiser la flexion du genou, sans décoller les talons, largeur des clavicules, légèrement ouverts. Bas du dos plaqué au siège du début à la fin, il ne se décolle jamais. Pousser fort dans les talons, bassin calé. En chaussettes : plus de mobilité de cheville et de stabilité.",
                 "supersetGroup": null
               },
@@ -76,7 +74,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "La prise neutre recrute le dos de façon plus équilibrée. Rester le plus droit possible, aucun balancier du buste vers l'arrière. Tirer avec les coudes, pas avec les mains. Étirement complet en haut sous tension constante, puis descendre les coudes vers l'intérieur pour contracter le dos.",
                 "supersetGroup": null
               },
@@ -88,7 +85,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Régler la hauteur du siège (ou debout si la machine le permet) pour un tirage naturel au milieu du buste. Laisser le haut du dos s'enrouler légèrement en fin de négative pour étirer dorsaux et trapèzes. Tirer les coudes vers l'arrière pour une forte contraction, inutile de dépasser la ligne du corps.",
                 "supersetGroup": null
               },
@@ -100,7 +96,6 @@
                 "repMax": 10,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Sans chaussures ou en chaussettes, sur une surface stable. Barre collée au corps sur toute la trajectoire : activer les grands dorsaux comme pour la plaquer contre soi. Fléchir les genoux et pousser avec les jambes tout en tirant avec le dos. Descente contrôlée en poussant les hanches vers l'arrière.",
                 "supersetGroup": null
               },
@@ -112,7 +107,6 @@
                 "repMax": 20,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Poulie basse réglée à hauteur du pubis (pas au sol) pour une courbe de tension optimale. Bien ancré au sol, aucun balancier ni compensation du dos. Élever le bras vers l'extérieur, coude aligné avec la main. Retenir la descente pour garder la tension dans l'épaule.",
                 "supersetGroup": null
               },
@@ -124,7 +118,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 0,
                 "notes": "Superset A1 avec les extensions triceps : enchaîner sans repos. Banc incliné, dos collé au dossier, bras qui pendent pour étirer le biceps. Monter en gardant les coudes de part et d'autre du corps, sans les laisser avancer.",
                 "supersetGroup": "A"
               },
@@ -136,7 +129,6 @@
                 "repMax": 12,
                 "targetRirMin": 2,
                 "targetRirMax": 2,
-                "restSec": 90,
                 "notes": "Superset A2. Poulie en position haute, dos à la poulie, calé contre la structure : très bonne stabilité et bon étirement du triceps sans contrainte sur le bas du dos. Repos après la paire.",
                 "supersetGroup": "A"
               }
