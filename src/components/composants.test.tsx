@@ -101,6 +101,16 @@ describe('BigStepper', () => {
     await rendre(createElement(BigStepper, { label: 'charge', unit: 'kg', value: 100, step: 2.5, onChange: () => {} }));
     expect(racine.textContent).toContain('100kg');
   });
+
+  it('garde les zeros des entiers : 10 reps ne devient pas 1', async () => {
+    const entier = { label: 'répétitions', unit: 'reps', step: 1, decimals: 0, onChange: () => {} };
+    await rendre(createElement(BigStepper, { ...entier, value: 10 }));
+    expect(racine.textContent).toContain('10reps');
+    await rendre(createElement(BigStepper, { ...entier, value: 60 }));
+    expect(racine.textContent).toContain('60reps');
+    await rendre(createElement(BigStepper, { ...entier, value: 0 }));
+    expect(racine.textContent).toContain('0reps');
+  });
 });
 
 describe('FightIntro', () => {

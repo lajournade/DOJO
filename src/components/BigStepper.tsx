@@ -17,8 +17,14 @@ interface Props {
   onChange: (value: number) => void;
 }
 
+// Les zeros inutiles ne se rognent que dans la partie decimale : sur un entier,
+// «10» doit rester «10» et non devenir «1».
 const fmt = (v: number, decimals: number) =>
-  v.toFixed(decimals).replace(/\.?0+$/, '').replace('.', ',') || '0';
+  v
+    .toFixed(decimals)
+    .replace(/(\.\d*?)0+$/, '$1')
+    .replace(/\.$/, '')
+    .replace('.', ',') || '0';
 
 export function BigStepper({
   label,
