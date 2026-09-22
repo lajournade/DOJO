@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { Sprite, useFrame } from '../components/Sprite';
 import { sfx } from '../fx/audio';
-import { HERO, HERO_FRAME, costume } from '../fx/sprites';
+import { HERO_FRAME, costume, fighter } from '../fx/sprites';
 import { navigate } from '../router';
 import { doneEntries, recentLogs, tonnage } from '../store/selectors';
 import { useStore } from '../store/state';
@@ -114,7 +114,7 @@ export function Results() {
       {/* Le combattant, le poing leve : la seance est battue. */}
       <div className="pad-top flex justify-center border-b-2 border-line pb-2">
         <Sprite
-          sprite={HERO}
+          sprite={fighter(state.user.palette).sprite}
           palette={costume(state.user.palette)}
           frame={HERO_FRAME.victory + breath}
           scale={3}

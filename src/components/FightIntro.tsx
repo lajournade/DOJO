@@ -9,7 +9,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { sfx } from '../fx/audio';
-import { HERO, costume } from '../fx/sprites';
+import { costume, fighter } from '../fx/sprites';
 import { useStore } from '../store/state';
 import { Sprite } from './Sprite';
 
@@ -62,7 +62,11 @@ export function FightIntro({ code, name, withVs = true, onDone }: Props) {
     >
       <div className="relative flex w-full items-end justify-center gap-6 px-2">
         <motion.div initial={{ x: -140 }} animate={{ x: 0 }} transition={{ duration: 0.3 }}>
-          <Sprite sprite={HERO} palette={costume(state.user.palette)} scale={3} />
+          <Sprite
+            sprite={fighter(state.user.palette).sprite}
+            palette={costume(state.user.palette)}
+            scale={3}
+          />
           <p className="fight-text fight-shadow mt-1 text-center text-p1 text-cyan">vous</p>
         </motion.div>
 

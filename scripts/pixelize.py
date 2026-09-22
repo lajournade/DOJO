@@ -18,6 +18,10 @@ avant de passer ici.
 La ceinture est noire sur les references et le sang rouge : le script sort
 `o`/`k` pour l'une et `b` pour l'autre. En collant dans `sprites.ts`, passer
 le sang en `r` puis peindre la ceinture en `b`, la couleur d'identite.
+
+Une reference peut porter des couleurs hors palette (la robe bleue de Lisa) :
+`--add d=284c92 --add D=0b1a55` les ajoute le temps de la transcription, sous
+des cles a renommer en collant (ici `d` -> `b`, `D` -> `B`).
 """
 import argparse
 import sys
@@ -37,6 +41,7 @@ PALETTE = {
     'W': '#aaafbe',
     'e': '#ffffff',
     'b': '#e01b24',
+    'B': '#8a1018',
     'r': '#b0142a',
 }
 
@@ -54,6 +59,7 @@ def main() -> None:
     ap.add_argument('--bg', help='couleur du fond en hex, sinon le pixel (0,0)')
     ap.add_argument('--tolerance', type=float, default=90, help='distance RGB max au fond (defaut 90)')
     ap.add_argument('--margin', type=int, default=1, help='colonnes vides de chaque cote (defaut 1)')
+    ap.add_argument('--add', action='append', default=[], metavar='CLE=HEX', help='couleur hors palette, propre a cette reference')
     ap.add_argument('--name', help='emet `const NAME = [...]` pret a coller')
     ap.add_argument('--preview', help='ecrit un apercu PNG agrandi x8')
     args = ap.parse_args()
@@ -80,8 +86,9 @@ def main() -> None:
     rgba = np.dstack([rgb, mask * 255]).astype('uint8')
     small = np.array(Image.fromarray(rgba, 'RGBA').resize((nw, nh), Image.BOX), dtype=float)
 
-    keys = list(PALETTE)
-    colors = np.stack([hex_rgb(PALETTE[k]) for k in keys])
+    palette = {**PALETTE, **dict(a.split('=', 1) for a in args.add)}
+    keys = list(palette)
+    colors = np.stack([hex_rgb(palette[k]) for k in keys])
     grid = [['.'] * args.w for _ in range(args.h)]
     ox, oy = (args.w - nw) // 2, args.h - nh
     for y in range(nh):
@@ -97,7 +104,7 @@ def main() -> None:
         for y, row in enumerate(rows):
             for x, c in enumerate(row):
                 if c != '.':
-                    color = tuple(int(v) for v in hex_rgb(PALETTE[c]))
+                    color = tuple(int(v) for v in hex_rgb(palette[c]))
                     big.paste(color, (x * 8, y * 8, x * 8 + 8, y * 8 + 8))
         big.save(args.preview)
 

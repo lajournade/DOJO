@@ -194,9 +194,11 @@ lambeaux, sang), **vainqueur** sur l'écran de résultats. Dans l'arène il tien
 — tête et épaules — dans le bandeau de combat, à côté de ses deux barres de vie — l'exercice,
 puis la séance — et du chrono de la séance, minutes et secondes écoulées depuis le premier
 round, comme dans les jeux dont l'app emprunte l'habit ; il apparaît en buste entier à
-l'intro et aux résultats. Chaque joueur le porte à ses couleurs — ceinture, cheveux —
-par permutation de palette (`costume` dans `sprites.ts`), comme les costumes alternatifs des
-jeux de combat ; le sang, lui, reste rouge.
+l'intro et aux résultats. Il y a deux combattants, choisis par le rang du joueur (`fighter`
+dans `sprites.ts`) : le héros au rang 0, **Lisa** au rang 1 — chignons, robe bleue, bracelets
+à pointes —, le héros à nouveau ensuite. Chaque joueur porte le sien à ses couleurs —
+ceinture ou robe, cheveux — par permutation de palette (`costume`), comme les costumes
+alternatifs des jeux de combat ; le sang, lui, reste rouge.
 
 Les dessins ne sont pas faits à la main pixel par pixel : ils viennent d'images générées
 (un personnage sur fond vert uni, style pixel art, gros aplats, contour noir) passées par
@@ -210,7 +212,10 @@ python3 scripts/pixelize.py scratch/chatgpt/default.png --name HERO_FRESH --prev
 Le tableau imprimé se colle dans `sprites.ts` et se retouche là, en texte ; l'aperçu sert à
 juger avant de coller. Deux retouches sont attendues à chaque fois : le sang sort en `b`
 (rouge) et passe en `r`, puis la ceinture, noire sur les références, se peint en `b` — c'est
-elle qui prend la couleur du joueur. L'image source reste dans `scratch/`, hors git.
+elle qui prend la couleur du joueur. Une référence qui sort de la palette — la robe bleue de
+Lisa — passe ses couleurs en `--add d=284c92 --add D=0b1a55`, sous des clés à renommer en
+collant (`d` → `b`, `D` → `B`) ; une image en pied se recadre au buste avant. L'image source
+reste dans `scratch/`, hors git.
 
 Les polices sont **embarquées dans `public/fonts/`** (sous-ensemble latin, 28 Ko en tout,
 licence dans `OFL.txt`) : l'application ne demande rien au réseau une fois chargée.

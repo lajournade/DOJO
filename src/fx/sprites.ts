@@ -8,7 +8,8 @@
  * Les dessins viennent d'images generees (fond vert, style pixel art) passees
  * par `scripts/pixelize.py`, puis retouchees ici. L'image ne rentre pas au depot.
  * Le combattant est un buste, coupe a la ceinture, sur 48x48 : c'est le cadrage
- * des references, et celui du bandeau de combat.
+ * des references, et celui du bandeau de combat. Il y en a deux, un par joueur
+ * (`fighter`), qui partagent la meme suite de frames.
  *
  * Le rendu est fait par <Sprite> ; ici on ne produit que la geometrie.
  */
@@ -70,11 +71,12 @@ const breathe = (rows: string[], neck: number) => [
 /* ------------------------------------------------------------------ palettes */
 
 /**
- * `b` (ceinture) et `k` (cheveux) portent l'identite d'un joueur. `r` est le
- * sang, fixe : il ne doit pas changer avec le costume. Sur les references la
- * ceinture est noire et le sang rouge, `pixelize.py` sort donc `o`/`k` pour
- * l'une et `b` pour l'autre ; on inverse a la main en collant (sang -> `r`,
- * puis ceinture -> `b`).
+ * `b` (ceinture du heros, robe de Lisa), son ombre `B` et `k` (cheveux) portent
+ * l'identite d'un joueur. `r` est le sang, fixe : il ne doit pas changer avec le
+ * costume. Sur les references la ceinture est noire et le sang rouge,
+ * `pixelize.py` sort donc `o`/`k` pour l'une et `b` pour l'autre ; on inverse a
+ * la main en collant (sang -> `r`, puis ceinture -> `b`). La robe bleue de Lisa
+ * passe par `--add d=284c92 --add D=0b1a55`, puis `d` -> `b` et `D` -> `B`.
  */
 const BASE: Palette = {
   o: '#000000',
@@ -85,6 +87,7 @@ const BASE: Palette = {
   W: '#aaafbe',
   e: '#ffffff',
   b: '#e01b24',
+  B: '#8a1018',
   r: '#b0142a',
 };
 
@@ -94,11 +97,12 @@ const BASE: Palette = {
  * de couleur pour le prix d'un tableau.
  */
 const COSTUMES: Palette[] = [
-  { ...BASE, b: '#e01b24', k: '#5a3418', W: '#4a4f66' },
-  { ...BASE, b: '#29b6d8', k: '#1c3a5e', W: '#2f4f66', s: '#e0b088', S: '#a87850' },
-  { ...BASE, b: '#d84fa0', k: '#4a1e5a', W: '#5a3a5a' },
-  { ...BASE, b: '#21c07a', k: '#1e4a2a', W: '#375a4a', s: '#d8ab86', S: '#a07048' },
-  { ...BASE, b: '#ffd400', k: '#b8862a', W: '#6a5a2a' },
+  { ...BASE, b: '#e01b24', B: '#8a1018', k: '#5a3418', W: '#4a4f66' },
+  // Le rang 1 est celui de Lisa : le bleu nuit de sa robe, ses cheveux bruns.
+  { ...BASE, b: '#284c92', B: '#0b1a55', k: '#3a2416' },
+  { ...BASE, b: '#d84fa0', B: '#7e2a5e', k: '#4a1e5a', W: '#5a3a5a' },
+  { ...BASE, b: '#21c07a', B: '#126e46', k: '#1e4a2a', W: '#375a4a', s: '#d8ab86', S: '#a07048' },
+  { ...BASE, b: '#ffd400', B: '#9a7e00', k: '#b8862a', W: '#6a5a2a' },
 ];
 
 export const costume = (index: number): Palette =>
@@ -268,7 +272,7 @@ const HERO_VICTORY = [
 /**
  * Frames du combattant : 0-1 frais en respiration, 2-3 fatigue en respiration,
  * 4 vainqueur. `HERO_FRAME` donne la premiere frame de chaque etat ; on y
- * ajoute l'index de respiration (0 ou 1).
+ * ajoute l'index de respiration (0 ou 1). Les deux combattants suivent ce plan.
  */
 export const HERO = sprite([
   HERO_FRESH,
@@ -282,3 +286,201 @@ export const HERO_FRAME = { fresh: 0, tired: 2, victory: 4 } as const;
 
 /** Le cadre du portrait, pour le bandeau et les tuiles : la tete et les epaules, sans le vide. */
 export const HERO_BUST = { x: 8, y: 0, w: 32, h: 26 } as const;
+
+/* ---------------------------------------------------------------------- lisa */
+
+// Lisa, le second joueur : chignons, robe bleue a liseres, bracelets a pointes.
+// Frais : mains sur les hanches, regard de cote.
+const LISA_FRESH = [
+  '................................................',
+  '................................................',
+  '................................................',
+  '................................................',
+  '................................................',
+  '................bSkk.....kbWW...................',
+  '...............WwwwWokkokkbWwW..................',
+  '..............kwwwwSokkkokkkWwS.................',
+  '..............SwwwWWkkooooookWS.................',
+  '..............bwwwWbkokkkkkkkbb.................',
+  '..............kWWWSookkkkkkkkkk.................',
+  '...............bbbkooookkkkkko..................',
+  '.............SWbboookokokokoooW.................',
+  '.............WSwbookSkkkkSSkkBWS................',
+  '.............kWWbkkkSSSkSsSkkbb.................',
+  '..............BboSSSskbkSsSkobo.................',
+  '..............SBkSSsssSsssSSkbb.................',
+  '.............SWokSSSsssssssskBW.................',
+  '.............wkokSkksssssSSskoWk................',
+  '............SW.okSSkSsssSSsSSoWW................',
+  '............SSooSsSkkSsskkSSSoSS................',
+  '............kkokssSkSkSssSSSSkko................',
+  '...........oBookSsSkkSkkSSBSSSkoBBBBB...........',
+  '..........BbbbBoSskBkSkkBBBkSSkBbbbbbB..........',
+  '.........kbbbbBBkoBBBkkkBBkBBkBBbbbbbbk.........',
+  '........BSSbbBBkBBBkBSBBkkBBBkBbbbbkkSSB........',
+  '.......BbbSbbbBkbbbBkSkkBBbbbkbbbbSbbSSbB.......',
+  '.......BbSbbBBkbbSbkbbbbbbbbSBBBbbSbbbSbB.......',
+  '......oBbbbBbBkbkSkbbbbbbbbbSBbBbbbSbbbkB.......',
+  '......oBBBbbbBkkbSbbbbbbbbbbSBbbbbbbBBBkB.......',
+  '.......BBBbbBkbbbbbbBBBbbbbbBkBbbbbBBBkko.......',
+  '......BBBBBBBbbbbbbBBbbbbbbBBkBBbbBBBBkBBo......',
+  '.....BbbkBBBBbSbbbbbbbSbbbbbBkoBBBBBoBkSbbB.....',
+  '....kkkkbBBBbbbSbbbbbSbbbbbbkBkBBBBoBBbkkkkk....',
+  '....kSSkbBBBbbbkbbbbSSbbbbbBkBBkBBokBbbkSSS.....',
+  '....SsskbkkBBbbkbBBbSSbbbbBkBBBBoooBkSbksssk....',
+  '...ksssSkkkBBBSkBBBbbkbBBBkkBBBB..oBkkkSsssS....',
+  '..kSsSsSSSkokkSBBBBBBkkkkkkBBBBo...koSSsssssS...',
+  '..SssSSSSk.kkBBkBBBBBkkBBBBBBBB....o.kSSSSsssk..',
+  '.kSsssSk.....ooBBBBBBBBBBBoBBBo........kSsssSSo.',
+  '.SSSsssS......oBBBBbbBBBBBBBBB........kSsssSSsk.',
+  '.kSSsssSk.....oBBBBBBBbBBBoBBo........SssSSSsSk.',
+  '..kSssssk...k..WWWWWWWWWWWWWb...b....kssssSsSSk.',
+  '..kSSsssSkkbb..bwwwwwwwwwWWWB...bbboSsssSsSSko..',
+  '...kSSsSkWkoo..bwwwwwwwwWWWWk..oobkkksssSSSko...',
+  '....kkSkkkookkkbwwwwwwwwwWWbSsSkookkkSSSSSk.....',
+  '......oWboksssobwwwwwwwWwWbkSsssSkkWbkSkk.......',
+  '......ookoSssSBBBbSWWWbbBooSssssskoooo..........',
+];
+
+// Fatigue : pliee en avant, une main sur le ventre, un oeil ferme, griffures aux bras.
+// La reference est en pied, un genou a terre ; recadree au buste avant transcription.
+const LISA_TIRED = [
+  '................................................',
+  '................................................',
+  '................................................',
+  '................................................',
+  '................................................',
+  '................................................',
+  '................................................',
+  '................................................',
+  '................................................',
+  '................................................',
+  '...........................o....................',
+  '............................o...................',
+  '.................kWwWbb.oo.oobSwWb..............',
+  '...............kkWwwwWSokkokkkbWwwk.............',
+  '................kwwwwWbokkkokkkbWwS.............',
+  '..............kkbwwwWbWkokkookkobWS.............',
+  '................bWWWWbokkokkkokoBbb.............',
+  '.................bWSbSookkkkkokkkko.............',
+  '...............SbbBbkoookkkkkokkkokok...........',
+  '.........SWWb.kWSSBoooooookkkkSkkoWS............',
+  '........kSSkWSkkWbBoookokokkoSsSokkS............',
+  '.........k...SSkbbokSkSkSSskSsSSokkk............',
+  '...............kbkkkSkSSSSkSsSkkkkbbSSb.........',
+  '............BBBWW..kSSSSkSkSskkoBokkbWsk........',
+  '.........BBbbbbBk.BoSSSsssSsssSkBbkk..k.........',
+  '........kbbbbbbBBBBBBkssssssssskbbSSk...........',
+  '.......kSSSbbbbbBkBkBkSsssssSSSBbSbbkk..........',
+  '......BSbbSbbbbbbkkkBBkSssSSSskbbbSbboBBk.......',
+  '......BbbSSSSbbbbBbBBBBkSsSWSSBBbbbbbBbkkk......',
+  '......BbbSbbbSbbBBSbkBBkkSsSSkBBbbbBBBbkSSSkk...',
+  '......BBkbbbbSbbBBbbBkBkkkSSBBkbbbBbBBbkSsssSk..',
+  '......BBSBbbbbbbbBbbbbkkkkBBBBkBBbbBBBbSkssssS..',
+  '.....BBokBBbbbbbBkbbSbkkBBBbbBkBBBBBkkkSSSsssS..',
+  '....BbbkkBBBBbbBBkbkSkbbbbbbbboBBBBBBkkSksssSk..',
+  '...kkkkkBBBBBBBBkkbbbbbbbbBbbbooBo..Bk..kssSSk..',
+  '....kSSSbBBBBBBkkBbbbbbbBBbWbbB......k..ksssSk..',
+  '...kSSSSbkkBokkBkbbbbSbbbbbSbbk.........kSssSk..',
+  '...SSsSSkkkoBBBBkbbbbbSbbbSbbbk.........ksssS...',
+  '..kssssSSkkoBBBBkBbbbbSbbbSbbbB.........oSSSk...',
+  '..SsssSSk.k.BBBBBkkbbSbBBbSSbBo.......kokkWkk...',
+  '.ksSssSSk...BBBBBBkkkkBBBBkkkk........Wkkbbko...',
+  '.ksSsssssS..bbBbBBBBBBBBBBBBB.........oooookob..',
+  '.ksSSSssssSkbokbBBkSSkBBBo............kkSSkooSk.',
+  '.kSSsssssSssSkkkoSsskkbbk............SSssssko...',
+  '............SoWbkssssSSSo.......................',
+  '.............oSkkssssSkko.......................',
+  '.............kookSSSSSkkok......................',
+  '.............kkoSSSSSkkoBk......................',
+];
+
+// Vainqueur : poing leve, grand sourire, les cheveux au vent. Le texte de la
+// reference tombe au recadrage.
+const LISA_VICTORY = [
+  '................................................',
+  '................................................',
+  '................................................',
+  '................................................',
+  '................................................',
+  '................................................',
+  '................................................',
+  '.......SSkk.....................................',
+  '......SSSSSk......SWbk....obWWb.................',
+  '.....kSsSSkk.....SwwwWokkokkbWw.................',
+  '.....SSSSkkS.....wwwwSokkkokokW.................',
+  '.....sskkkkS....kwwwWbooooookkb.................',
+  '....kssSSsSk....kWwWSkkkkkkkkkk.................',
+  '...okSSSSSk......bWbbookkkkkkko.................',
+  '.kWkkkkkko......Sbkkooookookooo.................',
+  '..kkbkkkoo.....WWWbookkkokoSkko.................',
+  '..okkokSobk....kSwbkkksSSkssSSk.................',
+  '...okoobo.......kbBkSSSkkksSkkBb................',
+  '...SSSko.......kSboSSSsssssSsSobS...SWWwW.......',
+  '...SssSk...WWWSWSkkSSssssssssSoobWWWS..SS.......',
+  '..ksssS...bwk..WWokSSkssssSSsSoo................',
+  '..SsssS...kS...wbokSSkSsSSkksSoko...............',
+  '..Sssssk...k..kSkoSSSkkSskSSSSkkkoo..kkk........',
+  '.ksssssk....oBSBBoSsSkSkSSSSkSSkkkokkkkkko......',
+  '.SSssssS.k.obbSbbBSSSBkSkkkBkSSkoBbbBBokkko.....',
+  '.SSssssSkkkBBbbbbBkSkBkkkBBBkkkkbbbbbbBkkkk.....',
+  '.SSssssSssSkBbbBbBkBBkBkBBBkBBkBBbbbSbSkSkk.....',
+  '.kSsssSSssSbbBbbBkbbBBkkkkBBbbkbbbbSSSkbkkkk....',
+  '.osSssssSSbbBBbbBkbSbkkbbbbbbbkBBbbSbbSSbkko....',
+  '..kSSSSSsSkBBBBbkbbSkbbbbbbbbbkbBbbSbbbSBkk.....',
+  '...kkkSSSSSkkBBBkkkSbbbbbbbbbbkbbbbbbBBkBkk.....',
+  '.......kkkkBoBBBkbbbbbbBBbbbbBkBbbbbBBBkBkk.....',
+  '........kkBoBBBBbbbbbBBbbbbbbBkBBbbBBBokBB......',
+  '.........k.oBBBbbSbbbbbbSbbbbBkoBBBBBoBSbbB.....',
+  '..............bbbSbbbbbSbbbbbkkkBBBBoBBbkkkk....',
+  '.............obbbSbbbbSbbbbbBkBBkBBokBbbSSSk....',
+  '.............oBbbkbBBBSSbbbBkkBBBo.BkkkkSssS....',
+  '..............BBkkBBBBkkkBBkkBBBB..BkSSSssssk...',
+  '..............kkkkBBBBBkSkSkBBBBo..okkSSsSssSk..',
+  '...............oBkBBBBBkBBBBBBBB......kSSSssSS..',
+  '................ooBBbBBBBBBBBBBo.......kSsssSsk.',
+  '................oBBBBBBbBBBBBBB........SssSSSsS.',
+  '.................bSbbbbbbbbbbbo.......ksssSSsSk.',
+  '.................bWwwwwwwwwWWb...WkkoSsssSsSSk..',
+  '.................bwwwwwwwwwWWb..oobkkSsssSSSk...',
+  '.................kwwwwwwwWWWWSSSkokkkksSSSkk....',
+  '.................bwwwwwwwWWWkSsssSokWbSSkk......',
+  '................BBBbWWWWbbBokssssskoook.........',
+];
+
+export const LISA = sprite([
+  LISA_FRESH,
+  breathe(LISA_FRESH, 21),
+  LISA_TIRED,
+  breathe(LISA_TIRED, 21),
+  LISA_VICTORY,
+  breathe(LISA_VICTORY, 22),
+]);
+
+/** Ses references sont moins hautes que celles du heros : le portrait descend d'autant. */
+export const LISA_BUST = { x: 8, y: 7, w: 32, h: 26 } as const;
+
+/* ---------------------------------------------------------------- combattants */
+
+export interface Bust {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface Fighter {
+  sprite: Sprite;
+  bust: Bust;
+}
+
+/**
+ * Le combattant d'un joueur, choisi par son rang de costume comme la palette :
+ * le heros au rang 0, Lisa au rang 1, le heros pour les suivants.
+ */
+const FIGHTERS: Fighter[] = [
+  { sprite: HERO, bust: HERO_BUST },
+  { sprite: LISA, bust: LISA_BUST },
+];
+
+export const fighter = (index: number): Fighter => FIGHTERS[index] ?? FIGHTERS[0];

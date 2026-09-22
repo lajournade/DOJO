@@ -12,7 +12,7 @@
 import { useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { sfx } from '../fx/audio';
-import { HERO, HERO_BUST, costume } from '../fx/sprites';
+import { costume, fighter } from '../fx/sprites';
 import { previewSession, repRange, rirTarget, type StepPreview } from '../store/session';
 import { useStore } from '../store/state';
 import type { ProgramSession } from '../types';
@@ -29,6 +29,7 @@ const kg = (v: number) => `${v.toLocaleString('fr-FR')} kg`;
 
 export function PreFight({ session, onFight, onBack }: Props) {
   const { state } = useStore();
+  const { sprite, bust } = fighter(state.user.palette);
   const preview = useMemo(() => previewSession(state, session), [state, session]);
   const breath = useFrame(2, 2.5);
 
@@ -58,14 +59,14 @@ export function PreFight({ session, onFight, onBack }: Props) {
 
         <div className="relative flex items-center justify-between gap-2">
           <Sprite
-            sprite={HERO}
+            sprite={sprite}
             palette={costume(state.user.palette)}
             frame={breath}
             scale={3}
-            cropX={HERO_BUST.x}
-            cropY={HERO_BUST.y}
-            cropW={HERO_BUST.w}
-            cropH={HERO_BUST.h}
+            cropX={bust.x}
+            cropY={bust.y}
+            cropW={bust.w}
+            cropH={bust.h}
           />
           <span className="fight-text arcade-title text-p4">vs</span>
           <span className="fight-text arcade-title text-p5">{session.code}</span>

@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { useHold } from '../fx/hold';
 import { sfx } from '../fx/audio';
-import { HERO, HERO_BUST, costume } from '../fx/sprites';
+import { costume, fighter } from '../fx/sprites';
 import { navigate } from '../router';
 import { dispatch, setCurrentUser, useStore } from '../store/state';
 import type { User } from '../types';
@@ -139,6 +139,7 @@ function PlayerCard({
   onRemove: () => void;
 }) {
   const hold = useHold(onRemove);
+  const { sprite, bust } = fighter(user.palette);
 
   return (
     <motion.div
@@ -155,14 +156,14 @@ function PlayerCard({
       >
         <div className="bevel-in halftone relative flex justify-center overflow-hidden bg-ink">
           <Sprite
-            sprite={HERO}
+            sprite={sprite}
             palette={costume(user.palette)}
             frame={frame}
             scale={3}
-            cropX={HERO_BUST.x}
-            cropY={HERO_BUST.y}
-            cropW={HERO_BUST.w}
-            cropH={HERO_BUST.h}
+            cropX={bust.x}
+            cropY={bust.y}
+            cropW={bust.w}
+            cropH={bust.h}
           />
         </div>
         <p className="mt-1.5 truncate text-p2 font-bold uppercase text-bone">{user.name}</p>

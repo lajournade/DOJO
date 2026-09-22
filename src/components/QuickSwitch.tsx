@@ -9,7 +9,7 @@
  * dans le sous-arbre de son joueur. Seul dans le dojo, le portrait n'est qu'un dessin.
  */
 import { sfx } from '../fx/audio';
-import { HERO, HERO_BUST, costume } from '../fx/sprites';
+import { costume, fighter } from '../fx/sprites';
 import { navigate } from '../router';
 import { getCurrentUserId, getState, setCurrentUser, useStore } from '../store/state';
 import type { User } from '../types';
@@ -39,17 +39,18 @@ interface Props {
 
 export function QuickSwitch({ scale, frame, flash = false }: Props) {
   const { state, users } = useStore();
+  const { sprite, bust } = fighter(state.user.palette);
   const portrait = (
     <Sprite
-      sprite={HERO}
+      sprite={sprite}
       palette={costume(state.user.palette)}
       frame={frame}
       flash={flash}
       scale={scale}
-      cropX={HERO_BUST.x}
-      cropY={HERO_BUST.y}
-      cropW={HERO_BUST.w}
-      cropH={HERO_BUST.h}
+      cropX={bust.x}
+      cropY={bust.y}
+      cropW={bust.w}
+      cropH={bust.h}
     />
   );
   const frameClass = 'bevel-in flex shrink-0 overflow-hidden bg-ink';
