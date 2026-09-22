@@ -26,26 +26,31 @@ export function App() {
     // `reducedMotion="user"` etend le reglage systeme a toutes les animations de
     // motion : les entrees et les ressorts se posent net, l'information reste.
     <MotionConfig reducedMotion="user">
-      {!loaded ? <Boot /> : known ? screen(route) : <Players />}
+      {!loaded ? <Boot /> : known ? screen(route, userId) : <Players />}
       <Crt />
     </MotionConfig>
   );
 }
 
-function screen(route: string) {
+/**
+ * Chaque ecran est cle par le joueur : le relais d'un joueur a l'autre sur un meme
+ * telephone remonte l'ecran plutot que de lui laisser l'etat local de l'autre — le
+ * briefing ouvert du Roster, le compteur et le combo de l'arene.
+ */
+function screen(route: string, userId: string | null) {
   switch (route) {
     case '/arena':
-      return <Arena />;
+      return <Arena key={userId} />;
     case '/results':
-      return <Results />;
+      return <Results key={userId} />;
     case '/history':
-      return <History />;
+      return <History key={userId} />;
     case '/program':
-      return <Program />;
+      return <Program key={userId} />;
     case '/players':
       return <Players />;
     default:
-      return <Roster />;
+      return <Roster key={userId} />;
   }
 }
 

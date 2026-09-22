@@ -7,7 +7,7 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { sfx } from '../fx/audio';
-import { HERO, HERO_BUST, costume } from '../fx/sprites';
+import { costume } from '../fx/sprites';
 import { navigate } from '../router';
 import { activeProgram, doneEntries, lastRun, sinceLabel, tonnage } from '../store/selectors';
 import { startSession } from '../store/session';
@@ -15,7 +15,8 @@ import { useStore } from '../store/state';
 import type { Program, ProgramSession } from '../types';
 import { FightIntro } from '../components/FightIntro';
 import { PreFight } from '../components/PreFight';
-import { Sprite, useFrame } from '../components/Sprite';
+import { QuickSwitch } from '../components/QuickSwitch';
+import { useFrame } from '../components/Sprite';
 import { SyncBadge } from '../components/SyncBadge';
 
 /** La seance choisie, en attente du premier coup. */
@@ -88,29 +89,24 @@ export function Roster() {
           <SyncBadge />
         </div>
 
-        {/* Qui joue, et de quoi en changer : l'application se partage a plusieurs. */}
-        <button
-          type="button"
-          onClick={() => navigate('/players')}
-          className="bevel-sm keycap mt-2 flex w-full items-center gap-2 bg-ink-2 p-1.5 text-left"
-        >
-          <span className="bevel-in flex shrink-0 overflow-hidden bg-ink">
-            <Sprite
-              sprite={HERO}
-              palette={costume(state.user.palette)}
-              frame={frame}
-              scale={1}
-              cropX={HERO_BUST.x}
-              cropY={HERO_BUST.y}
-              cropW={HERO_BUST.w}
-              cropH={HERO_BUST.h}
-            />
-          </span>
-          <span className="min-w-0 flex-1 truncate text-p2 font-bold uppercase text-bone">
-            {state.user.name}
-          </span>
-          <span className="label-text shrink-0 text-p2 text-ash">changer</span>
-        </button>
+        {/* Qui joue, et de quoi en changer : l'application se partage a plusieurs. Le
+            portrait passe au joueur suivant d'un appui — le relais sur un meme telephone —,
+            le nom ouvre le select player. */}
+        <div className="mt-2 flex gap-2">
+          <div className="bevel-sm keycap flex items-center bg-ink-2 p-1.5">
+            <QuickSwitch scale={1} frame={frame} />
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/players')}
+            className="bevel-sm keycap flex min-w-0 flex-1 items-center gap-2 bg-ink-2 p-1.5 text-left"
+          >
+            <span className="min-w-0 flex-1 truncate text-p2 font-bold uppercase text-bone">
+              {state.user.name}
+            </span>
+            <span className="label-text shrink-0 text-p2 text-ash">changer</span>
+          </button>
+        </div>
       </header>
 
       {resume && (

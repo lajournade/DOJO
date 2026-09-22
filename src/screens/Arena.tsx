@@ -11,12 +11,13 @@ import { HealthBar, RoundClock, useElapsed } from '../components/HealthBar';
 import { ImpactFx, type Hit } from '../components/ImpactFx';
 import { Plateau } from '../components/Plateau';
 import { PowerUp } from '../components/PowerUp';
+import { QuickSwitch } from '../components/QuickSwitch';
 import { RirPicker } from '../components/RirPicker';
 import { SessionMap } from '../components/SessionMap';
-import { Sprite, useFrame } from '../components/Sprite';
+import { useFrame } from '../components/Sprite';
 import { sfx } from '../fx/audio';
 import { useShake } from '../fx/shake';
-import { HERO, HERO_BUST, HERO_FRAME, costume } from '../fx/sprites';
+import { HERO_FRAME } from '../fx/sprites';
 import { keepAwake, rearmOnVisible, releaseAwake } from '../fx/wakelock';
 import { navigate } from '../router';
 import {
@@ -48,18 +49,49 @@ import { useStore } from '../store/state';
 /** Duree du flash et du bond a chaque serie validee. */
 const STRIKE_MS = 220;
 
+/**
+ * Ce que l'arene garde hors du journal, par joueur : le compteur en cours de reglage,
+ * le combo, les annonces deja faites, les decharges consenties. Deux joueurs sur un
+ * meme telephone se relaient dans l'arene, et elle se remonte a chaque relais
+ * (`key={userId}` dans App) — c'est ici qu'elle retrouve ce qu'elle avait laisse. Un
+ * brouillon d'une seance finie ne vaut plus rien : `liveId` le dit.
+ */
+interface Scratch {
+  liveId: string;
+  /** La serie que le brouillon decrivait : le curseur a pu bouger depuis un autre appareil. */
+  cursorKey: string;
+  weight: number;
+  reps: number;
+  rir: number | null;
+  combo: number;
+  advice: Advice | null;
+  banner: boolean;
+  deloaded: boolean;
+  announced: Set<string>;
+  deloads: Map<string, number>;
+}
+
+const scratches = new Map<string, Scratch>();
+
 export function Arena() {
-  const { state, loaded, status, pending } = useStore();
+  const { state, loaded, status, pending, users, userId } = useStore();
   const live = state.liveSession;
 
-  const [weight, setWeight] = useState(0);
-  const [reps, setReps] = useState(0);
-  const [rir, setRir] = useState<number | null>(null);
-  const [advice, setAdvice] = useState<Advice | null>(null);
-  const [banner, setBanner] = useState(false);
-  const [deloaded, setDeloaded] = useState(false);
+  // Le brouillon laisse par ce joueur, s'il parle bien de cette seance. Lu au montage
+  // seulement : c'est un point de depart, pas une source.
+  const [saved] = useState(() => {
+    const s = userId ? scratches.get(userId) : undefined;
+    return s && live && s.liveId === live.id ? s : null;
+  });
+
+  const [weight, setWeight] = useState(saved?.weight ?? 0);
+  const [reps, setReps] = useState(saved?.reps ?? 0);
+  const [rir, setRir] = useState<number | null>(saved?.rir ?? null);
+  const [advice, setAdvice] = useState<Advice | null>(saved?.advice ?? null);
+  const [banner, setBanner] = useState(saved?.banner ?? false);
+  const [deloaded, setDeloaded] = useState(saved?.deloaded ?? false);
   const [hits, setHits] = useState<Hit[]>([]);
-  const [combo, setCombo] = useState(0);
+  const [combo, setCombo] = useState(saved?.combo ?? 0);
   const [flash, setFlash] = useState(0);
   const [striking, setStriking] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
@@ -112,7 +144,7 @@ export function Arena() {
   // un seul index : dans un superset le curseur revient sur un exercice deja annonce,
   // et l'annonce se rejouerait a chaque tour, son compris — de meme quand on revient
   // par la carte sur un exercice quitte en route.
-  const announced = useRef(new Set<string>());
+  const announced = useRef(saved?.announced ?? new Set<string>());
 
   /**
    * Les exercices decharges a la main pendant cette seance : identifiant du pas → la
@@ -121,10 +153,18 @@ export function Arena() {
    * garde ses paliers, comme le fait deja `advise`. Rien n'est ecrit au journal —
    * la seance suivante repartira de l'historique.
    */
-  const deloads = useRef(new Map<string, number>());
+  const deloads = useRef(saved?.deloads ?? new Map<string, number>());
+
+  // Le brouillon decrit la serie ou l'on est : le premier passage ne doit ni ecraser
+  // un compteur regle mais pas valide, ni rejouer le son de l'annonce.
+  const restored = useRef(saved !== null && saved.cursorKey === cursorKey);
 
   // Chaque nouvelle serie repart de ce qui a ete fait la derniere fois.
   useEffect(() => {
+    if (restored.current) {
+      restored.current = false;
+      return;
+    }
     if (!live || !step) return;
     const s = suggestion(state, live);
     const cut = deloads.current.get(stepKey);
@@ -157,6 +197,24 @@ export function Arena() {
     () => (step && advice?.trend === 'hold' ? plateau(state, step) : null),
     [state, step, advice],
   );
+
+  // Le brouillon, tenu a jour a chaque rendu : ce que le joueur suivant laissera intact.
+  useEffect(() => {
+    if (!live || !userId) return;
+    scratches.set(userId, {
+      liveId: live.id,
+      cursorKey,
+      weight,
+      reps,
+      rir,
+      combo,
+      advice,
+      banner,
+      deloaded,
+      announced: announced.current,
+      deloads: deloads.current,
+    });
+  });
 
   const hitId = useRef(0);
   const strikeTimer = useRef<number | undefined>(undefined);
@@ -249,6 +307,13 @@ export function Arena() {
         >
           ← quitter
         </button>
+        {/* Qui joue, quand on se relaie sur un meme telephone : le rang, comme sur une borne. */}
+        {users.length > 1 && (
+          <span className="flex min-w-0 items-baseline gap-1.5">
+            <span className="fight-text text-p1 text-cyan">{users.indexOf(state.user) + 1}P</span>
+            <span className="label-text truncate text-p2 uppercase text-bone">{state.user.name}</span>
+          </span>
+        )}
         <div className="flex items-center gap-2">
           {/* Le reseau peut tomber en pleine seance : on le signale sans jamais interrompre. */}
           {status === 'offline' && (
@@ -272,19 +337,11 @@ export function Arena() {
           seance au bout. Frais jusqu'a la moitie de la seance, fatigue ensuite ; chaque
           serie validee le fait flasher. */}
       <div className="pad-x flex items-center gap-2 border-b-2 border-line pb-2">
-        <div className="bevel-in flex shrink-0 overflow-hidden bg-ink">
-          <Sprite
-            sprite={HERO}
-            palette={costume(state.user.palette)}
-            frame={(total && done * 2 >= total ? HERO_FRAME.tired : HERO_FRAME.fresh) + breath}
-            flash={striking}
-            scale={3}
-            cropX={HERO_BUST.x}
-            cropY={HERO_BUST.y}
-            cropW={HERO_BUST.w}
-            cropH={HERO_BUST.h}
-          />
-        </div>
+        <QuickSwitch
+          scale={3}
+          frame={(total && done * 2 >= total ? HERO_FRAME.tired : HERO_FRAME.fresh) + breath}
+          flash={striking}
+        />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <HealthBar
             name={`exo ${live.cursor.planIndex + 1}/${live.plan.length}`}

@@ -97,7 +97,7 @@ rendent l'interface le disent en tête de fichier (`/** @vitest-environment jsdo
 - **un scénario par cas d'usage de cette page, dans `src/conops/`** — premier lancement, séance
   complète, reprise et abandon, machine prise, remplacer, ajouter un exercice, superset,
   bibliothèque, montée en charge, bloqué et décharge, transposition, réseau coupé, historique et
-  export, multi-joueurs. Chacun monte `<App/>` dans jsdom et parle au **vrai serveur**, lancé sur
+  export, multi-joueurs, deux joueurs sur un téléphone. Chacun monte `<App/>` dans jsdom et parle au **vrai serveur**, lancé sur
   un port libre avec un `sport.json` temporaire ; `src/test/appareil.ts` fait les gestes du
   pouce (`clic`, `saisir`, `appuyerLong`, `basculerAppareil`…) et `src/test/serveur.ts` relit le
   fichier pour vérifier ce qui a atterri. Les états de départ viennent de `src/test/fabrique.ts`.
@@ -130,6 +130,15 @@ mot de passe. Le profil choisi est retenu par l'appareil, pas par le serveur —
 téléphones peuvent donc mener deux séances en même temps sans jamais se croiser. Chacun
 garde son journal, sa progression et sa séance en cours ; ce qui est commun, c'est le
 catalogue d'exercices et la **bibliothèque de programmes**.
+
+Deux personnes qui s'entraînent ensemble n'ont souvent qu'un téléphone : un appui sur le
+**portrait** du combattant — dans le bandeau de l'arène comme en tête du dojo — passe au joueur
+suivant, sans écran intermédiaire, et mène là où il en est : son arène s'il a une séance en cours,
+le choix de la séance sinon. L'arène de chacun attend son retour telle qu'elle a été laissée —
+la charge réglée mais pas encore validée, le combo, la décharge consentie, les annonces déjà
+faites —, et le rang s'affiche en tête, `1P` ou `2P`, comme sur une borne. Le nom du joueur, lui,
+ouvre toujours le *select player* ; et l'appareil retient le dernier joueur affiché. Seul dans le
+dojo, le portrait n'est qu'un dessin.
 
 Un programme appartient à une famille — **force**, **hypertrophie** ou **endurance** — qui
 range la bibliothèque et pré-remplit les exercices qu'on y ajoute :
