@@ -79,7 +79,9 @@ export function Roster() {
       )}
 
       <header className="pad-top pad-x pb-3">
-        <div className="flex items-start justify-between gap-2">
+        {/* Deux rangees d'air : le logo et le badge de son sont les elements les plus
+            hauts de l'application, la ou la vignette du tube mord le plus. */}
+        <div className="mt-4 flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h1 className="fight-text arcade-title text-p4">dojo</h1>
             <p className="mt-1 truncate text-p2 text-ash">

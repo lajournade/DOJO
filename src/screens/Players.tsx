@@ -52,7 +52,7 @@ export function Players() {
   return (
     <div className="min-h-dvh bg-ink">
       <header className="pad-top pad-x pb-3">
-        <h1 className="fight-text arcade-title text-p4">dojo</h1>
+        <h1 className="fight-text arcade-title mt-4 text-p4">dojo</h1>
         <p className="fight-text mt-2 text-p1 tracking-[0.2em] text-cyan">select player</p>
       </header>
 

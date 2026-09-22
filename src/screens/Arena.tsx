@@ -294,7 +294,7 @@ export function Arena() {
         />
       )}
 
-      <header className="pad-top pad-x flex items-center justify-between gap-2 pb-1.5">
+      <header className="pad-top pad-x flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={() => {
@@ -303,7 +303,7 @@ export function Arena() {
               navigate('/', { replace: true });
             }
           }}
-          className="fight-text text-p1 tracking-[0.2em] text-ash"
+          className="tap-target fight-text text-p1 tracking-[0.2em] text-ash"
         >
           ← quitter
         </button>
@@ -325,7 +325,7 @@ export function Arena() {
           <button
             type="button"
             onClick={() => setShowMap(true)}
-            className="fight-text text-p1 tracking-[0.2em] text-ash"
+            className="tap-target fight-text text-p1 tracking-[0.2em] text-ash"
           >
             carte →
           </button>

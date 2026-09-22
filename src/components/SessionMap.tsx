@@ -32,11 +32,11 @@ export function SessionMap({ live, names, onPick, onAdd, onClose }: Props) {
       transition={{ duration: 0.12 }}
       className="fixed inset-0 z-50 flex h-dvh flex-col overflow-hidden bg-ink"
     >
-      <header className="pad-top pad-x flex items-center justify-between gap-2 border-b-2 border-line pb-2">
+      <header className="pad-top pad-x flex items-center justify-between gap-2 border-b-2 border-line">
         <button
           type="button"
           onClick={onClose}
-          className="fight-text text-p1 tracking-[0.2em] text-ash"
+          className="tap-target fight-text text-p1 tracking-[0.2em] text-ash"
         >
           ← retour
         </button>

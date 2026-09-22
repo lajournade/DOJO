@@ -31,11 +31,11 @@ export function History() {
         <button
           type="button"
           onClick={() => navigate('/')}
-          className="fight-text text-p1 tracking-[0.2em] text-ash"
+          className="tap-target fight-text text-p1 tracking-[0.2em] text-ash"
         >
           ← dojo
         </button>
-        <h1 className="fight-text fight-shadow mt-2 text-p3 text-bone">
+        <h1 className="fight-text fight-shadow text-p3 text-bone">
           historique
         </h1>
 

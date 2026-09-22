@@ -570,11 +570,11 @@ function Frame({
         <button
           type="button"
           onClick={() => (onBack ? onBack() : navigate('/'))}
-          className="fight-text text-p1 tracking-[0.2em] text-ash"
+          className="tap-target fight-text text-p1 tracking-[0.2em] text-ash"
         >
           ← {back ?? 'dojo'}
         </button>
-        <h1 className="fight-shadow mt-2 truncate text-p3 font-bold uppercase leading-8 text-bone">
+        <h1 className="fight-shadow truncate text-p3 font-bold uppercase leading-8 text-bone">
           {title ?? 'programmes'}
         </h1>
       </header>

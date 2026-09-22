@@ -121,13 +121,32 @@
 
 /* --------------------------------------------------------- zones sures iOS */
 @utility pad-top {
-  padding-top: max(env(safe-area-inset-top), 0.75rem);
+  /* Le plancher vaut celui de pad-x : en onglet Safari l'inset vaut 0. Les 8 px
+     ajoutes par-dessus, eux, comptent surtout en application installee, ou
+     l'inset seul colle les commandes de tete au bord de l'ilot. */
+  padding-top: calc(max(env(safe-area-inset-top), 1rem) + 8px);
 }
 @utility pad-bottom {
   padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
 }
 @utility pad-x {
   padding-inline: max(env(safe-area-inset-left), 1rem) max(env(safe-area-inset-right), 1rem);
+}
+
+/* ------------------------------------------------------- cibles tactiles */
+/* Un libelle de 12 px ne fait pas une commande : les Human Interface Guidelines
+   d'Apple demandent 44 pt de cote au minimum. La boite monte a 48 px — six
+   rangees de la grille — et le libelle s'y centre : il descend de 18 px, ce qui
+   l'ecarte d'autant du bord haut sans rien deplacer d'autre. La largeur reste
+   intacte : les libelles passent deja 44 pt, et un padding lateral volerait des
+   pixels au nom du joueur, tronque juste a cote. */
+@utility tap-target {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  /* Le libelle cede la place au nom du joueur, jamais l'inverse. */
+  white-space: nowrap;
+  flex: none;
 }
 
 /* ------------------------------------------------------------ typographie */
