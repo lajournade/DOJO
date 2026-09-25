@@ -7,6 +7,7 @@ import { motion } from 'motion/react';
 import { BigStepper } from '../components/BigStepper';
 import { ComboMeter, comboLabel } from '../components/ComboMeter';
 import { ExerciseInput } from '../components/ExerciseInput';
+import { ExerciseHistory } from '../components/ExerciseHistory';
 import { HealthBar, RoundClock, useElapsed } from '../components/HealthBar';
 import { ImpactFx, type Hit } from '../components/ImpactFx';
 import { Plateau } from '../components/Plateau';
@@ -97,6 +98,8 @@ export function Arena() {
   const [showNotes, setShowNotes] = useState(false);
   // La carte de la seance, par-dessus l'arene : pour aller jouer un autre exercice.
   const [showMap, setShowMap] = useState(false);
+  // Monte la vue couteuse de progression uniquement a la demande.
+  const [showExerciseHistory, setShowExerciseHistory] = useState(false);
   // La saisie du remplacant : `null` tant que le titre reste un titre.
   const [draftName, setDraftName] = useState<string | null>(null);
   const { shake, props: shakeProps } = useShake();
@@ -275,6 +278,24 @@ export function Arena() {
     >
       <ImpactFx hits={hits} />
 
+      {showExerciseHistory && (
+        <div className="fixed inset-0 z-50 flex h-dvh flex-col overflow-hidden bg-ink">
+          <header className="pad-top pad-x flex items-center justify-between gap-2 border-b-2 border-line pb-2">
+            <button
+              type="button"
+              onClick={() => setShowExerciseHistory(false)}
+              className="tap-target fight-text text-p1 tracking-[0.2em] text-ash"
+            >
+              ← retour
+            </button>
+            <span className="fight-text text-p1 text-impact">historique</span>
+          </header>
+          <main className="pad-x min-h-0 flex-1 overflow-y-auto overflow-x-clip pad-bottom pt-3">
+            <ExerciseHistory key={step.exerciseId} initialExerciseId={step.exerciseId} />
+          </main>
+        </div>
+      )}
+
       {showMap && (
         <SessionMap
           live={live}
@@ -367,9 +388,18 @@ export function Arena() {
           {/* Le titre a gauche, le compteur de combo a droite quand il y en a un. */}
           <div className="flex items-start justify-between gap-2">
             {draftName === null ? (
-              <h1 className="fight-shadow min-w-0 text-p3 font-bold uppercase leading-8 text-bone">
-                {step.exerciseName}
-              </h1>
+              <div className="min-w-0">
+                <h1 className="fight-shadow text-p3 font-bold uppercase leading-8 text-bone">
+                  {step.exerciseName}
+                </h1>
+                <button
+                  type="button"
+                  onClick={() => setShowExerciseHistory(true)}
+                  className="bevel-sm keycap mt-2 bg-ink-3 px-2 py-1.5 text-p1 text-impact"
+                >
+                  historique ↗
+                </button>
+              </div>
             ) : (
               <ExerciseInput
                 value={draftName}

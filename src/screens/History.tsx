@@ -4,13 +4,12 @@
  *  — Exercice : la progression d'un mouvement dans le temps.
  */
 import { useMemo, useState } from 'react';
-import { ProgressChart, type Point } from '../components/ProgressChart';
+import { ExerciseHistory } from '../components/ExerciseHistory';
 import { useHold } from '../fx/hold';
 import { navigate } from '../router';
 import {
   doneEntries,
   formatDate,
-  historyOf,
   recentLogs,
   sinceLabel,
   tonnage,
@@ -50,7 +49,7 @@ export function History() {
       </header>
 
       <main className="pad-x pad-bottom">
-        {tab === 'journal' ? <Journal logs={logs} /> : <ByExercise />}
+        {tab === 'journal' ? <Journal logs={logs} /> : <ExerciseHistory />}
 
         <a
           href={`/api/export.csv?user=${encodeURIComponent(state.user.id)}`}
@@ -180,129 +179,6 @@ function LogDetail({ entries }: { entries: SetEntry[] }) {
         </div>
       ))}
     </div>
-  );
-}
-
-function ByExercise() {
-  const { state } = useStore();
-  // Les exercices deja pratiques, du plus recemment vu au plus ancien.
-  const seen = useMemo(() => {
-    const ids: string[] = [];
-    for (const log of recentLogs(state)) {
-      for (const e of log.entries) if (!ids.includes(e.exerciseId)) ids.push(e.exerciseId);
-    }
-    return ids.map((id) => ({
-      id,
-      name:
-        state.exercises.find((e) => e.id === id)?.name ??
-        state.logs.flatMap((l) => l.entries).find((e) => e.exerciseId === id)?.exerciseName ??
-        id,
-    }));
-  }, [state]);
-
-  const [selection, setSelected] = useState(seen[0]?.id ?? '');
-  const selectedIndex = Math.max(0, seen.findIndex((e) => e.id === selection));
-  const selected = seen[selectedIndex]?.id ?? '';
-  if (selection !== selected) setSelected(selected);
-  const rows = useMemo(() => (selected ? historyOf(state, selected) : []), [state, selected]);
-
-  const points: Point[] = useMemo(
-    () =>
-      [...rows]
-        .reverse()
-        .map(({ log, entries }) => ({
-          date: log.date,
-          label: formatDate(log.date).replace(/\.$/, ''),
-          value: Math.max(0, ...entries.map((e) => e.weight ?? 0)),
-        }))
-        .filter((p) => p.value > 0),
-    [rows],
-  );
-
-  if (!seen.length) {
-    return <p className="py-8 text-center text-p2 text-ash">Aucune série enregistrée.</p>;
-  }
-
-  return (
-    <div>
-      <label className="fight-text text-p1 tracking-[0.2em] text-ash" htmlFor="exo">
-        exercice
-      </label>
-      <div className="mt-2 flex items-stretch gap-2">
-        <ExerciseArrow
-          direction="previous"
-          disabled={selectedIndex === 0}
-          onClick={() => setSelected(seen[selectedIndex - 1].id)}
-        />
-        <select
-          id="exo"
-          value={selected}
-          onChange={(e) => setSelected(e.target.value)}
-          className="bevel-in min-w-0 flex-1 appearance-none bg-ink-3 px-3 py-3 text-bone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-impact"
-        >
-          {seen.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.name}
-            </option>
-          ))}
-        </select>
-        <ExerciseArrow
-          direction="next"
-          disabled={selectedIndex === seen.length - 1}
-          onClick={() => setSelected(seen[selectedIndex + 1].id)}
-        />
-      </div>
-
-      <div className="bevel-sm mt-3 bg-ink-2 p-2 pt-3">
-        <ProgressChart key={selected} points={points} />
-      </div>
-
-      <div className="mt-3 grid gap-2">
-        {rows.map(({ log, entries }) => (
-          <div key={log.id} className="bevel-sm bg-ink-2 p-3">
-            <div className="flex items-baseline justify-between">
-              <p className="numeric text-p2 text-bone">{formatDate(log.date)}</p>
-              <p className="fight-text text-p1 text-impact">{log.programCode}</p>
-            </div>
-            <p className="numeric mt-1 text-p2 text-ash">
-              {entries
-                .map((e) => `${e.reps ?? '—'}×${e.weight ?? '—'}kg${e.rir !== null ? ` (rir ${e.rir})` : ''}`)
-                .join('  ·  ')}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ExerciseArrow({ direction, disabled, onClick }: {
-  direction: 'previous' | 'next';
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  const previous = direction === 'previous';
-  return (
-    <button
-      type="button"
-      aria-label={previous ? 'Exercice précédent' : 'Exercice suivant'}
-      disabled={disabled}
-      onClick={onClick}
-      className={`bevel-sm flex min-h-12 w-12 shrink-0 items-center justify-center
-        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-impact ${
-          disabled
-            ? 'cursor-not-allowed bg-ink-2 text-ash opacity-40'
-            : 'keycap cursor-pointer bg-ink-3 text-impact active:bg-blood'
-        }`}
-    >
-      <svg aria-hidden="true" viewBox="0 0 16 16" width="24" height="24" shapeRendering="crispEdges">
-        <path
-          fill="currentColor"
-          transform={previous ? undefined : 'translate(16 0) scale(-1 1)'}
-          d="M8 2h2v4h4v4h-4v4H8v-2H6v-2H4V6h2V4h2Z"
-        />
-      </svg>
-    </button>
   );
 }
 
