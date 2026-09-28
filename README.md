@@ -60,6 +60,7 @@ complet, `tailscale serve` suffit, sans changer une ligne de code.
 | `scripts/seed.json` | état initial (programme P2 + historique importé du classeur) |
 | `scripts/p3-full-body.ops.json` | le programme P3, rejouable : `curl -X POST localhost:5180/api/ops --data-binary @scripts/p3-full-body.ops.json` |
 | `scripts/p4-full-body-machines.ops.json` | le programme P4, rejouable de la même façon |
+| `scripts/p5-sara-saffari.ops.json` | le programme P5 inspiré de Sara Saffari : deux séances full body de ~60 min, priorité fessiers/jambes ; rejouable de la même façon |
 
 Un fichier antérieur aux profils est converti au premier démarrage : tout ce qu'il contenait
 revient à un joueur nommé *Joueur 1*, les programmes rejoignent la famille *hypertrophie*, et

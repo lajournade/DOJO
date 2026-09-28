@@ -1,0 +1,264 @@
+[
+  {
+    "opId": "seed-p5-ex-0",
+    "type": "exercise.upsert",
+    "payload": {
+      "exercise": {
+        "id": "hip-thrust-barre",
+        "name": "Hip thrust barre"
+      }
+    }
+  },
+  {
+    "opId": "seed-p5-ex-1",
+    "type": "exercise.upsert",
+    "payload": {
+      "exercise": {
+        "id": "tirage-vertical",
+        "name": "Tirage vertical"
+      }
+    }
+  },
+  {
+    "opId": "seed-p5-ex-2",
+    "type": "exercise.upsert",
+    "payload": {
+      "exercise": {
+        "id": "kickback-fessier-poulie",
+        "name": "Kickback fessier à la poulie"
+      }
+    }
+  },
+  {
+    "opId": "seed-p5-ex-3",
+    "type": "exercise.upsert",
+    "payload": {
+      "exercise": {
+        "id": "crunch-poulie",
+        "name": "Crunch à la poulie"
+      }
+    }
+  },
+  {
+    "opId": "seed-p5-ex-4",
+    "type": "exercise.upsert",
+    "payload": {
+      "exercise": {
+        "id": "fentes-marchees",
+        "name": "Fentes marchées"
+      }
+    }
+  },
+  {
+    "opId": "seed-p5-ex-5",
+    "type": "exercise.upsert",
+    "payload": {
+      "exercise": {
+        "id": "tractions-assistees",
+        "name": "Tractions assistées"
+      }
+    }
+  },
+  {
+    "opId": "seed-p5-ex-6",
+    "type": "exercise.upsert",
+    "payload": {
+      "exercise": {
+        "id": "abduction-hanches-machine",
+        "name": "Abduction des hanches à la machine"
+      }
+    }
+  },
+  {
+    "opId": "seed-p5-ex-7",
+    "type": "exercise.upsert",
+    "payload": {
+      "exercise": {
+        "id": "releve-genoux-suspendu",
+        "name": "Relevé de genoux suspendu"
+      }
+    }
+  },
+  {
+    "opId": "seed-p5-program",
+    "type": "program.save",
+    "payload": {
+      "program": {
+        "id": "prog-p5",
+        "code": "P5",
+        "name": "Full body inspiré de Sara Saffari — 2 jours",
+        "goal": "hypertrophie",
+        "sessions": [
+          {
+            "id": "ses-p5-A",
+            "code": "A",
+            "name": "Fessiers + quadriceps + haut du corps — ~60 min",
+            "items": [
+              {
+                "id": "it-p5a-1",
+                "exerciseId": "hip-thrust-barre",
+                "sets": 4,
+                "repMin": 6,
+                "repMax": 10,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 120 s. Mouvement principal de force : marquer une courte pause en extension complète des hanches. Deux séances full body par semaine, espacées de 2–4 jours (par exemple mardi et vendredi), environ 60 min chacune. Commencer par 5–7 min d’échauffement, puis environ 50 min de musculation. Les séries indiquées sont des séries de travail : ajouter 1–3 séries légères de montée en charge avant ce premier mouvement lourd. Garder 1–2 répétitions en réserve. Double progression : garder la même charge jusqu’au haut de la fourchette sur toutes les séries avec une bonne technique, puis augmenter la charge et repartir vers le bas (ex. 3 × 8–12 : atteindre environ 12 partout, puis repartir à 8–9). Priorité à la progression au hip thrust, au soulevé de terre roumain, aux fentes bulgares et aux fentes marchées plutôt qu’à l’ajout d’exercices.",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p5a-2",
+                "exerciseId": "fente-bulgare",
+                "sets": 3,
+                "repMin": 8,
+                "repMax": 10,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 90 s. Répétitions par jambe.",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p5a-3",
+                "exerciseId": "leg-press",
+                "sets": 3,
+                "repMin": 10,
+                "repMax": 12,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 90 s.",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p5a-4",
+                "exerciseId": "tirage-vertical",
+                "sets": 3,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 75 s.",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p5a-5",
+                "exerciseId": "developpe-militaire-halteres-assis",
+                "sets": 3,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 75 s.",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p5a-6",
+                "exerciseId": "kickback-fessier-poulie",
+                "sets": 2,
+                "repMin": 12,
+                "repMax": 15,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 45 s. Répétitions par jambe. Échec possible occasionnellement sur la dernière série de cet exercice d’isolation.",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p5a-7",
+                "exerciseId": "crunch-poulie",
+                "sets": 3,
+                "repMin": 10,
+                "repMax": 15,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 45 s. Échec possible occasionnellement sur la dernière série de cet exercice d’isolation.",
+                "supersetGroup": null
+              }
+            ]
+          },
+          {
+            "id": "ses-p5-B",
+            "code": "B",
+            "name": "Fessiers + ischio-jambiers + haut du corps — ~60 min",
+            "items": [
+              {
+                "id": "it-p5b-1",
+                "exerciseId": "souleve-de-terre-roumain",
+                "sets": 4,
+                "repMin": 6,
+                "repMax": 10,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 120 s. Deux séances full body par semaine, espacées de 2–4 jours (par exemple mardi et vendredi), environ 60 min chacune. Commencer par 5–7 min d’échauffement, puis environ 50 min de musculation. Les séries indiquées sont des séries de travail : ajouter 1–3 séries légères de montée en charge avant ce premier mouvement lourd. Garder 1–2 répétitions en réserve. Double progression : garder la même charge jusqu’au haut de la fourchette sur toutes les séries avec une bonne technique, puis augmenter la charge et repartir vers le bas (ex. 3 × 8–12 : atteindre environ 12 partout, puis repartir à 8–9). Priorité à la progression au hip thrust, au soulevé de terre roumain, aux fentes bulgares et aux fentes marchées plutôt qu’à l’ajout d’exercices.",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p5b-2",
+                "exerciseId": "fentes-marchees",
+                "sets": 3,
+                "repMin": 10,
+                "repMax": 10,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 90 s. 10 répétitions par jambe.",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p5b-3",
+                "exerciseId": "leg-curl-assis",
+                "sets": 3,
+                "repMin": 10,
+                "repMax": 15,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 75 s. Variante : leg curl couché. Échec possible occasionnellement sur la dernière série de cet exercice d’isolation.",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p5b-4",
+                "exerciseId": "tractions-assistees",
+                "sets": 3,
+                "repMin": 8,
+                "repMax": 12,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 75 s. Alternative : tirage vertical (lat pulldown).",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p5b-5",
+                "exerciseId": "elevations-laterales-halteres",
+                "sets": 3,
+                "repMin": 12,
+                "repMax": 20,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 45 s. Échec possible occasionnellement sur la dernière série de cet exercice d’isolation.",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p5b-6",
+                "exerciseId": "abduction-hanches-machine",
+                "sets": 3,
+                "repMin": 15,
+                "repMax": 25,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 45 s. Échec possible occasionnellement sur la dernière série de cet exercice d’isolation.",
+                "supersetGroup": null
+              },
+              {
+                "id": "it-p5b-7",
+                "exerciseId": "releve-genoux-suspendu",
+                "sets": 3,
+                "repMin": 10,
+                "repMax": 15,
+                "targetRirMin": 1,
+                "targetRirMax": 2,
+                "notes": "Repos : 45 s.",
+                "supersetGroup": null
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]
