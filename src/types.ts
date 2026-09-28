@@ -76,6 +76,8 @@ export interface SetEntry {
 
 /** Une seance terminee, l'equivalent d'un bloc de lignes de l'onglet Suivit 2. */
 export interface SessionLog {
+  /** Absent sur les anciennes séances programmées. */
+  mode?: 'program' | 'free';
   id: string;
   userId: string;
   programCode: string;
@@ -84,6 +86,8 @@ export interface SessionLog {
   startedAt: string | null;
   endedAt: string | null;
   entries: SetEntry[];
+  /** Instantané conservé pour reprendre les nouvelles séances. */
+  plan?: PlanStep[];
 }
 
 /**
@@ -105,6 +109,8 @@ export interface Cursor {
 }
 
 export interface LiveSession extends SessionLog {
+  /** Identifie une réouverture et impose une clôture explicite. */
+  resumedAt?: string;
   plan: PlanStep[];
   cursor: Cursor;
 }
@@ -139,6 +145,7 @@ export interface UserView {
 
 export type OpType =
   | 'session.start'
+  | 'session.resume'
   | 'session.cursor'
   | 'session.plan'
   | 'session.append'

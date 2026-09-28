@@ -15,7 +15,7 @@ import type {
 } from '../types';
 import { dispatch, getView } from './state';
 import { blankItem, findExercise, slug } from './programs';
-import { exerciseName, knownSets, todayIso, typicalMinutes } from './selectors';
+import { exerciseName, historyOf, knownSets, todayIso, typicalMinutes } from './selectors';
 import { advise, gainLabel, plateau, type Advice, type Plateau, type Trend } from './progression';
 
 /** Instantane du programme au moment du demarrage : l'editer ensuite ne touche pas la seance engagee. */
@@ -139,6 +139,40 @@ export function startSession(program: Program, session: ProgramSession): LiveSes
   return live;
 }
 
+/** Une séance libre commence vide, sans modifier le programme du joueur. */
+export function startFreeSession(): LiveSession {
+  const state = getView();
+  if (state.liveSession) return state.liveSession;
+  const live: LiveSession = {
+    id: `log-free-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
+    userId: state.user.id,
+    mode: 'free',
+    programCode: 'LIBRE',
+    sessionId: null,
+    date: todayIso(),
+    startedAt: new Date().toISOString(),
+    endedAt: null,
+    entries: [],
+    plan: [],
+    cursor: { planIndex: 0, setIndex: 1 },
+  };
+  dispatch('session.start', { session: live });
+  return live;
+}
+
+/** Rouvre uniquement le journal encore éligible au moment du clic. */
+export function resumeSession(logId: string): boolean {
+  dispatch('session.resume', { logId, date: todayIso(), resumedAt: new Date().toISOString() });
+  return getView().liveSession?.id === logId;
+}
+
+/** Ajoute une ronde à un exercice terminé, puis reprend son groupe. */
+export function extendStep(live: LiveSession, planIndex: number) {
+  addSet({ ...live, cursor: { planIndex, setIndex: 1 } });
+  const updated = getView().liveSession;
+  if (updated) jumpTo(updated, planIndex);
+}
+
 /**
  * Les bornes du superset auquel appartient un exercice : les items *consecutifs*
  * qui portent la meme lettre. Un exercice seul est son propre groupe, ce qui
@@ -162,6 +196,7 @@ export const doneSets = (live: LiveSession, planIndex: number) =>
 /** Ou en est un exercice : rien, entame, ou toutes ses series au journal. */
 export function stepStatus(live: LiveSession, planIndex: number): 'todo' | 'started' | 'done' {
   const done = doneSets(live, planIndex);
+  if (live.mode === 'free') return done > 0 ? 'started' : 'todo';
   if (done >= live.plan[planIndex].sets) return 'done';
   return done > 0 ? 'started' : 'todo';
 }
@@ -176,6 +211,7 @@ export function stepStatus(live: LiveSession, planIndex: number): 'todo' | 'star
  * `null` quand le groupe est entierement joue.
  */
 export function groupCursor(live: LiveSession, planIndex: number): Cursor | null {
+  if (live.mode === 'free') return { planIndex, setIndex: doneSets(live, planIndex) + 1 };
   const [first, last] = supersetRange(live.plan, planIndex);
   const rounds = Math.max(...live.plan.slice(first, last + 1).map((s) => s.sets));
   for (let round = 1; round <= rounds; round += 1) {
@@ -211,6 +247,7 @@ export function resumeCursor(live: LiveSession, from: number): Cursor {
  */
 export function nextCursor(live: LiveSession): Cursor {
   const { planIndex, setIndex } = live.cursor;
+  if (live.mode === 'free') return { planIndex, setIndex: setIndex + 1 };
   const step = live.plan[planIndex];
   if (!step) return { planIndex: planIndex + 1, setIndex: 1 };
 
@@ -253,7 +290,7 @@ function withCurrentDone(live: LiveSession): LiveSession {
   return { ...live, entries: [...live.entries, pending] };
 }
 
-export const isFinished = (live: LiveSession) => live.cursor.planIndex >= live.plan.length;
+export const isFinished = (live: LiveSession) => live.mode !== 'free' && live.cursor.planIndex >= live.plan.length;
 
 export function logSet(live: LiveSession, values: { reps: number; weight: number; rir: number | null }) {
   const step = live.plan[live.cursor.planIndex];
@@ -343,12 +380,21 @@ export function appendStep(live: LiveSession, name: string) {
   if (!exerciseId) return;
   if (!existing) dispatch('exercise.upsert', { exercise: { id: exerciseId, name: label } });
 
+  // En libre, sélectionner à nouveau le même exercice reprend ses séries.
+  const prior = live.plan.findIndex((step) => step.exerciseId === exerciseId);
+  if (live.mode === 'free' && prior >= 0) {
+    jumpTo(live, prior);
+    return;
+  }
   const item = blankItem(sessionGoal(state, live));
   const step: PlanStep = {
     ...item,
     exerciseId,
     exerciseName: existing?.name ?? label,
-    sets: knownSets(state, exerciseId) ?? item.sets,
+    sets: live.mode === 'free' ? 0 : knownSets(state, exerciseId) ?? item.sets,
+    ...(live.mode === 'free' ? {
+      repMin: null, repMax: null, targetRirMin: null, targetRirMax: null,
+    } : {}),
   };
   dispatch('session.append', { step, cursor: { planIndex: live.plan.length, setIndex: 1 } });
 }
@@ -388,6 +434,13 @@ export function suggestion(state: UserView, live: LiveSession): Advice {
   const step = live.plan[live.cursor.planIndex];
   if (!step) return { weight: 0, reps: 0, trend: 'hold', reason: '', from: 0 };
 
+  if (live.mode === 'free') {
+    const today = [...live.entries].reverse().find((e) => e.itemId === step.id);
+    const previous = historyOf(state, step.exerciseId)[0]?.entries.at(-1);
+    const seed = today ?? previous;
+    return { weight: seed?.weight ?? 0, reps: seed?.reps ?? 8,
+      trend: 'hold', reason: '', from: seed?.weight ?? 0 };
+  }
   const advice = advise(state, step, live.cursor.setIndex);
   if (advice) return advice;
 

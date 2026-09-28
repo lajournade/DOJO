@@ -203,3 +203,32 @@ describe('repRange et rirTarget', () => {
     expect(rirTarget(etape(item('x', { targetRirMin: null })))).toBeNull();
   });
 });
+
+describe('mode libre', () => {
+  it('reste ouvert sans plan, avance sur le même exercice et autorise sa reprise', () => {
+    const empty = { ...seanceEnCours({ plan: [] }), mode: 'free' as const };
+    expect(isFinished(empty)).toBe(false);
+    const live = { ...jouee([etape(item('dips', { sets: 1 }))], [1]), mode: 'free' as const };
+    expect(nextCursor(live)).toEqual({ planIndex: 0, setIndex: 2 });
+    expect(groupCursor(live, 0)).toEqual({ planIndex: 0, setIndex: 2 });
+    expect(stepStatus(live, 0)).toBe('started');
+  });
+
+  it('préfère la dernière série du jour à l’historique, sans progression automatique', () => {
+    const state = vue(etat({ logs: historiqueMontee() }));
+    const live = { ...jouee([etape(item('squat-barre'))], [0]), mode: 'free' as const };
+    expect(suggestion(state, live)).toMatchObject({ weight: 100, trend: 'hold' });
+    live.entries = [{ ...serie('squat-barre', 1, 77.5, 7), itemId: live.plan[0].id }];
+    expect(suggestion(state, live)).toMatchObject({ weight: 77.5, reps: 7, trend: 'hold' });
+  });
+});
+
+it('ne prend pas la séance reprise comme référence de progression', () => {
+  const plan = [etape(item('squat-barre', { sets: 3 }))];
+  const live = jouee(plan, [1], { planIndex: 0, setIndex: 2 });
+  live.resumedAt = '2026-09-18T12:00:00Z';
+  const reference = { ...live, endedAt: '2026-09-18T11:00:00Z', entries: live.entries.map((e) => ({ ...e, weight: 200, rir: 4 })) };
+  const state = vue(etat({ logs: [reference], liveSessions: { 'u-1': live } }));
+  expect(suggestion(state, live).weight).toBe(50);
+  expect(suggestion(state, live).trend).toBe('hold');
+});

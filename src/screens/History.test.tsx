@@ -12,7 +12,7 @@ vi.mock('../store/state', () => ({ useStore: () => store, dispatch: vi.fn() }));
 let container: HTMLDivElement;
 let root: Root;
 const arrow = (name: string) => container.querySelector<HTMLButtonElement>(`[aria-label="Exercice ${name}"]`)!;
-const select = () => container.querySelector<HTMLSelectElement>('#exo')!;
+const select = () => container.querySelector<HTMLSelectElement>('#history-exercise')!;
 const render = () => act(async () => root.render(<History />));
 const click = (button: HTMLElement) => act(async () => button.click());
 const choose = (id: string) => act(async () => {
@@ -87,4 +87,28 @@ it('revient au premier exercice si la sélection disparaît et gère un historiq
   store.state = { ...store.state!, logs: [journal({ date: '2026-09-01', series: [serie('traction', 1, 0, 5)] })] };
   await render();
   expect(select().value).toBe('traction');
+});
+
+it('propose seulement la dernière séance du jour avec plan et bloque si une séance est en cours', async () => {
+  const { todayIso } = await import('../store/selectors');
+  const { etape, item, seanceEnCours } = await import('../test/fabrique');
+  const plan = [etape(item('squat-barre'))];
+  const older = { ...journal({ id: 'older', date: todayIso(), startedAt: '2026-09-28T08:00:00Z', series: [] }), plan };
+  const latest = { ...older, id: 'latest', startedAt: '2026-09-28T10:00:00Z' };
+  store.state = { ...store.state!, logs: [older, latest] };
+  await click([...container.querySelectorAll('button')].find((b) => b.textContent === 'journal')!);
+  await render();
+  const buttons = () => [...container.querySelectorAll('button')].filter((b) => b.textContent === 'Reprendre la séance');
+  expect(buttons()).toHaveLength(1);
+  expect(buttons()[0].disabled).toBe(false);
+  store.state = { ...store.state!, liveSession: seanceEnCours({ plan }) };
+  await render();
+  expect(buttons()[0].disabled).toBe(true);
+  expect(container.textContent).toContain('Une séance est déjà en cours.');
+  store.state = { ...store.state!, liveSession: null, logs: [older, { ...latest, plan: undefined }] };
+  await render();
+  expect(buttons()).toHaveLength(0);
+  store.state = { ...store.state!, logs: [{ ...latest, date: '2000-01-01' }] };
+  await render();
+  expect(buttons()).toHaveLength(0);
 });

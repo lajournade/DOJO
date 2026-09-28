@@ -69,7 +69,7 @@ describe("l'historique et l'export", () => {
     });
     expect(app.texte()).toContain('· 3 séances');
 
-    await app.choisir('#exo', 'developpe-couche');
+    await app.choisir('#history-exercise', 'developpe-couche');
     await app.attendre('10×50kg');
     expect(app.texte()).toContain('· 3 séances');
   });

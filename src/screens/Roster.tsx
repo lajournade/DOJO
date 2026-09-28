@@ -10,7 +10,7 @@ import { sfx } from '../fx/audio';
 import { costume } from '../fx/sprites';
 import { navigate } from '../router';
 import { activeProgram, doneEntries, lastRun, sinceLabel, tonnage } from '../store/selectors';
-import { startSession } from '../store/session';
+import { startFreeSession, startSession } from '../store/session';
 import { useStore } from '../store/state';
 import type { Program, ProgramSession } from '../types';
 import { FightIntro } from '../components/FightIntro';
@@ -48,6 +48,7 @@ export function Roster() {
 
   const launch = (session: ProgramSession) => {
     if (!program) return;
+    if (resume) { navigate('/arena'); return; }
     sfx.select();
     setBrief({ program, session });
   };
@@ -131,6 +132,12 @@ export function Roster() {
         choisis ton combat
       </p>
 
+      <section className="pad-x mb-3">
+        <button type="button" className="bevel-sm keycap label-text w-full bg-ink-2 p-3 text-p2 text-impact"
+          onClick={() => { startFreeSession(); navigate('/arena'); }}>
+          Séance libre
+        </button>
+      </section>
       <main className="pad-x grid grid-cols-2 gap-2">
         {program?.sessions.map((session, i) => {
           const previous = lastRun(state, session.id);
@@ -179,7 +186,7 @@ export function Roster() {
 
       {!program && (
         <p className="pad-x text-p2 text-ash">
-          Aucun programme. Créez-en un depuis l'écran Programme.
+          Lancez une séance libre ou créez un programme depuis l'écran Programme.
         </p>
       )}
 

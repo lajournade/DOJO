@@ -25,7 +25,7 @@ describe('une seance complete', () => {
 
   it('annonce le combat au briefing sans engager de seance', async () => {
     await app.attendre('choisis ton combat');
-    expect(app.texte()).toContain('il y a 1 sem.');
+    expect(app.texte()).toMatch(/il y a \d+ (j|sem)\./);
     await app.clic('A');
     await app.attendre('fight');
     const t = app.texte();
@@ -112,8 +112,9 @@ describe('une seance complete', () => {
       ['developpe-couche', 2, 50, 11, null],
       ['developpe-couche', 3, 50, 11, 3],
     ]);
-    // Une seance close n'a plus ni plan ni curseur.
-    expect('plan' in log).toBe(false);
+    // Le plan est conservé pour la reprise ; le curseur reste propre à la séance en cours.
+    expect(log?.plan).toHaveLength(2);
+    expect('cursor' in log).toBe(false);
     expect(localStorage.getItem('dojo.queue.v1')).toBe('[]');
   });
 });

@@ -25,7 +25,7 @@ describe('la bibliotheque de programmes', () => {
 
   it("sans programme, le dojo renvoie a l'ecran Programme", async () => {
     await app.attendre('aucun programme');
-    expect(app.texte()).toContain("Créez-en un depuis l'écran Programme");
+    expect(app.texte()).toContain("Lancez une séance libre ou créez un programme");
     await app.clic('programme');
     await app.attendre('La bibliothèque est vide');
   });

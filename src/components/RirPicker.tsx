@@ -13,17 +13,18 @@ const CAPTION: Record<number, string> = {
 };
 
 interface Props {
+  free?: boolean;
   value: number | null;
   target: string | null;
   onChange: (value: number) => void;
 }
 
-export function RirPicker({ value, target, onChange }: Props) {
+export function RirPicker({ value, target, onChange, free = false }: Props) {
   return (
     <div className="bevel-sm bg-blood/20 px-2 py-2">
       <div className="flex items-baseline justify-between">
         <span className="label-text text-p2 text-impact">
-          rir — dernière série
+          {free ? 'rir — facultatif' : 'rir — dernière série'}
         </span>
         {target && <span className="numeric text-p1 text-ash">cible {target}</span>}
       </div>

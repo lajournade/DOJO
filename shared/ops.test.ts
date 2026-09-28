@@ -91,7 +91,7 @@ describe('les operations de seance', () => {
     applyOp(s, op('set.remove', { userId: 'u-x', index: 0 }));
   });
 
-  it('session.finish verse la seance au journal, sans plan ni curseur, et trie', () => {
+  it('session.finish verse la seance au journal, avec le plan mais sans curseur, et trie', () => {
     const s = avecSeance(2);
     s.logs.push(journal({ date: '2026-09-20', series: [] }));
     applyOp(s, op('session.finish', { userId: 'u-1', endedAt: '2026-09-18T09:00:00.000Z' }));
@@ -99,7 +99,7 @@ describe('les operations de seance', () => {
     expect(s.logs.map((l) => l.date)).toEqual(['2026-09-18', '2026-09-20']);
     const log = s.logs[0] as unknown as Record<string, unknown>;
     expect(log.endedAt).toBe('2026-09-18T09:00:00.000Z');
-    expect('plan' in log).toBe(false);
+    expect(log.plan).toHaveLength(2);
     expect('cursor' in log).toBe(false);
   });
 
@@ -218,5 +218,61 @@ describe('applyBatch', () => {
     expect(() => applyBatch(s, ops)).toThrow();
     expect(s.exercises.map((e) => e.id)).toEqual(['dips']);
     expect(s.appliedOps).toEqual(['a']);
+  });
+});
+
+
+describe('session.resume', () => {
+  function finished() {
+    const s = avecSeance(2);
+    applyOp(s, op('session.finish', { userId: 'u-1', endedAt: '2026-09-18T09:00:00Z' }));
+    return s;
+  }
+  const resume = (s: AppState, patch = {}) => op('session.resume', {
+    userId: 'u-1', logId: s.logs[0].id, date: '2026-09-18', resumedAt: '2026-09-18T10:00:00Z', ...patch,
+  });
+
+  it('restaure une copie indépendante et abandonne sans perte', () => {
+    const s = finished();
+    const original = structuredClone(s.logs[0]);
+    applyOp(s, resume(s));
+    expect(s.liveSessions['u-1']).toMatchObject({ id: original.id, endedAt: null, cursor: { planIndex: 0, setIndex: 3 } });
+    s.liveSessions['u-1'].plan[0].sets++;
+    s.liveSessions['u-1'].entries[0].weight = 999;
+    applyOp(s, op('session.abort', { userId: 'u-1' }));
+    expect(s.logs[0]).toEqual(original);
+  });
+
+  it('refuse les anciens journaux, les autres jours et joueurs et une séance occupée', () => {
+    for (const patch of [{ date: '2026-09-19' }, { userId: 'u-2' }, { logId: 'absent' }]) {
+      const s = finished();
+      applyOp(s, resume(s, patch));
+      expect(s.liveSessions).toEqual({});
+    }
+    const old = finished();
+    delete old.logs[0].plan;
+    applyOp(old, resume(old));
+    expect(old.liveSessions).toEqual({});
+    const busy = finished();
+    const current = seanceEnCours({ plan: [] });
+    busy.liveSessions['u-1'] = current;
+    applyOp(busy, resume(busy));
+    expect(busy.liveSessions['u-1']).toBe(current);
+    const newer = finished();
+    newer.logs.push({ ...newer.logs[0], id: 'newer', startedAt: '2026-09-18T12:00:00Z' });
+    applyOp(newer, resume(newer));
+    expect(newer.liveSessions).toEqual({});
+  });
+
+  it('reprend un superset à la première série manquante et clôture sans doublon', () => {
+    const s = finished();
+    s.logs[0].plan!.forEach((step) => { step.supersetGroup = 'A'; });
+    const action = resume(s);
+    applyBatch(s, [action, action]);
+    expect(s.liveSessions['u-1'].cursor).toEqual({ planIndex: 1, setIndex: 1 });
+    applyOp(s, op('session.finish', { userId: 'u-1', endedAt: '2026-09-18T11:00:00Z' }));
+    expect(s.logs).toHaveLength(1);
+    expect(s.logs[0].endedAt).toBe('2026-09-18T11:00:00Z');
+    expect(s.logs[0]).not.toHaveProperty('resumedAt');
   });
 });

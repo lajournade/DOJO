@@ -10,7 +10,45 @@
  */
 const APPLIED_HISTORY = 400;
 
+/** La date locale est capturée par le client : le rejeu hors ligne reste déterministe. */
+export function latestTodayLog(logs, userId, date) {
+  return logs.filter((log) => log.userId === userId && log.date === date)
+    .sort((a, b) => (b.startedAt ?? '').localeCompare(a.startedAt ?? ''))[0];
+}
+
 const handlers = {
+  'session.resume': (s, { userId, logId, date, resumedAt }) => {
+    const log = latestTodayLog(s.logs, userId, date);
+    if (s.liveSessions[userId] || !log || log.id !== logId || !log.plan?.length) return;
+    const live = JSON.parse(JSON.stringify(log));
+    live.endedAt = null;
+    live.resumedAt = resumedAt;
+    live.cursor = { planIndex: live.plan.length, setIndex: 1 };
+    if (live.mode === 'free') {
+      const planIndex = live.plan.length - 1;
+      const step = live.plan[planIndex];
+      live.cursor = { planIndex, setIndex: live.entries.filter((e) => e.itemId === step.id).length + 1 };
+      s.liveSessions[userId] = live;
+      return;
+    }
+    // Parcours des groupes en rondes, y compris les supersets de tailles inégales.
+    outer: for (let first = 0; first < live.plan.length;) {
+      let last = first;
+      const group = live.plan[first].supersetGroup;
+      while (group && last + 1 < live.plan.length && live.plan[last + 1].supersetGroup === group) last++;
+      const rounds = Math.max(...live.plan.slice(first, last + 1).map((step) => step.sets));
+      for (let round = 1; round <= rounds; round++) {
+        for (let i = first; i <= last; i++) {
+          if (round <= live.plan[i].sets && !live.entries.some((entry) => entry.itemId === live.plan[i].id && entry.setIndex === round)) {
+            live.cursor = { planIndex: i, setIndex: round };
+            break outer;
+          }
+        }
+      }
+      first = last + 1;
+    }
+    s.liveSessions[userId] = live;
+  },
   /** Demarre une seance : le client envoie l'instantane complet (plan fige au demarrage). */
   'session.start': (s, { userId, session }) => {
     s.liveSessions[userId] = session;
@@ -58,6 +96,10 @@ const handlers = {
     const live = s.liveSessions[userId];
     if (!live) return;
     live.entries.push(entry);
+    if (live.mode === 'free') {
+      const step = live.plan.find((s) => s.id === entry.itemId);
+      if (step) step.sets = live.entries.filter((e) => e.itemId === step.id).length;
+    }
     if (cursor) live.cursor = cursor;
   },
 
@@ -69,7 +111,13 @@ const handlers = {
 
   'set.remove': (s, { userId, index }) => {
     const live = s.liveSessions[userId];
-    if (live) live.entries.splice(index, 1);
+    if (live) {
+      const [entry] = live.entries.splice(index, 1);
+      if (live.mode === 'free' && entry) {
+        const step = live.plan.find((s) => s.id === entry.itemId);
+        if (step) step.sets = live.entries.filter((e) => e.itemId === step.id).length;
+      }
+    }
   },
 
   /** Cloture : la seance en cours rejoint le journal. */
@@ -78,7 +126,7 @@ const handlers = {
     if (!live) return;
     delete s.liveSessions[userId];
     if (!live.entries.length) return;
-    const { plan, cursor, ...log } = live;
+    const { cursor, resumedAt, ...log } = live;
     log.endedAt = endedAt;
     s.logs = s.logs.filter((l) => l.id !== log.id);
     s.logs.push(log);

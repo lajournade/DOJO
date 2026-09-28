@@ -111,6 +111,7 @@ function transpose(step: PlanStep, ref: SetEntry, previousWeight: number): Advic
  * comprise, sans quoi l'echauffement d'un cycle servirait dans l'autre.
  */
 export function advise(state: UserView, step: PlanStep, setIndex: number): Advice | null {
+  if (state.liveSession?.resumedAt) state = { ...state, logs: state.logs.filter((log) => log.id !== state.liveSession?.id) };
   const previous = lastSet(state, step.exerciseId, setIndex);
   if (!previous || previous.weight === null || previous.weight === undefined) return null;
 
@@ -199,6 +200,7 @@ export interface Plateau {
  * `referenceSet` l'ecarte, et elle ne rompt donc pas la serie.
  */
 export function plateau(state: UserView, step: PlanStep): Plateau | null {
+  if (state.liveSession?.resumedAt) state = { ...state, logs: state.logs.filter((log) => log.id !== state.liveSession?.id) };
   const refs = historyOf(state, step.exerciseId)
     .map((row) => referenceSet(row.entries))
     .filter((e): e is SetEntry => e !== null && e.weight !== null);

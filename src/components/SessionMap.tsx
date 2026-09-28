@@ -18,12 +18,13 @@ interface Props {
   onPick: (planIndex: number) => void;
   onAdd: (name: string) => void;
   onClose: () => void;
+  adding?: boolean;
 }
 
-export function SessionMap({ live, names, onPick, onAdd, onClose }: Props) {
+export function SessionMap({ live, names, onPick, onAdd, onClose, adding = false }: Props) {
   const remaining = live.plan.filter((_, i) => stepStatus(live, i) !== 'done').length;
   // La saisie de l'exercice a ajouter : `null` tant que la ligne reste un bouton.
-  const [draft, setDraft] = useState<string | null>(null);
+  const [draft, setDraft] = useState<string | null>(adding ? '' : null);
 
   return (
     <motion.div
@@ -46,7 +47,7 @@ export function SessionMap({ live, names, onPick, onAdd, onClose }: Props) {
       <div className="pad-x flex items-baseline justify-between gap-2 py-2">
         <p className="label-text text-p2 text-bone">séance</p>
         <p className="numeric text-p2 text-ash">
-          {remaining} {remaining > 1 ? 'restants' : 'restant'} / {live.plan.length}
+          {live.mode === 'free' ? `${live.plan.length} exercices` : `${remaining} ${remaining > 1 ? 'restants' : 'restant'} / ${live.plan.length}`}
         </p>
       </div>
 
@@ -98,7 +99,7 @@ export function SessionMap({ live, names, onPick, onAdd, onClose }: Props) {
                   )}
                 </div>
                 <p className="numeric mt-0.5 pl-6 text-p2 text-ash">
-                  {done}/{step.sets} séries
+                  {live.mode === 'free' ? `${done} séries réalisées` : `${done}/${step.sets} séries`}
                 </p>
               </motion.button>
             );

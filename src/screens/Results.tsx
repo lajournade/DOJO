@@ -11,6 +11,7 @@ import type { SessionLog, UserView } from '../types';
 
 /** Rang de la seance, compare a la fois precedente sur la meme seance du programme. */
 function grade(state: UserView, log: SessionLog): { rank: string; delta: number | null } {
+  if (log.mode === 'free') return { rank: 'A', delta: null };
   const previous = recentLogs(state).find((l) => l.sessionId === log.sessionId && l.id !== log.id);
   const load = tonnage(doneEntries(log.entries));
   if (!previous) return { rank: 'A', delta: null };

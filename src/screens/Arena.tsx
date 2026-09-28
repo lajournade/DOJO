@@ -34,6 +34,7 @@ import {
   addSet,
   appendStep,
   finishSession,
+  extendStep,
   isFinished,
   jumpTo,
   logSet,
@@ -59,6 +60,7 @@ const STRIKE_MS = 220;
  */
 interface Scratch {
   liveId: string;
+  resumedAt?: string;
   /** La serie que le brouillon decrivait : le curseur a pu bouger depuis un autre appareil. */
   cursorKey: string;
   weight: number;
@@ -77,12 +79,15 @@ const scratches = new Map<string, Scratch>();
 export function Arena() {
   const { state, loaded, status, pending, users, userId } = useStore();
   const live = state.liveSession;
+  const free = live?.mode === 'free';
+  const [adding, setAdding] = useState(false);
+  const [firstName, setFirstName] = useState('');
 
   // Le brouillon laisse par ce joueur, s'il parle bien de cette seance. Lu au montage
   // seulement : c'est un point de depart, pas une source.
   const [saved] = useState(() => {
     const s = userId ? scratches.get(userId) : undefined;
-    return s && live && s.liveId === live.id ? s : null;
+    return s && live && s.liveId === live.id && s.resumedAt === live.resumedAt ? s : null;
   });
 
   const [weight, setWeight] = useState(saved?.weight ?? 0);
@@ -129,7 +134,7 @@ export function Arena() {
   const end = () => {
     ended.current = true;
     finishSession();
-    navigate('/results', { replace: true });
+    navigate(live?.entries.length ? '/results' : '/', { replace: true });
   };
 
   // Pas de seance en cours : rien a faire ici — sauf juste apres une cloture.
@@ -139,7 +144,7 @@ export function Arena() {
 
   // Derniere serie du dernier exercice validee : le combat est fini.
   useEffect(() => {
-    if (live && isFinished(live) && !ended.current) end();
+    if (live && isFinished(live) && !live.resumedAt && !ended.current) end();
   });
 
   // Un exercice n'a qu'une annonce, a sa premiere serie : la montee en charge, ou le
@@ -180,7 +185,7 @@ export function Arena() {
     setDeloaded(cut !== undefined);
 
     // Le meme palier que ci-dessous, relu ici : `advice` ne sera a jour qu'au rendu suivant.
-    const stallAtCursor = s.trend === 'hold' ? plateau(state, step) : null;
+    const stallAtCursor = !free && s.trend === 'hold' ? plateau(state, step) : null;
     const worthAnnouncing =
       (s.trend !== 'hold' || (stallAtCursor !== null && cut === undefined)) &&
       !announced.current.has(stepKey);
@@ -197,8 +202,8 @@ export function Arena() {
   const record = useMemo(() => (step ? bestWeight(state, step.exerciseId) : 0), [state, step]);
   // Le dojo propose deja une montee : quoi qu'en dise l'historique, rien n'est bloque.
   const stall = useMemo(
-    () => (step && advice?.trend === 'hold' ? plateau(state, step) : null),
-    [state, step, advice],
+    () => (!free && step && advice?.trend === 'hold' ? plateau(state, step) : null),
+    [state, step, advice, free],
   );
 
   // Le brouillon, tenu a jour a chaque rendu : ce que le joueur suivant laissera intact.
@@ -206,6 +211,7 @@ export function Arena() {
     if (!live || !userId) return;
     scratches.set(userId, {
       liveId: live.id,
+      resumedAt: live.resumedAt,
       cursorKey,
       weight,
       reps,
@@ -223,7 +229,47 @@ export function Arena() {
   const strikeTimer = useRef<number | undefined>(undefined);
   useEffect(() => () => clearTimeout(strikeTimer.current), []);
 
-  if (!live || !step) return null;
+  if (!live) return null;
+  if (free && !step) return (
+    <div className="pad-top pad-x min-h-dvh bg-ink">
+      <header className="flex items-center justify-between gap-2 py-3">
+        <Small onClick={() => navigate('/')}>← accueil</Small>
+        <QuickSwitch scale={1} frame={breath} />
+        <RoundClock seconds={elapsed} />
+      </header>
+      <h1 className="label-text py-4 text-p3 text-impact">Séance libre</h1>
+      <p className="label-text mb-3 text-p2 text-ash">Ajoutez votre premier exercice, puis vos séries au fur et à mesure.</p>
+      <ExerciseInput value={firstName} names={state.exercises.map((e) => e.name)}
+        onChange={setFirstName} onCancel={() => setFirstName('')}
+        onSubmit={() => appendStep(live, firstName)} />
+      <div className="mt-4"><Small onClick={end}>terminer</Small></div>
+    </div>
+  );
+  if (!step && live.resumedAt) return (
+    <div className="min-h-dvh bg-ink pad-top pad-x pad-bottom">
+      <Small onClick={() => navigate('/history')}>← historique</Small>
+      <h1 className="fight-text mt-4 text-p3 text-bone">Compléter la séance</h1>
+      <p className="my-3 text-p2 text-ash">{live.programCode} · {live.entries.length} séries réalisées</p>
+      <div className="grid gap-2">
+        {live.plan.map((item, i) => (
+          <Small key={item.id} onClick={() => extendStep(live, i)}>+ série · {item.exerciseName}</Small>
+        ))}
+        {draftName === null ? <Small onClick={() => setDraftName('')}>+ exercice</Small> : (
+          <ExerciseInput value={draftName} names={state.exercises.map((e) => e.name)}
+            onChange={setDraftName} onCancel={() => setDraftName(null)}
+            onSubmit={() => { appendStep(live, draftName); setDraftName(null); }} />
+        )}
+        <Small onClick={end}>terminer</Small>
+        <Small onClick={() => {
+          if (confirm('Abandonner les ajouts et conserver la séance précédente ?')) {
+            abortSession();
+            navigate('/history', { replace: true });
+          }
+        }}>abandonner la reprise</Small>
+      </div>
+    </div>
+  );
+  if (!step) return null;
 
   const done = live.entries.length;
   const total = totalSets(live.plan);
@@ -268,7 +314,7 @@ export function Arena() {
     setHits((h) => [...h, hit]);
     setTimeout(() => setHits((h) => h.filter((x) => x.id !== hit.id)), 900);
 
-    logSet(live, { reps, weight, rir: isLastSet ? rir : null });
+    logSet(live, { reps, weight, rir: free || isLastSet ? rir : null });
   };
 
   return (
@@ -299,6 +345,7 @@ export function Arena() {
       {showMap && (
         <SessionMap
           live={live}
+          adding={adding}
           names={state.exercises.map((e) => e.name)}
           onClose={() => setShowMap(false)}
           onPick={(i) => {
@@ -345,7 +392,7 @@ export function Arena() {
           {/* La seance entiere, et le saut vers un autre exercice quand la machine est prise. */}
           <button
             type="button"
-            onClick={() => setShowMap(true)}
+            onClick={() => { setAdding(false); setShowMap(true); }}
             className="tap-target fight-text text-p1 tracking-[0.2em] text-ash"
           >
             carte →
@@ -360,10 +407,11 @@ export function Arena() {
       <div className="pad-x flex items-center gap-2 border-b-2 border-line pb-2">
         <QuickSwitch
           scale={3}
-          frame={(total && done * 2 >= total ? HERO_FRAME.tired : HERO_FRAME.fresh) + breath}
+          frame={(!free && total && done * 2 >= total ? HERO_FRAME.tired : HERO_FRAME.fresh) + breath}
           flash={striking}
         />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
+          {free ? <p className="label-text text-p2 text-impact">Séance libre · {done} séries réalisées</p> : <>
           <HealthBar
             name={`exo ${live.cursor.planIndex + 1}/${live.plan.length}`}
             total={step.sets}
@@ -372,6 +420,7 @@ export function Arena() {
             flash={flash}
           />
           <HealthBar name={live.programCode} total={total} done={done} side="left" flash={flash} />
+          </>}
         </div>
         <RoundClock seconds={elapsed} />
       </div>
@@ -421,9 +470,9 @@ export function Arena() {
             {step.supersetGroup && <Tag tone="impact">superset {step.supersetGroup}</Tag>}
             {upcoming && <Tag>puis {upcoming.exerciseName}</Tag>}
             <Tag tone="blood">
-              série {live.cursor.setIndex}/{step.sets}
+              série {live.cursor.setIndex}{!free && `/${step.sets}`}
             </Tag>
-            <Tag>{repRange(step)} reps</Tag>
+            {!free && <Tag>{repRange(step)} reps</Tag>}
             {target && <Tag>rir {target}</Tag>}
             {record > 0 && <Tag>record {record} kg</Tag>}
             {/* Puis une simple trace sur les series suivantes. */}
@@ -499,17 +548,19 @@ export function Arena() {
             max={100}
             decimals={0}
             tone="impact"
-            hint={`cible ${repRange(step)}`}
+            hint={free ? undefined : `cible ${repRange(step)}`}
             onChange={setReps}
           />
-          {isLastSet && <RirPicker value={rir} target={target} onChange={setRir} />}
+          {(free || isLastSet) && <RirPicker free={free} value={rir} target={target} onChange={setRir} />}
         </section>
 
         {/* Actions secondaires */}
         <section className="pad-x mt-3 flex flex-wrap gap-1.5">
-          <Small onClick={() => addSet(live)}>+ série</Small>
+          {free ? (
+            <Small onClick={() => { setAdding(true); setShowMap(true); }}>Ajouter un exercice</Small>
+          ) : <Small onClick={() => addSet(live)}>+ série</Small>}
           {/* La machine ne se liberera pas : un autre exercice a la place, pour cette seance. */}
-          {draftName === null && (
+          {!free && draftName === null && (
             <Small onClick={() => setDraftName('')}>remplacer</Small>
           )}
           {live.entries.length > 0 && (
@@ -537,7 +588,7 @@ export function Arena() {
           <span className="notch relative flex h-[70px] w-full items-center justify-center overflow-hidden bg-blood">
             <span className="speedlines absolute inset-0 opacity-40" />
             <span className="fight-text fight-shadow relative text-p3 text-bone">
-              {next.planIndex >= live.plan.length ? 'finish him' : 'impact'}
+              {free ? 'valider la série' : next.planIndex >= live.plan.length && !live.resumedAt ? 'finish him' : 'impact'}
             </span>
           </span>
         </button>

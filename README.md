@@ -182,6 +182,21 @@ famille du programme, à corriger au compteur.
 Choisir un programme le pose comme **programme en cours** — celui du joueur, pas celui du dojo : deux
 personnes peuvent suivre le même sans partager une seule charge.
 
+### Séance libre
+
+Depuis l’accueil, **Séance libre** démarre le chrono sans programme. Ajoutez un exercice
+avec le catalogue ou un nouveau nom, puis validez les séries une par une. La première
+saisie reprend la dernière série connue du joueur (sinon 0 kg et 8 répétitions), puis
+chaque série reprend les valeurs de la précédente. Aucune progression automatique ni
+nombre de séries prévu ; le RIR est facultatif à chaque validation.
+
+**Ajouter un exercice** poursuit la séance ; la **carte** permet de revenir à un exercice
+et de continuer sa numérotation. Sélectionner à nouveau le même nom le reprend aussi.
+Seul **terminer** clôt la séance : elle rejoint l’historique et le CSV sous `LIBRE`,
+et nourrit l’historique de chaque exercice. Une séance vide ne crée aucun journal.
+La reprise et la synchronisation fonctionnent comme pour une séance programmée ;
+une séance déjà en cours est reprise au lieu d’être remplacée.
+
 ### Habillage
 
 Tout le dessin tient sur une grille de pixels : deux polices bitmap (Press Start 2P pour

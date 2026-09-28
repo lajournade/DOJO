@@ -4,6 +4,8 @@
  *  — Exercice : la progression d'un mouvement dans le temps.
  */
 import { useMemo, useState } from 'react';
+import { latestTodayLog } from '../../shared/ops.mjs';
+import { resumeSession } from '../store/session';
 import { ExerciseHistory } from '../components/ExerciseHistory';
 import { useHold } from '../fx/hold';
 import { navigate } from '../router';
@@ -13,6 +15,7 @@ import {
   recentLogs,
   sinceLabel,
   tonnage,
+  todayIso,
 } from '../store/selectors';
 import { dispatch, useStore } from '../store/state';
 import type { SessionLog, SetEntry } from '../types';
@@ -63,6 +66,8 @@ export function History() {
 }
 
 function Journal({ logs }: { logs: SessionLog[] }) {
+  const { state } = useStore();
+  const latest = latestTodayLog(logs, state.user.id, todayIso());
   const [open, setOpen] = useState<string | null>(logs[0]?.id ?? null);
 
   if (!logs.length) {
@@ -75,6 +80,8 @@ function Journal({ logs }: { logs: SessionLog[] }) {
         <LogCard
           key={log.id}
           log={log}
+          resumable={latest?.id === log.id && !!log.plan?.length}
+          busy={!!state.liveSession}
           expanded={open === log.id}
           onToggle={() => setOpen(open === log.id ? null : log.id)}
         />
@@ -94,10 +101,14 @@ function Journal({ logs }: { logs: SessionLog[] }) {
 function LogCard({
   log,
   expanded,
+  resumable,
+  busy,
   onToggle,
 }: {
   log: SessionLog;
   expanded: boolean;
+  resumable: boolean;
+  busy: boolean;
   onToggle: () => void;
 }) {
   const hold = useHold(() => {
@@ -135,6 +146,16 @@ function LogCard({
         <div aria-hidden {...hold.gauge} />
       </div>
 
+      {resumable && (
+        <div className="px-3 pb-3">
+          <button type="button" disabled={busy}
+            onClick={() => { if (resumeSession(log.id)) navigate('/arena'); }}
+            className="bevel-sm keycap fight-text w-full bg-blood py-3 text-p2 text-bone disabled:opacity-50">
+            Reprendre la séance
+          </button>
+          {busy && <p className="mt-2 text-p2 text-ash">Une séance est déjà en cours.</p>}
+        </div>
+      )}
       {expanded && <LogDetail entries={log.entries} />}
     </section>
   );
