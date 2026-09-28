@@ -41,7 +41,7 @@ export function ExerciseHistory({ initialExerciseId = '' }: { initialExerciseId?
         .map(({ log, entries }) => ({
           date: log.date,
           label: formatDate(log.date).replace(/\.$/, ''),
-          value: Math.max(0, ...entries.map((entry) => entry.weight ?? 0)),
+          value: Math.max(0, ...entries.filter((entry) => entry.reps !== 0).map((entry) => entry.weight ?? 0)),
         }))
         .filter((point) => point.value > 0),
     [rows],
@@ -92,7 +92,7 @@ export function ExerciseHistory({ initialExerciseId = '' }: { initialExerciseId?
             </div>
             <p className="numeric mt-1 text-p2 text-ash">
               {entries
-                .map((entry) => `${entry.reps ?? '—'}×${entry.weight ?? '—'}kg${entry.rir !== null ? ` (rir ${entry.rir})` : ''}`)
+                .map((entry) => entry.reps === 0 ? 'abandonné' : `${entry.reps ?? '—'}×${entry.weight ?? '—'}kg${entry.rir !== null ? ` (rir ${entry.rir})` : ''}`)
                 .join('  ·  ')}
             </p>
           </div>

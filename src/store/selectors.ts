@@ -13,7 +13,7 @@ export const tonnage = (entries: SetEntry[]) =>
   entries.reduce((sum, e) => sum + (e.weight ?? 0) * (e.reps ?? 0), 0);
 
 export const doneEntries = (entries: SetEntry[]) =>
-  entries.filter((e) => e.reps !== null && e.reps !== undefined);
+  entries.filter((e) => (e.reps ?? 0) > 0);
 
 /** Les seances du journal, de la plus recente a la plus ancienne. */
 export const recentLogs = (s: UserView) =>
@@ -33,10 +33,10 @@ export function historyOf(s: UserView, exerciseId: string): { log: SessionLog; e
  */
 export function lastSet(s: UserView, exerciseId: string, setIndex: number): SetEntry | null {
   for (const { entries } of historyOf(s, exerciseId)) {
-    const exact = entries.find((e) => e.setIndex === setIndex && e.weight !== null);
+    const exact = entries.find((e) => e.setIndex === setIndex && e.weight !== null && e.reps !== 0);
     if (exact) return exact;
     // Moins de series la derniere fois : on retombe sur la derniere renseignee.
-    const fallback = [...entries].reverse().find((e) => e.weight !== null);
+    const fallback = [...entries].reverse().find((e) => e.weight !== null && e.reps !== 0);
     if (fallback) return fallback;
   }
   return null;
@@ -44,7 +44,7 @@ export function lastSet(s: UserView, exerciseId: string, setIndex: number): SetE
 
 /** Le nombre de series de la derniere seance ou l'exercice a ete joue, `null` s'il ne l'a jamais ete. */
 export function knownSets(s: UserView, exerciseId: string): number | null {
-  const last = historyOf(s, exerciseId)[0];
+  const last = historyOf(s, exerciseId).map((row) => ({ ...row, entries: row.entries.filter((e) => e.reps !== 0) })).find((row) => row.entries.length);
   if (!last) return null;
   return Math.max(...last.entries.map((e) => e.setIndex));
 }
@@ -54,7 +54,7 @@ export function bestWeight(s: UserView, exerciseId: string): number {
   let best = 0;
   for (const log of s.logs) {
     for (const e of log.entries) {
-      if (e.exerciseId === exerciseId && (e.weight ?? 0) > best) best = e.weight ?? 0;
+      if (e.reps !== 0 && e.exerciseId === exerciseId && (e.weight ?? 0) > best) best = e.weight ?? 0;
     }
   }
   return best;

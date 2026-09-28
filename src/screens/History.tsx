@@ -1,3 +1,4 @@
+import { abandonedCount } from '../../shared/entries.mjs';
 /**
  * L'equivalent de l'onglet Suivit 2, en deux lectures :
  *  — Journal : les seances dans l'ordre, dépliables jusqu'au detail des series ;
@@ -139,6 +140,9 @@ function LogCard({
               {Math.round(tonnage(entries)).toLocaleString('fr-FR')} kg
             </p>
             <p className="text-p2 text-ash">{entries.length} séries</p>
+            {abandonedCount(log.entries) > 0 && <p className="text-p2 text-ash">
+              {abandonedCount(log.entries)} exercice(s) abandonné(s)
+            </p>}
           </div>
         </button>
 
@@ -188,7 +192,7 @@ function LogDetail({ entries }: { entries: SetEntry[] }) {
               {group.sets.map((s, j) => (
                 <tr key={j} className="border-t border-line/60">
                   <td className="py-1 text-ash">{s.setIndex}</td>
-                  <td className="py-1 text-right text-bone">{s.reps ?? '—'}</td>
+                  <td className="py-1 text-right text-bone">{s.reps === 0 ? 'abandonné' : s.reps ?? '—'}</td>
                   <td className="py-1 text-right text-bone">
                     {s.weight === null || s.weight === undefined ? '—' : `${s.weight} kg`}
                   </td>

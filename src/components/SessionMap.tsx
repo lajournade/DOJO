@@ -22,7 +22,7 @@ interface Props {
 }
 
 export function SessionMap({ live, names, onPick, onAdd, onClose, adding = false }: Props) {
-  const remaining = live.plan.filter((_, i) => stepStatus(live, i) !== 'done').length;
+  const remaining = live.plan.filter((_, i) => !['done', 'abandoned'].includes(stepStatus(live, i))).length;
   // La saisie de l'exercice a ajouter : `null` tant que la ligne reste un bouton.
   const [draft, setDraft] = useState<string | null>(adding ? '' : null);
 
@@ -62,10 +62,10 @@ export function SessionMap({ live, names, onPick, onAdd, onClose, adding = false
               <motion.button
                 key={step.id}
                 type="button"
-                disabled={status === 'done'}
+                disabled={['done', 'abandoned'].includes(status)}
                 onClick={() => onPick(i)}
                 initial={{ opacity: 0, x: 16 }}
-                animate={{ opacity: status === 'done' ? 0.6 : 1, x: 0 }}
+                animate={{ opacity: ['done', 'abandoned'].includes(status) ? 0.6 : 1, x: 0 }}
                 transition={{ delay: i * 0.04, duration: 0.25 }}
                 className={`bevel-sm p-2.5 text-left ${
                   current ? 'bg-ink-3' : 'bg-ink-2'
@@ -86,7 +86,9 @@ export function SessionMap({ live, names, onPick, onAdd, onClose, adding = false
                       superset {step.supersetGroup}
                     </span>
                   )}
-                  {current ? (
+                  {status === 'abandoned' ? (
+                    <span className="label-text text-p2 text-ash">abandonné</span>
+                  ) : current ? (
                     <span className="bevel-sm label-text shrink-0 bg-impact px-1.5 text-p2 leading-6 text-line">
                       en cours
                     </span>

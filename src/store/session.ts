@@ -13,6 +13,7 @@ import type {
   SetEntry,
   UserView,
 } from '../types';
+import { entryMatchesStep, isAbandoned } from '../../shared/entries.mjs';
 import { dispatch, getView } from './state';
 import { blankItem, findExercise, slug } from './programs';
 import { exerciseName, historyOf, knownSets, todayIso, typicalMinutes } from './selectors';
@@ -168,6 +169,7 @@ export function resumeSession(logId: string): boolean {
 
 /** Ajoute une ronde à un exercice terminé, puis reprend son groupe. */
 export function extendStep(live: LiveSession, planIndex: number) {
+  if (isAbandoned(live.entries, live.plan[planIndex])) return;
   addSet({ ...live, cursor: { planIndex, setIndex: 1 } });
   const updated = getView().liveSession;
   if (updated) jumpTo(updated, planIndex);
@@ -191,10 +193,11 @@ export function supersetRange(plan: PlanStep[], planIndex: number): [number, num
 
 /** Series deja validees sur un exercice de la seance. */
 export const doneSets = (live: LiveSession, planIndex: number) =>
-  live.entries.filter((e) => e.itemId === live.plan[planIndex].id).length;
+  live.entries.filter((e) => entryMatchesStep(e, live.plan[planIndex]) && (e.reps ?? 0) > 0).length;
 
 /** Ou en est un exercice : rien, entame, ou toutes ses series au journal. */
-export function stepStatus(live: LiveSession, planIndex: number): 'todo' | 'started' | 'done' {
+export function stepStatus(live: LiveSession, planIndex: number): 'todo' | 'started' | 'done' | 'abandoned' {
+  if (isAbandoned(live.entries, live.plan[planIndex])) return 'abandoned';
   const done = doneSets(live, planIndex);
   if (live.mode === 'free') return done > 0 ? 'started' : 'todo';
   if (done >= live.plan[planIndex].sets) return 'done';
@@ -211,12 +214,13 @@ export function stepStatus(live: LiveSession, planIndex: number): 'todo' | 'star
  * `null` quand le groupe est entierement joue.
  */
 export function groupCursor(live: LiveSession, planIndex: number): Cursor | null {
-  if (live.mode === 'free') return { planIndex, setIndex: doneSets(live, planIndex) + 1 };
+  if (live.mode === 'free') return isAbandoned(live.entries, live.plan[planIndex]) ? null
+    : { planIndex, setIndex: Math.max(0, ...live.entries.filter((e) => entryMatchesStep(e, live.plan[planIndex])).map((e) => e.setIndex)) + 1 };
   const [first, last] = supersetRange(live.plan, planIndex);
   const rounds = Math.max(...live.plan.slice(first, last + 1).map((s) => s.sets));
   for (let round = 1; round <= rounds; round += 1) {
     for (let i = first; i <= last; i += 1) {
-      if (round <= live.plan[i].sets && doneSets(live, i) < round) return { planIndex: i, setIndex: round };
+      if (!isAbandoned(live.entries, live.plan[i]) && round <= live.plan[i].sets && !live.entries.some((e) => entryMatchesStep(e, live.plan[i]) && e.setIndex === round)) return { planIndex: i, setIndex: round };
     }
   }
   return null;
@@ -245,16 +249,21 @@ export function resumeCursor(live: LiveSession, from: number): Cursor {
  * suivant : l'ordre prevu ne bouge jamais, et ce qu'on a saute pour une machine
  * prise revient de lui-meme des que ce qu'on jouait a la place est termine.
  */
-export function nextCursor(live: LiveSession): Cursor {
+export function nextCursor(live: LiveSession, reps: number | null = null): Cursor {
   const { planIndex, setIndex } = live.cursor;
-  if (live.mode === 'free') return { planIndex, setIndex: setIndex + 1 };
+  if (live.mode === 'free') {
+    if (reps !== 0) return { planIndex, setIndex: setIndex + 1 };
+    const remaining = live.plan.findIndex((step, i) => i !== planIndex && !isAbandoned(live.entries, step));
+    return remaining < 0 ? { planIndex: live.plan.length, setIndex: 1 } : groupCursor(live, remaining)!;
+  }
   const step = live.plan[planIndex];
   if (!step) return { planIndex: planIndex + 1, setIndex: 1 };
 
+  const updated = withCurrentDone(live, reps);
   const [first, last] = supersetRange(live.plan, planIndex);
   if (first === last) {
-    if (setIndex < step.sets) return { planIndex, setIndex: setIndex + 1 };
-    return resumeCursor(withCurrentDone(live), 0);
+    if (reps !== 0 && setIndex < step.sets) return { planIndex, setIndex: setIndex + 1 };
+    return resumeCursor(updated, 0);
   }
 
   const rounds = Math.max(...live.plan.slice(first, last + 1).map((s) => s.sets));
@@ -265,9 +274,9 @@ export function nextCursor(live: LiveSession): Cursor {
       round += 1;
       continue;
     }
-    if (round <= live.plan[i].sets) return { planIndex: i, setIndex: round };
+    if (!isAbandoned(updated.entries, live.plan[i]) && round <= live.plan[i].sets && !updated.entries.some((e) => entryMatchesStep(e, live.plan[i]) && e.setIndex === round)) return { planIndex: i, setIndex: round };
   }
-  return resumeCursor(withCurrentDone(live), 0);
+  return resumeCursor(updated, 0);
 }
 
 /**
@@ -276,14 +285,14 @@ export function nextCursor(live: LiveSession): Cursor {
  * valider — : sans cela, le groupe qu'on termine passerait encore pour inacheve et
  * le curseur y resterait une serie de trop.
  */
-function withCurrentDone(live: LiveSession): LiveSession {
+function withCurrentDone(live: LiveSession, reps: number | null): LiveSession {
   const step = live.plan[live.cursor.planIndex];
   const pending: SetEntry = {
     itemId: step.id,
     exerciseId: step.exerciseId,
     exerciseName: step.exerciseName,
     setIndex: live.cursor.setIndex,
-    reps: null,
+    reps,
     weight: null,
     rir: null,
   };
@@ -303,7 +312,7 @@ export function logSet(live: LiveSession, values: { reps: number; weight: number
     weight: values.weight,
     rir: values.rir,
   };
-  dispatch('set.log', { entry, cursor: nextCursor(live) });
+  dispatch('set.log', { entry, cursor: nextCursor(live, values.reps) });
 }
 
 export function moveTo(planIndex: number, setIndex = 1) {
@@ -381,7 +390,7 @@ export function appendStep(live: LiveSession, name: string) {
   if (!existing) dispatch('exercise.upsert', { exercise: { id: exerciseId, name: label } });
 
   // En libre, sélectionner à nouveau le même exercice reprend ses séries.
-  const prior = live.plan.findIndex((step) => step.exerciseId === exerciseId);
+  const prior = live.plan.findIndex((step) => step.exerciseId === exerciseId && !isAbandoned(live.entries, step));
   if (live.mode === 'free' && prior >= 0) {
     jumpTo(live, prior);
     return;
@@ -435,8 +444,8 @@ export function suggestion(state: UserView, live: LiveSession): Advice {
   if (!step) return { weight: 0, reps: 0, trend: 'hold', reason: '', from: 0 };
 
   if (live.mode === 'free') {
-    const today = [...live.entries].reverse().find((e) => e.itemId === step.id);
-    const previous = historyOf(state, step.exerciseId)[0]?.entries.at(-1);
+    const today = [...live.entries].reverse().find((e) => e.itemId === step.id && e.reps !== 0);
+    const previous = historyOf(state, step.exerciseId).flatMap(({ entries }) => [...entries].reverse()).find((e) => e.reps !== 0);
     const seed = today ?? previous;
     return { weight: seed?.weight ?? 0, reps: seed?.reps ?? 8,
       trend: 'hold', reason: '', from: seed?.weight ?? 0 };
@@ -446,7 +455,7 @@ export function suggestion(state: UserView, live: LiveSession): Advice {
 
   // Jamais fait : on reprend ce qui vient d'etre porte sur cet exercice aujourd'hui —
   // ou, s'il vient de remplacer un autre, ce que le compteur affichait a ce moment-la.
-  const today = [...live.entries].reverse().find((e) => e.itemId === step.id);
+  const today = [...live.entries].reverse().find((e) => e.itemId === step.id && e.reps !== 0);
   const seed = today ?? step.carry ?? null;
   return {
     weight: seed?.weight ?? 0,

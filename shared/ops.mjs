@@ -8,6 +8,8 @@
  * touchent que le sous-arbre de ce joueur : deux seances peuvent se mener en
  * parallele sans jamais se marcher dessus.
  */
+import { entryMatchesStep, isAbandoned } from './entries.mjs';
+
 const APPLIED_HISTORY = 400;
 
 /** La date locale est capturée par le client : le rejeu hors ligne reste déterministe. */
@@ -25,7 +27,8 @@ const handlers = {
     live.resumedAt = resumedAt;
     live.cursor = { planIndex: live.plan.length, setIndex: 1 };
     if (live.mode === 'free') {
-      const planIndex = live.plan.length - 1;
+      const planIndex = live.plan.findLastIndex((step) => !isAbandoned(live.entries, step));
+      if (planIndex < 0) { s.liveSessions[userId] = live; return; }
       const step = live.plan[planIndex];
       live.cursor = { planIndex, setIndex: live.entries.filter((e) => e.itemId === step.id).length + 1 };
       s.liveSessions[userId] = live;
@@ -39,7 +42,7 @@ const handlers = {
       const rounds = Math.max(...live.plan.slice(first, last + 1).map((step) => step.sets));
       for (let round = 1; round <= rounds; round++) {
         for (let i = first; i <= last; i++) {
-          if (round <= live.plan[i].sets && !live.entries.some((entry) => entry.itemId === live.plan[i].id && entry.setIndex === round)) {
+          if (!isAbandoned(live.entries, live.plan[i]) && round <= live.plan[i].sets && !live.entries.some((entry) => entryMatchesStep(entry, live.plan[i]) && entry.setIndex === round)) {
             live.cursor = { planIndex: i, setIndex: round };
             break outer;
           }
@@ -98,7 +101,7 @@ const handlers = {
     live.entries.push(entry);
     if (live.mode === 'free') {
       const step = live.plan.find((s) => s.id === entry.itemId);
-      if (step) step.sets = live.entries.filter((e) => e.itemId === step.id).length;
+      if (step) step.sets = live.entries.filter((e) => e.itemId === step.id && (e.reps ?? 0) > 0).length;
     }
     if (cursor) live.cursor = cursor;
   },
@@ -115,7 +118,7 @@ const handlers = {
       const [entry] = live.entries.splice(index, 1);
       if (live.mode === 'free' && entry) {
         const step = live.plan.find((s) => s.id === entry.itemId);
-        if (step) step.sets = live.entries.filter((e) => e.itemId === step.id).length;
+        if (step) step.sets = live.entries.filter((e) => e.itemId === step.id && (e.reps ?? 0) > 0).length;
       }
     }
   },

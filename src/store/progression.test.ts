@@ -161,3 +161,12 @@ describe('deloadWeight', () => {
     expect(deloadWeight(1)).toBe(0);
   });
 });
+
+it('ignore un abandon avec RIR dans les conseils et les paliers', () => {
+  const zero = journal({ date: '2026-09-19', series: [serie('squat-barre', 1, 999, 0, 4)] });
+  const logs = historiqueMontee();
+  expect(advise(avec([...logs, zero]), squat, 3)).toEqual(advise(avec(logs), squat, 3));
+  expect(advise(avec([zero]), squat, 1)).toBeNull();
+  const stalled = historiquePalier();
+  expect(plateau(avec([...stalled, zero]), squat)).toEqual(plateau(avec(stalled), squat));
+});

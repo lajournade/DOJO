@@ -121,8 +121,8 @@ export function Roster() {
           >
             <p className="fight-text pulsing text-p2 text-impact">continue ?</p>
             <p className="mt-1 text-p2 text-bone">
-              {resume.programCode} · {resume.entries.length} série
-              {resume.entries.length > 1 ? 's' : ''} en cours
+              {resume.programCode} · {doneEntries(resume.entries).length} série
+              {doneEntries(resume.entries).length > 1 ? 's' : ''} en cours
             </p>
           </button>
         </section>

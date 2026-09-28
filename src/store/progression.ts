@@ -40,7 +40,7 @@ export interface Advice {
 function referenceSet(entries: SetEntry[]): SetEntry | null {
   for (let i = entries.length - 1; i >= 0; i -= 1) {
     const entry = entries[i];
-    if (entry.rir !== null && entry.rir !== undefined && entry.weight !== null) return entry;
+    if (entry.reps !== 0 && entry.rir !== null && entry.rir !== undefined && entry.weight !== null) return entry;
   }
   return null;
 }
@@ -123,7 +123,7 @@ export function advise(state: UserView, step: PlanStep, setIndex: number): Advic
     from: previous.weight,
   };
 
-  const last = historyOf(state, step.exerciseId)[0];
+  const last = historyOf(state, step.exerciseId).find((row) => row.entries.some((e) => e.reps !== 0));
   const ref = last ? referenceSet(last.entries) : null;
   if (!ref || ref.reps === null) return plain;
 

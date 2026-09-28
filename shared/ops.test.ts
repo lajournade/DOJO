@@ -276,3 +276,24 @@ describe('session.resume', () => {
     expect(s.logs[0]).not.toHaveProperty('resumedAt');
   });
 });
+
+it('la reprise conserve les abandons et reprend le partenaire du superset', () => {
+  const s = avecSeance();
+  const live = s.liveSessions['u-1'];
+  live.plan.forEach((step) => { step.supersetGroup = 'A'; });
+  live.entries.push({ ...serie('squat-barre', 1, 999, 0), itemId: live.plan[0].id });
+  applyOp(s, op('session.finish', { userId: 'u-1', endedAt: 'fin' }));
+  applyOp(s, op('session.resume', { userId: 'u-1', logId: live.id, date: live.date, resumedAt: 'reprise' }));
+  expect(s.liveSessions['u-1'].cursor).toEqual({ planIndex: 1, setIndex: 1 });
+  expect(s.liveSessions['u-1'].entries[0].reps).toBe(0);
+});
+
+it('reprend une séance libre entièrement abandonnée sur le choix d’exercice', () => {
+  const s = avecSeance();
+  const live = s.liveSessions['u-1'];
+  live.mode = 'free';
+  live.entries = live.plan.map((step) => ({ ...serie(step.exerciseId, 1, 0, 0), itemId: step.id }));
+  applyOp(s, op('session.finish', { userId: 'u-1', endedAt: 'fin' }));
+  applyOp(s, op('session.resume', { userId: 'u-1', logId: live.id, date: live.date, resumedAt: 'reprise' }));
+  expect(s.liveSessions['u-1'].cursor.planIndex).toBe(live.plan.length);
+});

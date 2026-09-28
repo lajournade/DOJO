@@ -63,7 +63,7 @@ export interface User {
   palette: number;
 }
 
-/** Une serie realisee. Le RIR n'est renseigne que sur la derniere serie d'un exercice. */
+/** Une série enregistrée : reps === 0 marque l’abandon de cette occurrence de l’exercice. Le RIR n'est renseigne que sur la derniere serie d'un exercice. */
 export interface SetEntry {
   itemId?: string;
   exerciseId: string;

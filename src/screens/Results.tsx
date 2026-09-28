@@ -5,6 +5,7 @@ import { Sprite, useFrame } from '../components/Sprite';
 import { sfx } from '../fx/audio';
 import { HERO_FRAME, costume, fighter } from '../fx/sprites';
 import { navigate } from '../router';
+import { abandonedCount } from '../../shared/entries.mjs';
 import { doneEntries, recentLogs, tonnage } from '../store/selectors';
 import { useStore } from '../store/state';
 import type { SessionLog, UserView } from '../types';
@@ -30,12 +31,12 @@ function grade(state: UserView, log: SessionLog): { rank: string; delta: number 
 function records(state: UserView, log: SessionLog): string[] {
   const found: string[] = [];
   for (const id of new Set(log.entries.map((e) => e.exerciseId))) {
-    const best = Math.max(0, ...log.entries.filter((e) => e.exerciseId === id).map((e) => e.weight ?? 0));
+    const best = Math.max(0, ...doneEntries(log.entries).filter((e) => e.exerciseId === id).map((e) => e.weight ?? 0));
     const previousBest = Math.max(
       0,
       ...state.logs
         .filter((l) => l.id !== log.id)
-        .flatMap((l) => l.entries.filter((e) => e.exerciseId === id).map((e) => e.weight ?? 0)),
+        .flatMap((l) => doneEntries(l.entries).filter((e) => e.exerciseId === id).map((e) => e.weight ?? 0)),
     );
     if (best > previousBest && best > 0) {
       found.push(`${log.entries.find((e) => e.exerciseId === id)?.exerciseName} · ${best} kg`);
@@ -133,6 +134,7 @@ export function Results() {
         </motion.h1>
 
         <div className="bevel bg-ink-2 p-3">
+          {abandonedCount(log.entries) > 0 && <Row label="exercices abandonnés" value={String(abandonedCount(log.entries))} delay={0.7} />}
           <Row label="tonnage" value={`${shownLoad.toLocaleString('fr-FR')} kg`} delay={0.7} />
           <Row label="répétitions" value={String(shownReps)} delay={0.9} />
           <Row label="durée" value={minutes ? `${shownMinutes} min` : '—'} delay={1.1} />

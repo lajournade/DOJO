@@ -121,3 +121,13 @@ describe('les dates', () => {
     expect(todayIso()).toBe('2026-09-18');
   });
 });
+
+it('exclut les abandons des performances sans perdre les séries positives anciennes', () => {
+  const entries = [serie('squat-barre', 1, 60, 8), serie('squat-barre', 2, 999, 0, 4), serie('squat-barre', 3, 70, 8)];
+  const state = vue(etat({ logs: [journal({ date: '2026-09-18', series: entries })] }));
+  expect(doneEntries(entries)).toHaveLength(2);
+  expect(bestWeight(state, 'squat-barre')).toBe(70);
+  expect(lastSet(state, 'squat-barre', 2)?.weight).toBe(70);
+  expect(historyOf(state, 'squat-barre')[0].entries).toHaveLength(3);
+  expect(doneEntries([serie('dips', 1, 0, 8), serie('dips', 2, 0, null)])).toHaveLength(1);
+});

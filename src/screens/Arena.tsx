@@ -28,21 +28,25 @@ import {
   plateau,
   type Advice,
 } from '../store/progression';
-import { bestWeight } from '../store/selectors';
+import { isAbandoned } from '../../shared/entries.mjs';
+import { bestWeight, doneEntries } from '../store/selectors';
 import {
   abortSession,
   addSet,
   appendStep,
   finishSession,
+  doneSets,
   extendStep,
   isFinished,
   jumpTo,
   logSet,
+  moveTo,
   nextCursor,
   repRange,
   replaceStep,
   rirTarget,
   suggestion,
+  stepStatus,
   totalSets,
   undoLastSet,
 } from '../store/session';
@@ -142,6 +146,14 @@ export function Arena() {
     if (loaded && !live && !ended.current) navigate('/', { replace: true });
   }, [live, loaded]);
 
+  // Les anciennes séances peuvent encore pointer après un zéro déjà enregistré.
+  useEffect(() => {
+    if (live && step && isAbandoned(live.entries, step)) {
+      const cursor = nextCursor(live, 0);
+      moveTo(cursor.planIndex, cursor.setIndex);
+    }
+  }, [live, step]);
+
   // Derniere serie du dernier exercice validee : le combat est fini.
   useEffect(() => {
     if (live && isFinished(live) && !live.resumedAt && !ended.current) end();
@@ -238,7 +250,12 @@ export function Arena() {
         <RoundClock seconds={elapsed} />
       </header>
       <h1 className="label-text py-4 text-p3 text-impact">Séance libre</h1>
-      <p className="label-text mb-3 text-p2 text-ash">Ajoutez votre premier exercice, puis vos séries au fur et à mesure.</p>
+      <p className="label-text mb-3 text-p2 text-ash">{live.plan.length ? 'Choisissez ou ajoutez un exercice pour continuer.' : 'Ajoutez votre premier exercice, puis vos séries au fur et à mesure.'}</p>
+      {live.plan.map((item, i) => <p key={item.id} className="text-p2 text-ash">
+        {stepStatus(live, i) === 'abandoned' ? `${item.exerciseName} · abandonné` :
+          <Small onClick={() => jumpTo(live, i)}>{item.exerciseName}</Small>}
+      </p>)}
+      {live.entries.length > 0 && <Small onClick={() => undoLastSet(live)}>annuler la dernière</Small>}
       <ExerciseInput value={firstName} names={state.exercises.map((e) => e.name)}
         onChange={setFirstName} onCancel={() => setFirstName('')}
         onSubmit={() => appendStep(live, firstName)} />
@@ -249,9 +266,10 @@ export function Arena() {
     <div className="min-h-dvh bg-ink pad-top pad-x pad-bottom">
       <Small onClick={() => navigate('/history')}>← historique</Small>
       <h1 className="fight-text mt-4 text-p3 text-bone">Compléter la séance</h1>
-      <p className="my-3 text-p2 text-ash">{live.programCode} · {live.entries.length} séries réalisées</p>
+      <p className="my-3 text-p2 text-ash">{live.programCode} · {doneEntries(live.entries).length} séries réalisées</p>
       <div className="grid gap-2">
-        {live.plan.map((item, i) => (
+        {live.entries.length > 0 && <Small onClick={() => undoLastSet(live)}>annuler la dernière</Small>}
+        {live.plan.map((item, i) => stepStatus(live, i) !== 'abandoned' && (
           <Small key={item.id} onClick={() => extendStep(live, i)}>+ série · {item.exerciseName}</Small>
         ))}
         {draftName === null ? <Small onClick={() => setDraftName('')}>+ exercice</Small> : (
@@ -271,10 +289,11 @@ export function Arena() {
   );
   if (!step) return null;
 
-  const done = live.entries.length;
+  const done = doneEntries(live.entries).length;
+  const resolved = live.plan.reduce((sum, item, i) => sum + (isAbandoned(live.entries, item) ? item.sets : doneSets(live, i)), 0);
   const total = totalSets(live.plan);
   // Dans un superset, on doit savoir avant de valider qu'on enchaine, et sur quoi.
-  const next = nextCursor(live);
+  const next = nextCursor(live, reps);
   const chained =
     next.planIndex < live.plan.length &&
     next.planIndex !== live.cursor.planIndex &&
@@ -287,6 +306,10 @@ export function Arena() {
   const bump = advice && advice.trend !== 'hold' && weight === advice.weight ? advice : null;
 
   const validate = () => {
+    if (reps === 0) {
+      logSet(live, { reps: 0, weight, rir: null });
+      return;
+    }
     // Le tonnage sert de degats. Au poids du corps (charge nulle), on compte les repetitions.
     const damage = (weight || 10) * reps;
     const power = record > 0 ? Math.min(1, weight / record) : 0.6;
@@ -419,7 +442,7 @@ export function Arena() {
             side="left"
             flash={flash}
           />
-          <HealthBar name={live.programCode} total={total} done={done} side="left" flash={flash} />
+          <HealthBar name={live.programCode} total={total} done={resolved} side="left" flash={flash} />
           </>}
         </div>
         <RoundClock seconds={elapsed} />
@@ -588,7 +611,7 @@ export function Arena() {
           <span className="notch relative flex h-[70px] w-full items-center justify-center overflow-hidden bg-blood">
             <span className="speedlines absolute inset-0 opacity-40" />
             <span className="fight-text fight-shadow relative text-p3 text-bone">
-              {free ? 'valider la série' : next.planIndex >= live.plan.length && !live.resumedAt ? 'finish him' : 'impact'}
+              {reps === 0 ? 'Abandonner l’exercice' : free ? 'valider la série' : next.planIndex >= live.plan.length && !live.resumedAt ? 'finish him' : 'impact'}
             </span>
           </span>
         </button>

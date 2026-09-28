@@ -232,3 +232,41 @@ it('ne prend pas la séance reprise comme référence de progression', () => {
   expect(suggestion(state, live).weight).toBe(50);
   expect(suggestion(state, live).trend).toBe('hold');
 });
+
+describe('abandon à zéro répétition', () => {
+  const plan = [etape(item('squat-barre')), etape(item('dips'))];
+  it('saute les séries restantes et distingue les séries réalisées', () => {
+    const live = jouee(plan, [1, 0], { planIndex: 0, setIndex: 2 });
+    expect(nextCursor(live, 0)).toEqual({ planIndex: 1, setIndex: 1 });
+    live.entries.push({ ...serie('squat-barre', 2, 100, 0), itemId: plan[0].id });
+    expect(stepStatus(live, 0)).toBe('abandoned');
+    expect(doneSets(live, 0)).toBe(1);
+    expect(groupCursor(live, 0)).toBeNull();
+    expect(resumeCursor(live, 0)).toEqual({ planIndex: 1, setIndex: 1 });
+  });
+  it('poursuit le partenaire du superset sans revenir sur l’abandon', () => {
+    const pair = plan.map((step) => ({ ...step, supersetGroup: 'A' }));
+    const live = jouee(pair, [0, 0], { planIndex: 0, setIndex: 1 });
+    expect(nextCursor(live, 0)).toEqual({ planIndex: 1, setIndex: 1 });
+    live.entries.push({ ...serie('squat-barre', 1, 100, 0), itemId: pair[0].id });
+    live.cursor = { planIndex: 1, setIndex: 1 };
+    expect(nextCursor(live, 8)).toEqual({ planIndex: 1, setIndex: 2 });
+    expect(nextCursor(live, 0).planIndex).toBe(2);
+  });
+  it('isole les occurrences et reconnaît les anciens zéros sans itemId', () => {
+    const repeated = [plan[0], { ...plan[0], id: 'autre' }];
+    const live = jouee(repeated, [0, 0]);
+    live.entries.push({ ...serie('squat-barre', 1, 100, 0), itemId: plan[0].id });
+    expect(stepStatus(live, 0)).toBe('abandoned');
+    expect(stepStatus(live, 1)).toBe('todo');
+    delete live.entries[0].itemId;
+    expect(stepStatus(live, 1)).toBe('abandoned');
+  });
+  it('laisse la séance libre ouverte et termine une séance programmée', () => {
+    const live = jouee([plan[0]], [0], { planIndex: 0, setIndex: 1 });
+    expect(isFinished({ ...live, cursor: nextCursor(live, 0) })).toBe(true);
+    live.mode = 'free';
+    expect(nextCursor(live, 0)).toEqual({ planIndex: 1, setIndex: 1 });
+    expect(isFinished({ ...live, cursor: nextCursor(live, 0) })).toBe(false);
+  });
+});
