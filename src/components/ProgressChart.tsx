@@ -24,7 +24,7 @@ const ASH = '#8fa0c8';
 const IMPACT = '#ffd400';
 const BLOOD = '#e01b24';
 
-export function ProgressChart({ points, unit = 'kg' }: { points: Point[]; unit?: string }) {
+export function ProgressChart({ points, unit = 'kg', metricLabel = 'charge maximale par séance' }: { points: Point[]; unit?: string; metricLabel?: string }) {
   const [active, setActive] = useState<number | null>(null);
 
   if (points.length < 2) {
@@ -63,7 +63,7 @@ export function ProgressChart({ points, unit = 'kg' }: { points: Point[]; unit?:
         className="mx-auto block max-w-full"
         shapeRendering="crispEdges"
         role="img"
-        aria-label={`Charge maximale par séance, de ${points[0].label} à ${points[lastIndex].label}`}
+        aria-label={`${metricLabel}, de ${points[0].label} à ${points[lastIndex].label}`}
       >
         <defs>
           {/* Tramage : un pixel sur quatre, la trame des jeux 16 bits. */}
@@ -153,7 +153,7 @@ export function ProgressChart({ points, unit = 'kg' }: { points: Point[]; unit?:
       <figcaption className="mt-1 text-center text-p2 text-ash">
         {shown >= 0
           ? `${points[shown].label} · ${points[shown].value} ${unit}`
-          : `charge maximale par séance · ${points.length} séances`}
+          : `${metricLabel} · ${points.length} séances`}
       </figcaption>
     </figure>
   );

@@ -95,7 +95,9 @@ export function Results() {
 
   const entries = log ? doneEntries(log.entries) : [];
   const load = Math.round(tonnage(entries));
-  const reps = entries.reduce((n, e) => n + (e.reps ?? 0), 0);
+  const isTimed = (exerciseId: string) => state.exercises.find((x) => x.id === exerciseId)?.tracking === 'duration';
+  const reps = entries.reduce((n, e) => n + (isTimed(e.exerciseId) ? 0 : e.reps ?? 0), 0);
+  const seconds = entries.reduce((n, e) => n + (isTimed(e.exerciseId) ? e.seconds ?? e.reps ?? 0 : 0), 0);
   const minutes =
     log?.startedAt && log.endedAt
       ? Math.max(1, Math.round((Date.parse(log.endedAt) - Date.parse(log.startedAt)) / 60000))
@@ -104,6 +106,7 @@ export function Results() {
   // Les crochets doivent tourner a chaque rendu : les valeurs sont calculees avant la sortie.
   const shownLoad = useCountUp(load, 700);
   const shownReps = useCountUp(reps, 900);
+  const shownSeconds = useCountUp(seconds, 1000);
   const shownMinutes = useCountUp(minutes, 1100);
 
   if (!log) return null;
@@ -136,7 +139,8 @@ export function Results() {
         <div className="bevel bg-ink-2 p-3">
           {abandonedCount(log.entries) > 0 && <Row label="exercices abandonnés" value={String(abandonedCount(log.entries))} delay={0.7} />}
           <Row label="tonnage" value={`${shownLoad.toLocaleString('fr-FR')} kg`} delay={0.7} />
-          <Row label="répétitions" value={String(shownReps)} delay={0.9} />
+          {reps > 0 && <Row label="répétitions" value={String(shownReps)} delay={0.9} />}
+          {seconds > 0 && <Row label="durée cumulée" value={`${shownSeconds} s`} delay={1.0} />}
           <Row label="durée" value={minutes ? `${shownMinutes} min` : '—'} delay={1.1} />
 
           <motion.div

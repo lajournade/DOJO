@@ -3,6 +3,8 @@
 export interface Exercise {
   id: string;
   name: string;
+  /** Absent dans les anciens catalogues : repetitions. */
+  tracking?: 'reps' | 'duration';
 }
 
 /**
@@ -70,6 +72,8 @@ export interface SetEntry {
   exerciseName: string;
   setIndex: number;
   reps: number | null;
+  /** Duree en secondes pour les exercices chronometres. */
+  seconds?: number | null;
   weight: number | null;
   rir: number | null;
 }
@@ -96,6 +100,7 @@ export interface SessionLog {
  */
 export interface PlanStep extends ProgramItem {
   exerciseName: string;
+  tracking?: 'reps' | 'duration';
   /**
    * Ce que le compteur affichait quand l'exercice a ete remplace par un inconnu :
    * sans historique, c'est de la que repart la suggestion. Absent sinon.

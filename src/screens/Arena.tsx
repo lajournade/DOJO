@@ -300,7 +300,8 @@ export function Arena() {
     !!step.supersetGroup &&
     live.plan[next.planIndex].supersetGroup === step.supersetGroup;
   const upcoming = chained ? live.plan[next.planIndex] : null;
-  const target = rirTarget(step);
+  const timed = step.tracking === 'duration';
+  const target = timed ? null : rirTarget(step);
   // La proposition ne tient que tant qu'elle decrit la valeur au compteur : des
   // que le pouce touche la charge, elle s'efface plutot que de mentir.
   const bump = advice && advice.trend !== 'hold' && weight === advice.weight ? advice : null;
@@ -311,8 +312,8 @@ export function Arena() {
       return;
     }
     // Le tonnage sert de degats. Au poids du corps (charge nulle), on compte les repetitions.
-    const damage = (weight || 10) * reps;
-    const power = record > 0 ? Math.min(1, weight / record) : 0.6;
+    const damage = timed ? reps : (weight || 10) * reps;
+    const power = timed ? Math.min(1, reps / 60) : record > 0 ? Math.min(1, weight / record) : 0.6;
     const isRecord = weight > record && weight > 0;
     const nextCombo = combo + 1;
 
@@ -495,7 +496,7 @@ export function Arena() {
             <Tag tone="blood">
               série {live.cursor.setIndex}{!free && `/${step.sets}`}
             </Tag>
-            {!free && <Tag>{repRange(step)} reps</Tag>}
+            {!free && !timed && <Tag>{repRange(step)} reps</Tag>}
             {target && <Tag>rir {target}</Tag>}
             {record > 0 && <Tag>record {record} kg</Tag>}
             {/* Puis une simple trace sur les series suivantes. */}
@@ -553,7 +554,7 @@ export function Arena() {
         </motion.section>
 
         <section className="pad-x mt-3 grid gap-2">
-          <BigStepper
+          {!timed && <BigStepper
             label="charge"
             unit="kg"
             value={weight}
@@ -561,20 +562,20 @@ export function Arena() {
             min={-100}
             tone={bump?.trend === 'up' ? 'impact' : 'blood'}
             onChange={setWeight}
-          />
+          />}
           <BigStepper
-            label="répétitions"
-            unit="reps"
+            label={timed ? 'durée' : 'répétitions'}
+            unit={timed ? 'sec' : 'reps'}
             value={reps}
-            step={1}
+            step={timed ? 5 : 1}
             min={0}
-            max={100}
+            max={timed ? 3600 : 100}
             decimals={0}
             tone="impact"
-            hint={free ? undefined : `cible ${repRange(step)}`}
+            hint={free || timed ? undefined : `cible ${repRange(step)}`}
             onChange={setReps}
           />
-          {(free || isLastSet) && <RirPicker free={free} value={rir} target={target} onChange={setRir} />}
+          {!timed && (free || isLastSet) && <RirPicker free={free} value={rir} target={target} onChange={setRir} />}
         </section>
 
         {/* Actions secondaires */}

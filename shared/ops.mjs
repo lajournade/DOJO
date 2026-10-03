@@ -101,7 +101,7 @@ const handlers = {
     live.entries.push(entry);
     if (live.mode === 'free') {
       const step = live.plan.find((s) => s.id === entry.itemId);
-      if (step) step.sets = live.entries.filter((e) => e.itemId === step.id && (e.reps ?? 0) > 0).length;
+      if (step) step.sets = live.entries.filter((e) => e.itemId === step.id && ((e.reps ?? 0) > 0 || (e.seconds ?? 0) > 0)).length;
     }
     if (cursor) live.cursor = cursor;
   },
@@ -118,7 +118,7 @@ const handlers = {
       const [entry] = live.entries.splice(index, 1);
       if (live.mode === 'free' && entry) {
         const step = live.plan.find((s) => s.id === entry.itemId);
-        if (step) step.sets = live.entries.filter((e) => e.itemId === step.id && (e.reps ?? 0) > 0).length;
+      if (step) step.sets = live.entries.filter((e) => e.itemId === step.id && ((e.reps ?? 0) > 0 || (e.seconds ?? 0) > 0)).length;
       }
     }
   },

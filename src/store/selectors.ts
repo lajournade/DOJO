@@ -13,7 +13,7 @@ export const tonnage = (entries: SetEntry[]) =>
   entries.reduce((sum, e) => sum + (e.weight ?? 0) * (e.reps ?? 0), 0);
 
 export const doneEntries = (entries: SetEntry[]) =>
-  entries.filter((e) => (e.reps ?? 0) > 0);
+  entries.filter((e) => (e.reps ?? 0) > 0 || (e.seconds ?? 0) > 0);
 
 /** Les seances du journal, de la plus recente a la plus ancienne. */
 export const recentLogs = (s: UserView) =>

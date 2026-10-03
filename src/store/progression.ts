@@ -111,6 +111,7 @@ function transpose(step: PlanStep, ref: SetEntry, previousWeight: number): Advic
  * comprise, sans quoi l'echauffement d'un cycle servirait dans l'autre.
  */
 export function advise(state: UserView, step: PlanStep, setIndex: number): Advice | null {
+  if (step.tracking === 'duration') return null;
   if (state.liveSession?.resumedAt) state = { ...state, logs: state.logs.filter((log) => log.id !== state.liveSession?.id) };
   const previous = lastSet(state, step.exerciseId, setIndex);
   if (!previous || previous.weight === null || previous.weight === undefined) return null;

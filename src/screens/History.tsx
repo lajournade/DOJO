@@ -167,6 +167,7 @@ function LogCard({
 
 /** Le detail d'une seance, regroupe par exercice — la lecture de l'onglet d'origine. */
 function LogDetail({ entries }: { entries: SetEntry[] }) {
+  const { state } = useStore();
   const groups: { name: string; sets: SetEntry[] }[] = [];
   for (const entry of entries) {
     const last = groups[groups.length - 1];
@@ -183,7 +184,7 @@ function LogDetail({ entries }: { entries: SetEntry[] }) {
             <thead>
               <tr className="label-text text-p2 text-ash">
                 <th className="w-10 py-1 text-left">sér.</th>
-                <th className="py-1 text-right">reps</th>
+                <th className="py-1 text-right">valeur</th>
                 <th className="py-1 text-right">charge</th>
                 <th className="w-14 py-1 pl-2 text-right">rir</th>
               </tr>
@@ -192,7 +193,7 @@ function LogDetail({ entries }: { entries: SetEntry[] }) {
               {group.sets.map((s, j) => (
                 <tr key={j} className="border-t border-line/60">
                   <td className="py-1 text-ash">{s.setIndex}</td>
-                  <td className="py-1 text-right text-bone">{s.reps === 0 ? 'abandonné' : s.reps ?? '—'}</td>
+                  <td className="py-1 text-right text-bone">{s.reps === 0 ? 'abandonné' : state.exercises.find((e) => e.id === s.exerciseId)?.tracking === 'duration' ? `${s.seconds ?? s.reps ?? '—'} s` : s.reps ?? '—'}</td>
                   <td className="py-1 text-right text-bone">
                     {s.weight === null || s.weight === undefined ? '—' : `${s.weight} kg`}
                   </td>

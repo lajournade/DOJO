@@ -12,7 +12,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { useHold } from '../fx/hold';
 import { navigate } from '../router';
 import { activeProgram, exerciseName } from '../store/selectors';
-import { GOALS, GOAL_ORDER, blankItem, blankProgram, duplicateProgram, nextCode, slug } from '../store/programs';
+import { GOALS, GOAL_ORDER, blankItem, blankProgram, duplicateProgram, findExercise, nextCode, slug } from '../store/programs';
 import { dispatch, useStore } from '../store/state';
 import type { Program as ProgramType, ProgramGoal, ProgramItem, ProgramSession } from '../types';
 
@@ -42,11 +42,18 @@ export function Program() {
           goal={program.goal}
           names={state.exercises.map((e) => e.name)}
           resolveName={(id) => exerciseName(state, id)}
-          onSave={(next, names) => {
+          resolveTracking={(id) => state.exercises.find((e) => e.id === id)?.tracking ?? 'reps'}
+          resolveTrackingName={(name) => findExercise(state.exercises, name)?.tracking ?? 'reps'}
+          onSave={(next, names, tracking) => {
             // Les exercices inedits entrent au catalogue en meme temps que la seance.
             for (const [id, name] of Object.entries(names)) {
               if (!state.exercises.some((e) => e.id === id)) {
-                dispatch('exercise.upsert', { exercise: { id, name } });
+                dispatch('exercise.upsert', { exercise: { id, name, tracking: tracking[id] ?? 'reps' } });
+              }
+            }
+            for (const [id, type] of Object.entries(tracking)) {
+              if (state.exercises.some((e) => e.id === id && e.tracking !== type)) {
+                dispatch('exercise.upsert', { exercise: { id, tracking: type } });
               }
             }
             saveSession(next);
@@ -381,6 +388,8 @@ function SessionEditor({
   goal,
   names,
   resolveName,
+  resolveTracking,
+  resolveTrackingName,
   onSave,
   onDelete,
 }: {
@@ -388,13 +397,18 @@ function SessionEditor({
   goal: ProgramGoal;
   names: string[];
   resolveName: (id: string) => string;
-  onSave: (session: ProgramSession, names: Record<string, string>) => void;
+  resolveTracking: (id: string) => 'reps' | 'duration';
+  resolveTrackingName: (name: string) => 'reps' | 'duration';
+  onSave: (session: ProgramSession, names: Record<string, string>, tracking: Record<string, 'reps' | 'duration'>) => void;
   onDelete: () => void;
 }) {
   const [draft, setDraft] = useState(session);
   // Les noms d'exercices sont saisis en clair ; l'identifiant est derive a l'enregistrement.
   const [labels, setLabels] = useState<Record<string, string>>(() =>
     Object.fromEntries(session.items.map((it) => [it.id, resolveName(it.exerciseId)])),
+  );
+  const [types, setTypes] = useState<Record<string, 'reps' | 'duration'>>(() =>
+    Object.fromEntries(session.items.map((it) => [it.id, resolveTracking(it.exerciseId)])),
   );
 
   useEffect(() => {
@@ -465,7 +479,10 @@ function SessionEditor({
                 value={labels[item.id] ?? ''}
                 list="exercices"
                 placeholder="nom de l'exercice"
-                onChange={(e) => setLabels({ ...labels, [item.id]: e.target.value })}
+                onChange={(e) => {
+                  setLabels({ ...labels, [item.id]: e.target.value });
+                  setTypes({ ...types, [item.id]: resolveTrackingName(e.target.value) });
+                }}
                 className="min-w-0 flex-1 bg-transparent font-bold text-bone outline-none placeholder:text-ash/50"
               />
               <IconButton onClick={() => move(index, -1)}>↑</IconButton>
@@ -478,19 +495,21 @@ function SessionEditor({
             </div>
 
             <div className="mt-2 grid grid-cols-3 gap-1.5">
+              <label className="bevel-in col-span-3 block bg-ink-3 px-2 py-1.5">
+                <span className="label-text block text-p1 text-ash">mesure</span>
+                <select value={types[item.id] ?? 'reps'} onChange={(e) => setTypes({ ...types, [item.id]: e.target.value as 'reps' | 'duration' })}
+                  className="w-full bg-ink-3 text-p2 text-bone">
+                  <option value="reps">répétitions</option>
+                  <option value="duration">durée (secondes)</option>
+                </select>
+              </label>
               <Num label="séries" value={item.sets} onChange={(v) => patch(item.id, { sets: v })} />
-              <Num label="rep min" value={item.repMin} onChange={(v) => patch(item.id, { repMin: v })} />
-              <Num label="rep max" value={item.repMax} onChange={(v) => patch(item.id, { repMax: v })} />
-              <Num
-                label="rir min"
-                value={item.targetRirMin}
-                onChange={(v) => patch(item.id, { targetRirMin: v })}
-              />
-              <Num
-                label="rir max"
-                value={item.targetRirMax}
-                onChange={(v) => patch(item.id, { targetRirMax: v })}
-              />
+              {types[item.id] !== 'duration' && <>
+                <Num label="rep min" value={item.repMin} onChange={(v) => patch(item.id, { repMin: v })} />
+                <Num label="rep max" value={item.repMax} onChange={(v) => patch(item.id, { repMax: v })} />
+                <Num label="rir min" value={item.targetRirMin} onChange={(v) => patch(item.id, { targetRirMin: v })} />
+                <Num label="rir max" value={item.targetRirMax} onChange={(v) => patch(item.id, { targetRirMax: v })} />
+              </>}
             </div>
 
             <textarea
@@ -533,7 +552,8 @@ function SessionEditor({
           const names = Object.fromEntries(
             items.map((it) => [it.exerciseId, labels[it.id].trim()]),
           );
-          onSave({ ...draft, items }, names);
+          const tracking = Object.fromEntries(items.map((it) => [it.exerciseId, types[it.id] ?? 'reps']));
+          onSave({ ...draft, items }, names, tracking);
         }}
         className="bevel keycap fight-text bg-blood py-4 text-p2 text-bone"
       >

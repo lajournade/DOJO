@@ -60,7 +60,7 @@ function readBody(req) {
  * Utilisateur permet alors de trier au tableur.
  */
 export function toCsv(state, userId) {
-  const header = ['Utilisateur', 'Programme', 'Date', 'Exercice', 'Série', 'Répétitions', 'Charge (kg)', 'RIR'];
+  const header = ['Utilisateur', 'Programme', 'Date', 'Exercice', 'Série', 'Répétitions', 'Durée (s)', 'Charge (kg)', 'RIR'];
   const cell = (v) => {
     if (v === null || v === undefined) return '';
     const s = String(v).replace(/\./g, ',');
@@ -76,7 +76,8 @@ export function toCsv(state, userId) {
     if (userId && log.userId !== userId) continue;
     for (const e of log.entries) {
       lines.push(
-        [nameOf(log.userId), log.programCode, frDate(log.date), e.exerciseName, e.setIndex, e.reps, e.weight, e.rir]
+        [nameOf(log.userId), log.programCode, frDate(log.date), e.exerciseName, e.setIndex, e.reps,
+          e.seconds ?? (state.exercises.find((x) => x.id === e.exerciseId)?.tracking === 'duration' ? e.reps : null), e.weight, e.rir]
           .map(cell)
           .join(';'),
       );

@@ -218,10 +218,12 @@ function Line({
       {/* Puis le chiffrage : la charge tombe toujours au meme fer a droite. */}
       <div className="mt-0.5 flex items-baseline justify-between gap-2 pl-6">
         <p className="numeric truncate text-p2 text-ash">
-          {step.sets} × {repRange(step)}
+          {step.sets} × {step.tracking === 'duration' ? 'durée' : `${repRange(step)} reps`}
           {target ? ` · rir ${target}` : ''}
         </p>
-        {preview.known ? (
+        {step.tracking === 'duration' && preview.duration !== null ? (
+          <p className="numeric shrink-0 text-p2 text-bone">{preview.duration} s</p>
+        ) : preview.known ? (
           <p className="numeric shrink-0 text-p2 text-bone">
             {preview.ramp
               ? `${preview.first.toLocaleString('fr-FR')} à ${kg(preview.work)}`

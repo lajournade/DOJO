@@ -13,7 +13,7 @@ import type {
   SetEntry,
   UserView,
 } from '../types';
-import { entryMatchesStep, isAbandoned } from '../../shared/entries.mjs';
+import { entryMatchesStep, isAbandoned, isDone } from '../../shared/entries.mjs';
 import { dispatch, getView } from './state';
 import { blankItem, findExercise, slug } from './programs';
 import { exerciseName, historyOf, knownSets, todayIso, typicalMinutes } from './selectors';
@@ -21,7 +21,11 @@ import { advise, gainLabel, plateau, type Advice, type Plateau, type Trend } fro
 
 /** Instantane du programme au moment du demarrage : l'editer ensuite ne touche pas la seance engagee. */
 export function buildPlan(state: UserView, session: ProgramSession): PlanStep[] {
-  return session.items.map((item) => ({ ...item, exerciseName: exerciseName(state, item.exerciseId) }));
+  return session.items.map((item) => ({
+    ...item,
+    exerciseName: exerciseName(state, item.exerciseId),
+    tracking: state.exercises.find((e) => e.id === item.exerciseId)?.tracking ?? 'reps',
+  }));
 }
 
 export function totalSets(plan: PlanStep[]): number {
@@ -47,6 +51,7 @@ export interface StepPreview {
   known: boolean;
   /** Renseigne quand la charge ne bouge plus depuis plusieurs seances. */
   plateau: Plateau | null;
+  duration: number | null;
 }
 
 export interface SessionPreview {
@@ -74,6 +79,14 @@ export function previewSession(state: UserView, session: ProgramSession): Sessio
   const plan = buildPlan(state, session);
 
   const steps: StepPreview[] = plan.map((step) => {
+    if (step.tracking === 'duration') {
+      const previous = historyOf(state, step.exerciseId).flatMap((row) => row.entries).reverse().find((entry) => entry.reps !== 0);
+      return {
+        step, first: 0, work: 0, ramp: false, trend: 'hold', gain: '',
+        known: previous !== undefined, plateau: null,
+        duration: previous ? previous.seconds ?? previous.reps ?? null : null,
+      };
+    }
     const advices: (Advice | null)[] = [];
     for (let i = 1; i <= step.sets; i += 1) advices.push(advise(state, step, i));
     const known = advices.filter((a): a is Advice => a !== null);
@@ -91,6 +104,7 @@ export function previewSession(state: UserView, session: ProgramSession): Sessio
         gain: '',
         known: false,
         plateau: null,
+        duration: null,
       };
     }
 
@@ -104,6 +118,7 @@ export function previewSession(state: UserView, session: ProgramSession): Sessio
       known: true,
       // Le dojo propose deja une montee : quoi qu'en dise l'historique, rien n'est bloque.
       plateau: work.trend === 'hold' ? plateau(state, step) : null,
+      duration: null,
     };
   });
 
@@ -193,7 +208,7 @@ export function supersetRange(plan: PlanStep[], planIndex: number): [number, num
 
 /** Series deja validees sur un exercice de la seance. */
 export const doneSets = (live: LiveSession, planIndex: number) =>
-  live.entries.filter((e) => entryMatchesStep(e, live.plan[planIndex]) && (e.reps ?? 0) > 0).length;
+  live.entries.filter((e) => entryMatchesStep(e, live.plan[planIndex]) && isDone(e)).length;
 
 /** Ou en est un exercice : rien, entame, ou toutes ses series au journal. */
 export function stepStatus(live: LiveSession, planIndex: number): 'todo' | 'started' | 'done' | 'abandoned' {
@@ -293,6 +308,7 @@ function withCurrentDone(live: LiveSession, reps: number | null): LiveSession {
     exerciseName: step.exerciseName,
     setIndex: live.cursor.setIndex,
     reps,
+    seconds: step.tracking === 'duration' && reps !== 0 ? reps : null,
     weight: null,
     rir: null,
   };
@@ -303,18 +319,20 @@ export const isFinished = (live: LiveSession) => live.mode !== 'free' && live.cu
 
 export function logSet(live: LiveSession, values: { reps: number; weight: number; rir: number | null }) {
   const step = live.plan[live.cursor.planIndex];
+  const duration = step.tracking === 'duration';
   const entry: SetEntry = {
     itemId: step.id,
     exerciseId: step.exerciseId,
     exerciseName: step.exerciseName,
     setIndex: live.cursor.setIndex,
-    reps: values.reps,
-    weight: values.weight,
-    rir: values.rir,
+    reps: duration && values.reps !== 0 ? null : values.reps,
+    seconds: duration && values.reps !== 0 ? values.reps : null,
+    weight: duration ? null : values.weight,
+    rir: duration ? null : values.rir,
   };
   // En séance libre, saisir un RIR clôt l'exercice : chaque série renseignée
   // ainsi est la dernière, et l'écran revient à la demande du prochain exercice.
-  const cursor = live.mode === 'free' && values.reps !== 0 && values.rir !== null
+  const cursor = live.mode === 'free' && values.reps !== 0 && (duration || values.rir !== null)
     ? { planIndex: live.plan.length, setIndex: 1 }
     : nextCursor(live, values.reps);
   dispatch('set.log', { entry, cursor });
@@ -359,6 +377,7 @@ export function replaceStep(live: LiveSession, name: string, counter: { weight: 
   const patch: Partial<PlanStep> = {
     exerciseId,
     exerciseName: existing?.name ?? label,
+    tracking: existing?.tracking ?? 'reps',
     sets: known === null ? step.sets : Math.max(known, live.cursor.setIndex),
     carry: counter,
     notes: '',
@@ -405,6 +424,7 @@ export function appendStep(live: LiveSession, name: string) {
     ...item,
     exerciseId,
     exerciseName: existing?.name ?? label,
+    tracking: existing?.tracking ?? 'reps',
     sets: live.mode === 'free' ? 0 : knownSets(state, exerciseId) ?? item.sets,
     ...(live.mode === 'free' ? {
       repMin: null, repMax: null, targetRirMin: null, targetRirMax: null,
@@ -448,11 +468,18 @@ export function suggestion(state: UserView, live: LiveSession): Advice {
   const step = live.plan[live.cursor.planIndex];
   if (!step) return { weight: 0, reps: 0, trend: 'hold', reason: '', from: 0 };
 
+  if (step.tracking === 'duration') {
+    const today = [...live.entries].reverse().find((e) => e.itemId === step.id && e.reps !== 0);
+    const previous = historyOf(state, step.exerciseId).flatMap(({ entries }) => [...entries].reverse()).find((e) => e.reps !== 0);
+    const seed = today ?? previous;
+    return { weight: 0, reps: seed?.seconds ?? seed?.reps ?? 0, trend: 'hold', reason: '', from: 0 };
+  }
+
   if (live.mode === 'free') {
     const today = [...live.entries].reverse().find((e) => e.itemId === step.id && e.reps !== 0);
     const previous = historyOf(state, step.exerciseId).flatMap(({ entries }) => [...entries].reverse()).find((e) => e.reps !== 0);
     const seed = today ?? previous;
-    return { weight: seed?.weight ?? 0, reps: seed?.reps ?? 8,
+    return { weight: seed?.weight ?? 0, reps: seed?.seconds ?? seed?.reps ?? 8,
       trend: 'hold', reason: '', from: seed?.weight ?? 0 };
   }
   const advice = advise(state, step, live.cursor.setIndex);
@@ -462,9 +489,10 @@ export function suggestion(state: UserView, live: LiveSession): Advice {
   // ou, s'il vient de remplacer un autre, ce que le compteur affichait a ce moment-la.
   const today = [...live.entries].reverse().find((e) => e.itemId === step.id && e.reps !== 0);
   const seed = today ?? step.carry ?? null;
+  const seedValue = seed ? ('seconds' in seed ? seed.seconds ?? seed.reps : seed.reps) : null;
   return {
     weight: seed?.weight ?? 0,
-    reps: seed?.reps ?? step.repMin ?? 8,
+    reps: seedValue ?? step.repMin ?? 8,
     trend: 'hold',
     reason: '',
     from: seed?.weight ?? 0,

@@ -41,7 +41,10 @@ export function ExerciseHistory({ initialExerciseId = '' }: { initialExerciseId?
         .map(({ log, entries }) => ({
           date: log.date,
           label: formatDate(log.date).replace(/\.$/, ''),
-          value: Math.max(0, ...entries.filter((entry) => entry.reps !== 0).map((entry) => entry.weight ?? 0)),
+          value: Math.max(0, ...entries.filter((entry) => entry.reps !== 0).map((entry) =>
+            state.exercises.find((exercise) => exercise.id === selected)?.tracking === 'duration'
+              ? entry.seconds ?? entry.reps ?? 0
+              : entry.weight ?? 0)),
         }))
         .filter((point) => point.value > 0),
     [rows],
@@ -80,7 +83,9 @@ export function ExerciseHistory({ initialExerciseId = '' }: { initialExerciseId?
       </div>
 
       <div className="bevel-sm mt-3 bg-ink-2 p-2 pt-3">
-        <ProgressChart key={selected} points={points} />
+        <ProgressChart key={selected} points={points}
+          unit={state.exercises.find((e) => e.id === selected)?.tracking === 'duration' ? 's' : 'kg'}
+          metricLabel={state.exercises.find((e) => e.id === selected)?.tracking === 'duration' ? 'durée par séance' : 'charge maximale par séance'} />
       </div>
 
       <div className="mt-3 grid gap-2">
@@ -92,7 +97,9 @@ export function ExerciseHistory({ initialExerciseId = '' }: { initialExerciseId?
             </div>
             <p className="numeric mt-1 text-p2 text-ash">
               {entries
-                .map((entry) => entry.reps === 0 ? 'abandonné' : `${entry.reps ?? '—'}×${entry.weight ?? '—'}kg${entry.rir !== null ? ` (rir ${entry.rir})` : ''}`)
+                .map((entry) => entry.reps === 0 ? 'abandonné' : state.exercises.find((e) => e.id === entry.exerciseId)?.tracking === 'duration'
+                  ? `${entry.seconds ?? entry.reps ?? '—'} s`
+                  : `${entry.reps ?? '—'}×${entry.weight ?? '—'}kg${entry.rir !== null ? ` (rir ${entry.rir})` : ''}`)
                 .join('  ·  ')}
             </p>
           </div>
