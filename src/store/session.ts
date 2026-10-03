@@ -312,7 +312,12 @@ export function logSet(live: LiveSession, values: { reps: number; weight: number
     weight: values.weight,
     rir: values.rir,
   };
-  dispatch('set.log', { entry, cursor: nextCursor(live, values.reps) });
+  // En séance libre, saisir un RIR clôt l'exercice : chaque série renseignée
+  // ainsi est la dernière, et l'écran revient à la demande du prochain exercice.
+  const cursor = live.mode === 'free' && values.reps !== 0 && values.rir !== null
+    ? { planIndex: live.plan.length, setIndex: 1 }
+    : nextCursor(live, values.reps);
+  dispatch('set.log', { entry, cursor });
 }
 
 export function moveTo(planIndex: number, setIndex = 1) {

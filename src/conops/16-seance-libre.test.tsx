@@ -34,7 +34,6 @@ describe('séance libre', () => {
     await add('Dips', true);
     expect(app.texte()).toContain('rir — facultatif');
     expect(app.texte()).not.toContain('cible');
-    await app.clicBouton('3');
     await app.clic('valider la série');
     await app.attendre('série 2');
     await app.clic('valider la série');
@@ -52,7 +51,7 @@ describe('séance libre', () => {
     const live = (await serveur.lireJson()).liveSessions['u-1'];
     expect(live.plan.map((s) => s.sets)).toEqual([3, 1]);
     expect(live.entries.map((s) => [s.weight, s.reps, s.rir])).toEqual([
-      [20, 12, 3], [20, 12, null], [0, 8, null], [20, 12, null],
+      [20, 12, null], [20, 12, null], [0, 8, null], [20, 12, null],
     ]);
     await app.cliquer('[aria-label="changer de joueur"]');
     await app.attendre('choisis ton combat');
@@ -85,6 +84,21 @@ describe('séance libre', () => {
     await app.attendreSynchro();
     expect((await serveur.lireJson()).logs).toHaveLength(1);
     expect((await serveur.lireJson()).liveSessions).toEqual({});
+  });
+
+  it('termine l’exercice libre quand un RIR est saisi et demande le suivant', async () => {
+    await boot();
+    await add('Dips', true);
+    await app.clicBouton('2'); // RIR 2
+    await app.clic('valider la série');
+    await app.attendre('Choisissez ou ajoutez un exercice pour continuer.');
+    await add('Curl libre', true);
+    expect(app.texte()).toContain('Curl libre');
+    expect(app.texte()).toContain('valider la série');
+    await app.attendreSynchro();
+    const live = (await serveur.lireJson()).liveSessions['u-1'];
+    expect(live.cursor).toEqual({ planIndex: 1, setIndex: 1 });
+    expect(live.entries[0]).toMatchObject({ exerciseName: 'Dips', rir: 2 });
   });
 
   it('reprend une séance existante et synchronise les séries hors ligne sans doublon', async () => {
