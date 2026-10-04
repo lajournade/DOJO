@@ -47,7 +47,7 @@ export function ExerciseHistory({ initialExerciseId = '' }: { initialExerciseId?
               : entry.weight ?? 0)),
         }))
         .filter((point) => point.value > 0),
-    [rows],
+    [rows, selected, state.exercises],
   );
 
   if (!options.length) {

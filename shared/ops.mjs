@@ -129,7 +129,9 @@ const handlers = {
     if (!live) return;
     delete s.liveSessions[userId];
     if (!live.entries.length) return;
-    const { cursor, resumedAt, ...log } = live;
+    const log = { ...live };
+    delete log.cursor;
+    delete log.resumedAt;
     log.endedAt = endedAt;
     s.logs = s.logs.filter((l) => l.id !== log.id);
     s.logs.push(log);
