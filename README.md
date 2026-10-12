@@ -10,24 +10,40 @@ téléphone s'en souvient. Les données vivent sur le PC, dans un fichier JSON.
 
 ## Démarrer
 
+Après avoir cloné le dépôt, installez les dépendances :
+
 ```bash
 npm install
-npm run serve        # compile puis lance le serveur sur le port 5180
 ```
 
-Puis, sur le téléphone : `http://<ip-du-pc>:5180` → *Partager* → *Sur l'écran d'accueil*.
-L'application s'ouvre alors en plein écran, sans barre Safari.
+### Développement local
 
-En développement :
+Lancez l'API et l'interface dans deux terminaux, depuis la racine du dépôt :
 
 ```bash
-npm start            # serveur d'API seul (port 5180)
-npm run dev          # Vite sur le port 5174, rechargement à chaud, proxy /api vers 5180
+npm start
 ```
 
-Les ports sont figés (`strictPort`) : Comptes tient le 5173, DOJO le 5174, Vigie le 5175, et un port
-déjà pris échoue au lieu de faire glisser l'URL sous les pieds du téléphone. Le tableau complet est
-dans le README de `../Vigie`, qui surveille les trois.
+```bash
+npm run dev
+```
+
+Ouvrez `http://localhost:5174` sur le PC, ou `http://<ip-du-pc>:5174` sur un téléphone du même
+réseau. Vite sert l'interface avec rechargement à chaud et transmet les requêtes `/api` au serveur
+lancé sur le port 5180.
+
+`npm start` seul lance uniquement l'API, pas l'interface. Si vous ouvrez le port 5180 sans avoir
+compilé l'application, le serveur affiche « Application non compilée ». Pour le développement,
+lancez aussi `npm run dev` dans un second terminal. Le script `npm run build` existe et compile
+l'interface ; `npm run serve` lance cette compilation puis le serveur complet sur le port 5180.
+
+Les ports de développement sont figés (`strictPort`) : Comptes tient le 5173, DOJO le 5174, Vigie le
+5175. Si un port est déjà pris, le démarrage échoue au lieu de choisir silencieusement une autre
+adresse. Le tableau complet est dans le README de `../Vigie`, qui surveille les trois.
+
+Pour utiliser le serveur complet sur le téléphone, lancez `npm run serve`, puis ouvrez
+`http://<ip-du-pc>:5180` → *Partager* → *Sur l'écran d'accueil*. L'application s'ouvre alors en
+plein écran, sans barre Safari.
 
 ## Démarrage automatique
 
