@@ -6,6 +6,7 @@ import { History } from './screens/History';
 import { Players } from './screens/Players';
 import { Program } from './screens/Program';
 import { Results } from './screens/Results';
+import { Statistics } from './screens/Statistics';
 import { Roster } from './screens/Roster';
 import { useStore } from './store/state';
 import { boot, startSyncDaemon } from './store/sync';
@@ -47,6 +48,8 @@ function screen(route: string, userId: string | null) {
       return <Results key={userId} />;
     case '/history':
       return <History key={userId} />;
+    case '/stats':
+      return <Statistics key={userId} />;
     case '/program':
       return <Program key={userId} />;
     case '/players':

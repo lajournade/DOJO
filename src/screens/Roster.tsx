@@ -190,8 +190,9 @@ export function Roster() {
         </p>
       )}
 
-      <nav className="pad-x pad-bottom mt-4 grid grid-cols-2 gap-2">
+      <nav className="pad-x pad-bottom mt-4 grid grid-cols-3 gap-2">
         <NavButton onClick={() => navigate('/history')}>historique</NavButton>
+        <NavButton onClick={() => navigate('/stats')}>statistiques</NavButton>
         <NavButton onClick={() => navigate('/program')}>programme</NavButton>
       </nav>
     </div>

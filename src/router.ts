@@ -4,12 +4,12 @@
  */
 import { useSyncExternalStore } from 'react';
 
-export type Route = '/' | '/arena' | '/history' | '/program' | '/players' | '/results';
+export type Route = '/' | '/arena' | '/history' | '/stats' | '/program' | '/players' | '/results';
 
 const listeners = new Set<() => void>();
 
 function normalize(path: string): Route {
-  const known: Route[] = ['/', '/arena', '/history', '/program', '/players', '/results'];
+  const known: Route[] = ['/', '/arena', '/history', '/stats', '/program', '/players', '/results'];
   return known.includes(path as Route) ? (path as Route) : '/';
 }
 
