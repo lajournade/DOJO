@@ -37,6 +37,8 @@
   --color-dim: #0b1124;
   --color-line: #000000;
 
+  /* Valeurs surchargees par profil via data-theme. */
+
   --color-blood: #e01b24;
   --color-blood-hot: #ff3b2f;
   --color-impact: #ffd400;
@@ -67,6 +69,16 @@
 
   --ease-slam: cubic-bezier(0.2, 1.6, 0.35, 1);
   --ease-out-hard: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme='pink'] {
+  --color-ink: #301b2b;
+  --color-ink-2: #503047;
+  --color-ink-3: #70425f;
+  --color-lit: #925673;
+  --color-dim: #21121e;
+  --color-line: #10080e;
+  color-scheme: dark;
 }
 
 /* ------------------------------------------------------------------ base */

@@ -35,6 +35,7 @@ export function Players() {
       name: trimmed,
       activeProgramId: null,
       palette: users.length,
+      theme: 'blue',
     };
     // L'operation nomme son joueur explicitement : il n'existait pas encore.
     dispatch('user.upsert', { user, userId: user.id });
@@ -66,6 +67,7 @@ export function Players() {
             delay={i * 0.06}
             onChoose={() => choose(user)}
             onRemove={() => remove(user)}
+            onTheme={(theme) => dispatch('user.upsert', { user: { id: user.id, theme } })}
           />
         ))}
 
@@ -130,6 +132,7 @@ function PlayerCard({
   delay,
   onChoose,
   onRemove,
+  onTheme,
 }: {
   user: User;
   current: boolean;
@@ -137,6 +140,7 @@ function PlayerCard({
   delay: number;
   onChoose: () => void;
   onRemove: () => void;
+  onTheme: (theme: 'blue' | 'pink') => void;
 }) {
   const hold = useHold(onRemove);
   const { sprite, bust } = fighter(user.palette);
@@ -173,6 +177,15 @@ function PlayerCard({
       {current && (
         <span className="blinking pointer-events-none absolute inset-0 border-4 border-cyan" />
       )}
+      <div className="grid grid-cols-2 gap-1 p-1">
+        {(['blue', 'pink'] as const).map((theme) => (
+          <button key={theme} type="button" aria-pressed={(user.theme ?? 'blue') === theme}
+            onClick={() => onTheme(theme)}
+            className={`bevel-sm keycap label-text py-2 text-p1 ${theme === 'pink' ? 'bg-magenta' : 'bg-ink-3'} ${(user.theme ?? 'blue') === theme ? 'text-bone' : 'text-ash'}`}>
+            {theme === 'blue' ? 'bleu' : 'rose'}
+          </button>
+        ))}
+      </div>
       <div aria-hidden {...hold.gauge} />
     </motion.div>
   );

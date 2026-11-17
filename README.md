@@ -26,6 +26,8 @@ npm start
 
 ```bash
 npm run dev
+
+npm run serve # compile for the service
 ```
 
 Ouvrez `http://localhost:5174` sur le PC, ou `http://<ip-du-pc>:5174` sur un téléphone du même

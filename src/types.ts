@@ -63,6 +63,8 @@ export interface User {
   activeProgramId: string | null;
   /** Rang de couleur du costume, passe a `costume`. */
   palette: number;
+  /** Theme visuel personnel du joueur. Absent dans les anciens états = bleu. */
+  theme?: 'blue' | 'pink';
 }
 
 /** Une série enregistrée : reps === 0 marque l’abandon de cette occurrence de l’exercice. Le RIR n'est renseigne que sur la derniere serie d'un exercice. */

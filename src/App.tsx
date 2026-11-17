@@ -12,7 +12,7 @@ import { boot, startSyncDaemon } from './store/sync';
 
 export function App() {
   const route = useRoute();
-  const { loaded, userId, users } = useStore();
+  const { loaded, userId, users, state } = useStore();
   // Tant qu'aucun profil n'est choisi sur cet appareil — ou que celui qui l'etait a
   // disparu —, la selection passe avant tout le reste : chaque ecran parle d'un joueur.
   const known = userId !== null && users.some((u) => u.id === userId);
@@ -26,7 +26,9 @@ export function App() {
     // `reducedMotion="user"` etend le reglage systeme a toutes les animations de
     // motion : les entrees et les ressorts se posent net, l'information reste.
     <MotionConfig reducedMotion="user">
+      <div data-theme={known ? state.user.theme ?? 'blue' : 'blue'} className="min-h-dvh">
       {!loaded ? <Boot /> : known ? screen(route, userId) : <Players />}
+      </div>
       <Crt />
     </MotionConfig>
   );
