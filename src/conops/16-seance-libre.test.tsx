@@ -9,20 +9,29 @@ let serveur: ServeurDeTest;
 let app: Appareil;
 afterEach(async () => { await app?.demonter(); await serveur?.fermer(); });
 
-async function boot() {
-  serveur = await demarrerServeur(etat({ programs: [],
+async function boot(withGainage = false) {
+  const state = etat({ programs: [],
     users: [joueur({ activeProgramId: null }), joueur({ id: 'u-2', name: 'Lisa', palette: 1 })],
     logs: [journal({ date: '2026-09-10', series: [serie('dips', 1, 10, 8), serie('dips', 2, 20, 12, 3)] })],
-  }));
+  });
+  if (withGainage) state.exercises.push({ id: 'gainage', name: 'Gainage', tracking: 'duration' });
+  serveur = await demarrerServeur(state);
   app = await demarrerAppareil(serveur, { localStorage: { 'dojo.user.v1': 'u-1' } });
   await app.attendre('Séance libre');
   await app.clic('Séance libre');
 }
-async function add(name: string, first = false) {
+async function add(name: string, first = false, timed = false) {
   if (!first) await app.clic('Ajouter un exercice');
   const input = first ? 'input[list="exercices"]' : 'input[list="exercices-carte"]';
   await app.saisir(input, name);
   await app.touche(input, 'Enter');
+  if (timed) {
+    const increase = app.racine.querySelector('button[aria-label="augmenter"]')!;
+    await act(async () => {
+      increase.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      increase.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+    });
+  }
   await app.attendre('valider la série');
 }
 
@@ -99,6 +108,20 @@ describe('séance libre', () => {
     const live = (await serveur.lireJson()).liveSessions['u-1'];
     expect(live.cursor).toEqual({ planIndex: 1, setIndex: 1 });
     expect(live.entries[0]).toMatchObject({ exerciseName: 'Dips', rir: 2 });
+  });
+
+  it('enchaîne les séries d’un exercice chronométré en séance libre', async () => {
+    await boot(true);
+    await add('Gainage', true, true);
+    await app.clic('valider la série');
+    await app.attendre('série 2');
+    expect(app.texte()).toContain('Gainage');
+    expect(app.texte()).toContain('valider la série');
+    await app.attendreSynchro();
+    const live = (await serveur.lireJson()).liveSessions['u-1'];
+    expect(live.cursor).toEqual({ planIndex: 0, setIndex: 2 });
+    expect(live.entries[0]).toMatchObject({ exerciseName: 'Gainage', weight: null, rir: null });
+    expect(live.entries[0].seconds).toBeGreaterThan(0);
   });
 
   it('reprend une séance existante et synchronise les séries hors ligne sans doublon', async () => {
