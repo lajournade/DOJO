@@ -20,7 +20,9 @@ describe("remplacer un exercice en cours de seance", () => {
       sessionId: 'ses-b',
       series: [1, 2, 3, 4].map((i) => serie('presse-a-cuisses', i, 120, 10, i === 4 ? 2 : null)),
     });
-    serveur = await demarrerServeur(etat({ logs: [presse] }));
+    const state = etat({ logs: [presse] });
+    state.exercises.find((e) => e.id === 'presse-a-cuisses')!.family = 'quads';
+    serveur = await demarrerServeur(state);
     app = await demarrerAppareil(serveur, { localStorage: { 'dojo.user.v1': 'u-1' } });
     await app.attendre('choisis ton combat');
     await app.clic('A');
@@ -53,6 +55,8 @@ describe("remplacer un exercice en cours de seance", () => {
     await app.saisir('input[list="exercices"]', 'Curl biceps');
     await app.clic('✓');
     await app.attendre('Curl biceps');
+    expect(app.racine.querySelector('[data-family][aria-current]')).toBeNull();
+    expect(app.racine.querySelectorAll('[data-family="quads"] [data-status]')).toHaveLength(0);
     expect(app.texte()).toContain('série 1/3');
     expect(app.texte()).toContain('2,5');
     await app.attendreSynchro();
@@ -68,6 +72,7 @@ describe("remplacer un exercice en cours de seance", () => {
     await app.saisir('input[list="exercices"]', 'presse a cuisses');
     await app.touche('input[list="exercices"]', 'Enter');
     await app.attendre('Presse à cuisses');
+    expect(app.racine.querySelector('[data-family="quads"][aria-current] [data-status="active"]')).not.toBeNull();
     expect(app.texte()).toContain('série 1/4');
     expect(app.texte()).toContain('120');
     expect(app.texte()).toContain('record 120 kg');

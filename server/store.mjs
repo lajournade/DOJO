@@ -10,6 +10,7 @@ import { readFile, writeFile, rename, mkdir, readdir, unlink, copyFile } from 'n
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { withExerciseFamily } from '../shared/exercise-families.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -108,7 +109,15 @@ export function createStore({
 
     const converted = migrate(state);
     if (converted && !fresh) await archiveV1();
-    if (converted || fresh) await persist();
+
+    let classified = false;
+    for (const [index, exercise] of (state.exercises ?? []).entries()) {
+      const classifiedExercise = withExerciseFamily(exercise);
+      if (classifiedExercise === exercise) continue;
+      state.exercises[index] = classifiedExercise;
+      classified = true;
+    }
+    if (converted || fresh || classified) await persist();
 
     return state;
   }

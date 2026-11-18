@@ -8,6 +8,7 @@ import { BigStepper } from '../components/BigStepper';
 import { ComboMeter, comboLabel } from '../components/ComboMeter';
 import { ExerciseInput } from '../components/ExerciseInput';
 import { ExerciseHistory } from '../components/ExerciseHistory';
+import { FamilyProgress } from '../components/FamilyProgress';
 import { HealthBar, RoundClock, useElapsed } from '../components/HealthBar';
 import { ImpactFx, type Hit } from '../components/ImpactFx';
 import { Plateau } from '../components/Plateau';
@@ -249,6 +250,7 @@ export function Arena() {
         <QuickSwitch scale={1} frame={breath} />
         <RoundClock seconds={elapsed} />
       </header>
+      <FamilyProgress live={live} exercises={state.exercises} />
       <h1 className="label-text py-4 text-p3 text-impact">Séance libre</h1>
       <p className="label-text mb-3 text-p2 text-ash">{live.plan.length ? 'Choisissez ou ajoutez un exercice pour continuer.' : 'Ajoutez votre premier exercice, puis vos séries au fur et à mesure.'}</p>
       {live.plan.map((item, i) => <p key={item.id} className="text-p2 text-ash">
@@ -265,6 +267,7 @@ export function Arena() {
   if (!step && live.resumedAt) return (
     <div className="min-h-dvh bg-ink pad-top pad-x pad-bottom">
       <Small onClick={() => navigate('/history')}>← historique</Small>
+      <FamilyProgress live={live} exercises={state.exercises} />
       <h1 className="fight-text mt-4 text-p3 text-bone">Compléter la séance</h1>
       <p className="my-3 text-p2 text-ash">{live.programCode} · {doneEntries(live.entries).length} séries réalisées</p>
       <div className="grid gap-2">
@@ -448,6 +451,7 @@ export function Arena() {
         </div>
         <RoundClock seconds={elapsed} />
       </div>
+      <FamilyProgress live={live} exercises={state.exercises} />
 
       {/* Seule cette zone defile : la barre d'action reste sous le pouce. */}
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-clip pb-3">

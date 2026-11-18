@@ -14,7 +14,9 @@ describe('le superset', () => {
   let app: Appareil;
 
   beforeAll(async () => {
-    serveur = await demarrerServeur(etat());
+    const state = etat();
+    state.exercises.find((e) => e.id === 'developpe-couche')!.family = 'horizontal-push';
+    serveur = await demarrerServeur(state);
     app = await demarrerAppareil(serveur, { localStorage: { 'dojo.user.v1': 'u-1' } });
     await app.attendre('choisis ton combat');
   });
@@ -59,11 +61,14 @@ describe('le superset', () => {
     await app.attendre('impact');
     expect(app.texte()).toContain('superset A');
     expect(app.texte()).toContain('puis Développé couché');
+    expect(app.racine.querySelector('[data-family="quads"][aria-current]')).not.toBeNull();
 
     await app.clicBouton('impact');
     await app.attendre('exo 2/2');
     expect(app.texte()).toContain('série 1/3');
     expect(app.texte()).toContain('puis Squat barre');
+    expect(app.racine.querySelector('[data-family="horizontal-push"][aria-current]')).not.toBeNull();
+    expect(app.racine.querySelector('[data-family="quads"] [data-status="pending"]')).not.toBeNull();
 
     await app.clicBouton('impact');
     await app.attendre('exo 1/2'); // la ronde suivante repart du premier de la paire
@@ -90,6 +95,7 @@ describe('le superset', () => {
     }
     await app.attendre('finish him');
     expect(app.texte()).toContain('Développé couché');
+    expect(app.racine.querySelector('[data-family="quads"] [data-status="done"]')).not.toBeNull();
     await app.clicBouton('finish him');
     await app.attendre('you win');
   });

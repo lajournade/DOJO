@@ -151,6 +151,18 @@ describe('la bibliotheque, le catalogue et les joueurs', () => {
     expect(s.exercises).toEqual([{ id: 'dips', name: 'Dips lestés' }]);
   });
 
+  it('exercise.upsert classe un exercice connu et conserve sa famille pendant les mises a jour', () => {
+    const s = etat({ exercises: [] });
+    const exercise = { id: 'gainage', name: 'Gainage' };
+    applyOp(s, op('exercise.upsert', { exercise }));
+    expect(s.exercises[0]).toEqual({ ...exercise, family: 'core' });
+    expect(exercise).not.toHaveProperty('family');
+
+    applyOp(s, op('exercise.upsert', { exercise: { id: exercise.id, name: 'Planche' } }));
+    applyOp(s, op('exercise.upsert', { exercise: { id: exercise.id, tracking: 'duration' } }));
+    expect(s.exercises[0]).toEqual({ id: exercise.id, name: 'Planche', tracking: 'duration', family: 'core' });
+  });
+
   it('user.upsert cree ou fusionne partiellement, user.remove emporte journal et seance', () => {
     const s = avecSeance(1);
     s.logs.push(journal({ date: '2026-09-01', series: [] }), journal({ date: '2026-09-02', user: 'u-2', series: [] }));

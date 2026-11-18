@@ -1,8 +1,12 @@
 /** Modele partage avec le serveur (shared/ops.mjs applique les memes transformations). */
+import type { EXERCISE_FAMILIES } from '../shared/exercise-families.mjs';
+
+export type ExerciseFamily = keyof typeof EXERCISE_FAMILIES;
 
 export interface Exercise {
   id: string;
   name: string;
+  family?: ExerciseFamily;
   /** Absent dans les anciens catalogues : repetitions. */
   tracking?: 'reps' | 'duration';
 }

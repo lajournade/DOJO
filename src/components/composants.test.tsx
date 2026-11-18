@@ -6,6 +6,8 @@ import { BigStepper } from './BigStepper';
 import { FightIntro } from './FightIntro';
 import { HealthBar, RoundClock, useElapsed } from './HealthBar';
 import { comboLabel } from './ComboMeter';
+import { FamilyProgress } from './FamilyProgress';
+import { etape, item, seanceEnCours, serie } from '../test/fabrique';
 
 /**
  * Les composants a horloge, sous horloges factices : l'acceleration du compteur,
@@ -32,6 +34,38 @@ afterEach(async () => {
   await act(async () => root.unmount());
   racine.remove();
   vi.useRealTimers();
+});
+
+it('affiche une famille active et validée, avec un segment par occurrence', async () => {
+  const plan = [
+    ...Array.from({ length: 5 }, () => etape(item('squat-barre', { sets: 1 }))),
+    etape(item('traction', { sets: 1 })),
+    etape(item('curl-libre', { sets: 1 })),
+  ];
+  const live = seanceEnCours({
+    plan,
+    entries: [
+      { ...serie('squat-barre', 1, 60, 8), itemId: plan[0].id },
+      { ...serie('squat-barre', 1, null, 0), itemId: plan[1].id },
+    ],
+    cursor: { planIndex: 2, setIndex: 1 },
+  });
+  await rendre(<FamilyProgress live={live} exercises={[
+    { id: 'squat-barre', name: 'Squat barre', family: 'quads' },
+    { id: 'traction', name: 'Traction', family: 'vertical-pull' },
+    { id: 'curl-libre', name: 'Curl libre' },
+  ]} />);
+
+  const quads = racine.querySelector('[data-family="quads"]');
+  expect(quads?.getAttribute('aria-label')).toBe('Quads, 1 sur 5 exercices validés, famille active');
+  expect(quads?.getAttribute('aria-current')).toBe('true');
+  expect(quads?.querySelector('.family-progress-check')).not.toBeNull();
+  expect(Array.from(quads?.querySelectorAll('[data-status]') ?? [], (segment) => segment.getAttribute('data-status')))
+    .toEqual(['done', 'pending', 'active', 'pending', 'pending']);
+  expect(racine.querySelectorAll('[data-family]')).toHaveLength(8);
+  expect(racine.querySelectorAll('[data-family="core"] [data-status]')).toHaveLength(0);
+  expect(racine.querySelectorAll('[data-family="vertical-pull"] [data-status]')).toHaveLength(1);
+  expect(racine.querySelectorAll('[data-status]')).toHaveLength(6);
 });
 
 describe('BigStepper', () => {

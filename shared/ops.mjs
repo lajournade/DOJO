@@ -9,6 +9,7 @@
  * parallele sans jamais se marcher dessus.
  */
 import { entryMatchesStep, isAbandoned } from './entries.mjs';
+import { withExerciseFamily } from './exercise-families.mjs';
 
 const APPLIED_HISTORY = 400;
 
@@ -159,8 +160,8 @@ const handlers = {
 
   'exercise.upsert': (s, { exercise }) => {
     const i = s.exercises.findIndex((e) => e.id === exercise.id);
-    if (i === -1) s.exercises.push(exercise);
-    else s.exercises[i] = { ...s.exercises[i], ...exercise };
+    if (i === -1) s.exercises.push(withExerciseFamily(exercise));
+    else s.exercises[i] = withExerciseFamily({ ...s.exercises[i], ...exercise });
   },
 
   /** Fusion partielle : cree un joueur, le renomme, ou lui change de programme en cours. */

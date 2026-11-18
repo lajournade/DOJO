@@ -1,0 +1,119 @@
+.family-progress {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(3px, 1.2vw, 8px);
+  margin: 0;
+  padding: 7px max(8px, env(safe-area-inset-right)) 6px max(8px, env(safe-area-inset-left));
+  border: 1px solid var(--color-lit);
+  border-inline: 0;
+  background: var(--color-dim);
+  list-style-type: none;
+}
+
+.family-progress-tile {
+  --family-tone: var(--color-ash);
+  --family-edge: var(--color-lit);
+  --family-fill: var(--color-ink-2);
+  display: grid;
+  grid-template-rows: 32px 12px 5px;
+  gap: 3px;
+  min-width: 0;
+  color: var(--family-tone);
+}
+
+.family-progress-tile[data-done] {
+  --family-tone: var(--color-jade);
+  --family-edge: var(--color-jade);
+  --family-fill: color-mix(in srgb, var(--color-jade) 15%, var(--color-dim));
+}
+
+.family-progress-tile[aria-current] {
+  --family-tone: var(--color-impact);
+  --family-edge: var(--color-impact);
+  --family-fill: color-mix(in srgb, var(--color-impact) 14%, var(--color-dim));
+}
+
+.family-progress-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--family-edge);
+  border-radius: 5px;
+  background: var(--family-fill);
+  box-shadow: inset 0 0 0 1px var(--color-dim);
+}
+
+.family-progress-tile[aria-current] .family-progress-icon {
+  box-shadow: inset 0 0 0 1px var(--color-dim), 0 0 7px color-mix(in srgb, var(--color-impact) 50%, transparent);
+}
+
+.family-progress-glyph {
+  position: relative;
+  width: 28px;
+  height: 20px;
+}
+
+.family-progress-glyph > span {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 2px;
+  height: 2px;
+  color: inherit;
+}
+
+.family-progress-check {
+  position: absolute;
+  top: -5px;
+  right: -3px;
+  display: grid;
+  width: 13px;
+  height: 13px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-jade);
+  color: var(--color-dim);
+}
+
+.family-progress-check::after {
+  width: 7px;
+  height: 4px;
+  margin-top: -2px;
+  border: solid currentColor;
+  border-width: 0 0 2px 2px;
+  transform: rotate(-45deg);
+  content: '';
+}
+
+.family-progress-label {
+  align-self: center;
+  text-align: center;
+  font-size: clamp(7px, 2.2vw, 10px);
+  white-space: nowrap;
+}
+
+.family-progress-segments {
+  display: flex;
+  gap: min(2px, calc(30% / var(--segment-count)));
+}
+
+.family-progress-segments > span {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 1px;
+  background: var(--color-ink-3);
+}
+
+.family-progress-segments > [data-status='done'] {
+  background: var(--color-jade);
+}
+
+.family-progress-segments > [data-status='active'] {
+  background: var(--color-impact);
+}
+
+@media (max-width: 335px) {
+  .family-progress-glyph {
+    transform: scale(0.85);
+  }
+}

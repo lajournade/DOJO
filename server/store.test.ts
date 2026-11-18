@@ -4,6 +4,8 @@ import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createStore } from './store.mjs';
+import { EXERCISE_FAMILIES } from '../shared/exercise-families.mjs';
+import type { Exercise } from '../src/types';
 
 const FIXTURES = new URL('../fixtures/', import.meta.url);
 const jour = () => new Date().toISOString().slice(0, 10);
@@ -30,6 +32,8 @@ describe('le premier demarrage', () => {
     expect(state.logs.every((l: { userId?: string }) => l.userId === 'u-1')).toBe(true);
     expect(state.liveSessions).toEqual({});
     expect('liveSession' in state).toBe(false);
+    expect(state.exercises).toHaveLength(20);
+    expect(state.exercises.every((exercise: Exercise) => exercise.family && Object.hasOwn(EXERCISE_FAMILIES, exercise.family))).toBe(true);
     expect(await lire()).toEqual(state);
     expect(messages[0]).toMatch(/etat initialise depuis .*seed\.json/);
     // Le seed n'est pas un fichier d'avant : rien a archiver.
@@ -68,12 +72,20 @@ describe('la migration d\'un fichier d\'avant les profils', () => {
     expect(await lire()).toEqual(state);
   });
 
-  it("ne touche pas a un fichier deja migre", async () => {
+  it('classe un catalogue existant et enregistre les familles une seule fois', async () => {
     await cp(new URL('sport-v2.json', FIXTURES), fichier);
-    const avant = await readFile(fichier, 'utf8');
-    const store = createStore({ file: fichier, log: () => {} });
-    await store.load();
-    expect(await readFile(fichier, 'utf8')).toBe(avant);
+    const avant = await lire();
+    const state = await createStore({ file: fichier, log: () => {} }).load();
+    expect(state).toEqual({
+      ...avant,
+      exercises: [{ id: 'squat-barre', name: 'Squat barre', family: 'quads' }],
+    });
+    expect(await lire()).toEqual(state);
+
+    const apres = (await readFile(fichier, 'utf8')) + '\n';
+    await writeFile(fichier, apres);
+    expect(await createStore({ file: fichier, log: () => {} }).load()).toEqual(state);
+    expect(await readFile(fichier, 'utf8')).toBe(apres);
     expect(existsSync(join(dossier, 'backups'))).toBe(false);
   });
 

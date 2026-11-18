@@ -45,6 +45,7 @@ describe("l'API", () => {
     expect(res.headers.get('cache-control')).toBe('no-store');
     const state = await res.json();
     expect(state.users.map((u: { name: string }) => u.name)).toEqual(['Ludo', 'Lisa']);
+    expect(state.exercises).toContainEqual({ id: 'squat-barre', name: 'Squat barre', family: 'quads' });
   });
 
   it('POST /api/ops applique une salve, la persiste, et ignore son rejeu', async () => {
@@ -55,6 +56,11 @@ describe("l'API", () => {
     const disque = JSON.parse(await readFile(fichier, 'utf8'));
     expect(disque.programs.map((p: { code: string }) => p.code)).toEqual(['P1', 'P3']);
     expect(disque.rev).toBe(4);
+    expect(disque.exercises).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'curl-biceps-a-la-poulie-basse', family: 'arm-shoulder-isolation' }),
+      expect.objectContaining({ id: 'souleve-de-terre-jambes-tendues', family: 'posterior-chain' }),
+      expect.objectContaining({ id: 'cable-triceps-pushdown', family: 'arm-shoulder-isolation' }),
+    ]));
 
     const apres = (await stat(fichier)).mtimeMs;
     expect(apres).toBeGreaterThanOrEqual(avant);

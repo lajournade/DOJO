@@ -112,7 +112,12 @@ describe('séance libre', () => {
 
   it('enchaîne les séries d’un exercice chronométré en séance libre', async () => {
     await boot(true);
+    const families = () => Array.from(app.racine.querySelectorAll('[data-family]'));
+    const core = () => app.racine.querySelector('[data-family="core"]');
+    expect(families()).toHaveLength(0);
     await add('Gainage', true, true);
+    expect(families()).toHaveLength(1);
+    expect(core()?.querySelector('[data-status="active"]')).not.toBeNull();
     await app.clic('valider la série');
     await app.attendre('série 2');
     expect(app.texte()).toContain('Gainage');
@@ -122,6 +127,18 @@ describe('séance libre', () => {
     expect(live.cursor).toEqual({ planIndex: 0, setIndex: 2 });
     expect(live.entries[0]).toMatchObject({ exerciseName: 'Gainage', weight: null, rir: null });
     expect(live.entries[0].seconds).toBeGreaterThan(0);
+    expect(core()?.querySelector('[data-status="done"]')).not.toBeNull();
+    await app.clic('annuler la dernière');
+    expect(core()?.querySelector('[data-status="active"]')).not.toBeNull();
+    await app.appuyer('augmenter');
+    await app.clic('valider la série');
+    await add('Squat barre');
+    expect(families().map((family) => family.getAttribute('data-family'))).toEqual(['quads', 'core']);
+    await app.clicBouton('2');
+    await app.clic('valider la série');
+    await app.attendre('Choisissez ou ajoutez un exercice pour continuer.');
+    expect(families()).toHaveLength(2);
+    expect(app.racine.querySelector('[data-family][aria-current]')).toBeNull();
   });
 
   it('reprend une séance existante et synchronise les séries hors ligne sans doublon', async () => {
